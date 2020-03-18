@@ -1,171 +1,247 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" xmlns:script="http://www.w3.org/1999/html">
   <head>
-      <meta charset="utf-8">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Home | Bistro | Gourmet</title>
-      <meta name="description" content="Multipurpose HTML template.">
-      <script src="../scripts/jquery.min.js"></script>
-      <link rel="stylesheet" href="../scripts/bootstrap/css/bootstrap.css">
-      <script src="../scripts/script.js"></script>
-      <link rel="stylesheet" href="../style.css">
-      <link rel="stylesheet" href="../css/content-box.css">
-      <link rel="stylesheet" href="../css/image-box.css">
-      <link rel="stylesheet" href="../css/animations.css">
-      <link rel="stylesheet" href='../css/components.css'>
-      <link rel="stylesheet" href='../scripts/flexslider/flexslider.css'>
-      <link rel="stylesheet" href='../scripts/magnific-popup.css'>
-      <link rel="stylesheet" href='../scripts/php/contact-form.css'>
-      <link rel="stylesheet" href='../scripts/social.stream.css'>
-      <link rel="icon" href="../images/favicon.png">
-      <link rel="stylesheet" href="../skin.css">
-      <!-- Extra optional content header -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Melinux - Controle de comandas</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bower_components/font-awesome/css/all.min.css' %}">
+
+    <script src="{% static 'bower_components/vue/dist/vue.js' %}"></script>
+    <script src="{% static 'base_controller.js' %}"></script>
+    <script src="{% static 'commands_controller.js' %}"></script>
+
+    <style>
+      /*
+        AUTO GRID
+        Set the minimum item size with `--auto-grid-min-size` and you'll
+        get a fully responsive grid with no media queries.
+      */
+      .auto-grid-large {
+        --auto-grid-min-size: 14rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+      }
+
+      .auto-grid-small {
+        --auto-grid-min-size: 6rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+      }
+
+
+      /* Presentational styles */
+      body {
+        background-image: url("/static/images/1024.png");
+        line-height: 1.4;
+        font-family: Tahoma, Geneva, sans-serif;
+      }
+
+      ul #product-menu{
+        list-style-type: none;
+      }
+
+      ul#product-menu li {
+        text-align: left;
+        background: rgb(178,34,34);
+        background: linear-gradient(0deg, rgba(178,34,34,1) 0%, rgba(178,34,34,1) 92%, rgba(134,28,28,1) 100%);
+        color: #ffffff;
+      }
+
+      ul#product-menu li span {
+        position: relative;
+        left:4px;
+        top: 4px;
+      }
+
+      ul#product-menu li:hover {
+        background: #8e1b1b;
+      }
+
+      .auto-grid-small {
+        font-size: 9px;
+      }
+
+      .auto-grid-large {
+        font-size: 1.0rem;
+      }
+
+      .menu-item-image{
+        object-fit:cover;
+        width:100%;
+        height:155px;
+      }
+
+      .auto-grid-small .menu-item-image{
+        height:70px;
+      }
+
+      .menu-item-price{
+        border-bottom-left-radius: 5px;
+        text-align: right;
+        color: #b22222;
+        height: 20px;
+        float: right;
+      }
+
+      .auto-grid-large .menu-item-price{
+        padding-left:20px;
+        padding-top: 0px;
+        margin-top:-155px;
+        font-size:14px;
+      }
+
+      .auto-grid-small .menu-item-price{
+        padding-left:15px;
+        margin-top:-73px;
+        padding-top:3px;
+        font-size:11px;
+      }
+
+      #extras {
+        font-size:12px;
+      }
+
+      #extras thead tr td{
+        font-size:10px;
+        border-top: none;
+      }
+
+      #extras td{
+        vertical-align:middle;
+      }
+
+    </style>
   </head>
 
   <body>
-    <div class="section-empty no-paddings-y">
-      <div class="content">
-        <div class="grid-list">
-          <div class="grid-box row">
-            <div class="grid-item col-md-3">
-              <div class="img-box adv-img adv-img-half-content" data-anima="fade-left" data-trigger="hover">
-                <i class="fa fa-camera-retro anima" aid="0.08465149318600529" style="animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;"></i>
-                <a href="#" class="img-box lightbox anima-scale-up anima" style="position: relative; animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;" aid="0.13361549581480747">
-                  <img src="../images/gallery/square-1.jpg" alt="">
-                </a>
-                <div class="caption">
-                  <h2>The Perfect Burger</h2>
-                  <span class="extra-content">$ 9.99</span>
-                  <p>
-                    Beetroot water spinach okra water chestnut ricebean pea.
-                    Teaspoon mustard, teaspoon worcestershire sauce.
-                  </p>
-                  <p class="sub">   </p>
-                </div>
-              </div>
-            </div>
-            <div class="grid-item col-md-3">
-              <div class="img-box adv-img adv-img-half-content" data-anima="fade-left" data-trigger="hover">
-                <i class="fa fa-camera-retro anima" aid="0.10181730848820303" style="animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;"></i>
-                <a href="#" class="img-box lightbox anima-scale-up anima" style="position: relative; animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;" aid="0.9870989511070474">
-                  <img src="../images/gallery/square-2.jpg" alt="">
-                </a>
-                <div class="caption">
-                  <h2>Cheese Toast Deluxe</h2>
-                  <span class="extra-content">$ 10.50</span>
-                  <p>
-                      Beetroot water spinach okra water chestnut ricebean pea.
-                      Teaspoon mustard, teaspoon worcestershire sauce.
-                  </p>
-                  <p class="sub">   </p>
-                </div>
-              </div>
-            </div>
-            <div class="grid-item col-md-3">
-              <div class="img-box adv-img adv-img-half-content" data-anima="fade-left" data-trigger="hover">
-                <i class="fa fa-camera-retro anima" aid="0.3705406333263689" style="animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;"></i>
-                <a href="#" class="img-box lightbox anima-scale-up anima" style="position: relative; animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;" aid="0.4039054504610353">
-                  <img src="../images/gallery/square-3.jpg" alt="">
-                </a>
-                <div class="caption">
-                  <h2>Summer Yellow Snack</h2>
-                  <span class="extra-content">$ 11.50</span>
-                  <p>
-                      Beetroot water spinach okra water chestnut ricebean pea.
-                      Teaspoon mustard, teaspoon worcestershire sauce.
-                  </p>
-                  <p class="sub">   </p>
-                </div>
-              </div>
-            </div>
-            <div class="grid-item col-md-3">
-              <div class="img-box adv-img adv-img-half-content" data-anima="fade-left" data-trigger="hover">
-                <i class="fa fa-camera-retro anima" aid="0.9138463308021354" style="animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;"></i>
-                <a href="#" class="img-box lightbox anima-scale-up anima" style="position: relative; animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;" aid="0.007125486705441442">
-                  <img src="../images/gallery/square-4.jpg" alt="">
-                </a>
-                <div class="caption">
-                  <h2>Cheese Toast Big</h2>
-                  <span class="extra-content">$ 9.99</span>
-                  <p>
-                      Beetroot water spinach okra water chestnut ricebean pea.
-                      Teaspoon mustard, teaspoon worcestershire sauce.
-                  </p>
-                  <p class="sub">   </p>
-                </div>
-              </div>
-            </div>
-            <div class="grid-item col-md-3">
-              <div class="img-box adv-img adv-img-half-content" data-anima="fade-left" data-trigger="hover">
-                <i class="fa fa-camera-retro anima"></i>
-                <a href="#" class="img-box lightbox anima-scale-up anima">
-                  <img src="../images/gallery/square-5.jpg" alt="">
-                </a>
-                <div class="caption">
-                  <h2>Cheese Burger Deluxe</h2>
-                  <span class="extra-content">$ 9.99</span>
-                  <p>
-                    Beetroot water spinach okra water chestnut ricebean pea.
-                    Teaspoon mustard, teaspoon worcestershire sauce.
-                  </p>
-                  <p class="sub">   </p>
-                </div>
-              </div>
-            </div>
-            <div class="grid-item col-md-3">
-              <div class="img-box adv-img adv-img-half-content" data-anima="fade-left" data-trigger="hover">
-                <i class="fa fa-camera-retro anima" aid="0.6139336857507386" style="animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;"></i>
-                <a href="#" class="img-box lightbox anima-scale-up anima" style="position: relative; animation-duration: 500ms; transition-timing-function: ease; transition-delay: 0ms;" aid="0.5918380747616321">
-                    <img src="../images/gallery/square-6.jpg" alt="">
-                </a>
-                <div class="caption">
-                  <h2>Salad Piadina Eggs</h2>
-                  <span class="extra-content">$ 10.99</span>
-                  <p>
-                    Beetroot water spinach okra water chestnut ricebean pea.
-                    Teaspoon mustard, teaspoon worcestershire sauce.
-                  </p><p class="sub">   </p>
-                </div>
-              </div>
-            </div>
-            <div class="grid-item col-md-3">
-              <div class="img-box adv-img adv-img-half-content" data-anima="fade-left" data-trigger="hover">
-                <i class="fa fa-camera-retro anima"></i>
-                <a href="#" class="img-box lightbox anima-scale-up anima">
-                  <img src="../images/gallery/square-7.jpg" alt="">
-                </a>
-                <div class="caption">
-                  <h2>Mexican Hot Piadina</h2>
-                  <span class="extra-content">$ 12.50</span>
-                  <p>
-                    Beetroot water spinach okra water chestnut ricebean pea.
-                    Teaspoon mustard, teaspoon worcestershire sauce.
-                  </p>
-                  <p class="sub">   </p>
-                </div>
-              </div>
-            </div>
-            <div class="grid-item col-md-3">
-              <div class="img-box adv-img adv-img-half-content" data-anima="fade-left" data-trigger="hover">
-                <i class="fa fa-camera-retro anima"></i>
-                <a href="#" class="img-box lightbox anima-scale-up anima">
-                  <img src="../images/gallery/square-8.jpg" alt="">
-                </a>
-                <div class="caption">
-                  <h2>Italian Bruschette</h2>
-                  <span class="extra-content">$ 9.99</span>
-                  <p>
-                    Beetroot water spinach okra water chestnut ricebean pea.
-                    Teaspoon mustard, teaspoon worcestershire sauce.
-                  </p>
-                  <p class="sub">   </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div id="app" @mousemove="" @keyup="">
+      <app_commands :controls="controls" :selected="selected" :groups="groups" :extras="extras" :init_extras="init_extras">
+
+      </app_commands>
     </div>
+
+    <script>
+      var app = new Vue({
+        el: '#app',
+        mixins: [base_communications],
+        data: function() {
+          return {
+            controls:{
+              screen: {
+                width: window.innerWidth,
+                height: window.screen.height,
+              },
+            },
+
+            selected:{
+              group:null,
+              product:null,
+            },
+
+            commands:{},
+
+            extras:[
+              {'id':'1', 'name':'Ovo', 'price':1.50, 'quant':0},
+              {'id':'1', 'name':'Queijo', 'price':2.00, 'quant':0},
+              {'id':'1', 'name':'Presunto', 'price':2.00, 'quant':0},
+              {'id':'1', 'name':'Hamburgue', 'price':3.50, 'quant':0},
+            ],
+
+            groups: [
+              {'id':'1', 'code':'1', 'name':'Refeição', 'description':'', 'image':'/static/images/commands/refeicao.jpg',
+                'products':[
+                  {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90, 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'image':'https://s2.glbimg.com/BcqNo5FTYhP497BmAHGs2NlP2lI=/620x430/e.glbimg.com/og/ed/f/original/2017/03/09/refeicao.jpg'},
+                  {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'description':'Self service sem churrasco', 'have_promotion':false},
+                  {'id':'3', 'code':'12', 'name':'Buffet com churrasco', 'price':42.00, 'description':'Self service com churrasco', 'have_promotion':false},
+                  {'id':'4', 'code':'13', 'name':'Buffet especial', 'price':69.90, 'description':'Comidas japonesas e arabes, moquecas e tortas especiais', 'have_promotion':true},
+                  {'id':'4', 'code':'13', 'name':'Marmitex', 'price':14.00, 'description':'Arroz, feijão, macarrão, duas carnes, farofa, batata frita e salada.', 'have_promotion':true},
+                ]
+              },
+
+
+              {'id':'1', 'code':'1', 'name':'Entradas', 'description':'', 'image':'/static/images/commands/entradas.jpg',
+                'products':[
+                  {'id':'1', 'code':'10', 'name':'Torradas', 'price':8.90, 'description':'250g de torradas amanteigadas com orégano', 'have_promotion':false},
+                  {'id':'2', 'code':'11', 'name':'Torresmo', 'price':13.50, 'description':'150g de torresmo', 'have_promotion':false},
+                  {'id':'3', 'code':'12', 'name':'Porção de frios', 'price':18.50, 'description':'Salame, ovos de codorna, palmito e queijo em cubinhos', 'have_promotion':false},
+                  {'id':'4', 'code':'13', 'name':'Pasteis sortidos', 'price':21.50, 'description':'6 unidades sortidas', 'have_promotion':true},
+                ]
+              },
+
+
+              {'id':'2', 'code':'2', 'name':'Porções', 'description':'', 'image':'/static/images/commands/porcoes.jpg',
+                'products':[
+                  {'id':'5', 'code':'20', 'name':'Pasteis sortidos', 'price':27.50, 'description':'', 'have_promotion':true},
+                  {'id':'6', 'code':'21', 'name':'Bolinhas de queijo', 'price':32.80, 'description':'', 'have_promotion':false},
+                  {'id':'7', 'code':'22', 'name':'Filé com fritas', 'price':39.90, 'description':'', 'have_promotion':true},
+                  {'id':'8', 'code':'23', 'name':'Filé de tilapia', 'price':45.50, 'description':'', 'have_promotion':false},
+                ]
+              },
+
+              {'id':'3', 'code':'3', 'name':'Pizzas', 'description':'', 'image':'/static/images/commands/pizza.jfif',
+                'products':[
+                  {'id':'9', 'code':'30', 'name':'Portuguesa', 'price':27.50, 'description':'', 'have_promotion':true},
+                  {'id':'10', 'code':'31', 'name':'Calabresa', 'price':33.80, 'description':'', 'have_promotion':false},
+                  {'id':'11', 'code':'32', 'name':'Marguerita', 'price':39.90, 'description':'', 'have_promotion':true},
+                  {'id':'12', 'code':'33', 'name':'Americana', 'price':45.50, 'description':'', 'have_promotion':false},
+                ]
+              },
+
+              {'id':'4', 'code':'4', 'name':'Drinks', 'description':'', 'image':'/static/images/commands/drinks.jpg',
+                'products':[
+                  {'id':'5', 'code':'21', 'name':'Caipivodka', 'price':10.00, 'description':'Vodka batida com limão, açucar e gelo', 'have_promotion':true},
+                  {'id':'6', 'code':'22', 'name':'Mad Max', 'price':8.00, 'description':'Vodka com energético', 'have_promotion':true},
+                  {'id':'7', 'code':'23', 'name':'Canelinha', 'price':5.00, 'description':'Dose de canelinha', 'have_promotion':false},
+                  {'id':'8', 'code':'24', 'name':'Pina colada', 'price':14.50, 'description':'Vodka batida com abacaxi, coco e leite condensado', 'have_promotion':false},
+                ]
+              },
+            ],
+          }
+        },
+
+        methods: {
+          verify_screen: function () {
+            this.controls.screen.width = window.innerWidth;
+            this.controls.screen.height = window.innerHeight;
+          },
+
+          init_extras: function(){
+
+          }
+        },
+
+        created: function () {
+          this.init_extras();
+        },
+
+        mounted: function () {
+        }
+      });
+
+      window.addEventListener('resize', function(e) {
+        app.verify_screen();
+      });
+    </script>
+
+    <script src="{% static 'vali/js/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'vali/js/bootstrap.min.js' %}"></script>
+    <script async defer src="{% static 'apps/core/authentication/action.js' %}"></script>
+    <script>
+      function success_notify(){
+      }
+
+      window.addEventListener('load', function () {
+        register_action();
+      }, false);
+
+      window.addEventListener('resize', function(e) {
+        app.verify_screen();
+      });
+    </script>
   </body>
 </html>
