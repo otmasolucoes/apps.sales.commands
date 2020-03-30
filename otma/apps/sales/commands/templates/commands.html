@@ -36,7 +36,7 @@
 
       /* Presentational styles */
       body {
-        background-image: url("/static/images/1024.png");
+        background-image: url("/media/images/commands/1024.png");
         line-height: 1.4;
         font-family: Tahoma, Geneva, sans-serif;
       }
@@ -136,6 +136,9 @@
                 width: window.innerWidth,
                 height: window.screen.height,
               },
+              urls: {
+                groups: '/api/sales/commands/groups/load/',
+              }
             },
 
             selected:{
@@ -152,55 +155,8 @@
               {'id':'1', 'name':'Hamburgue', 'price':3.50, 'quant':0},
             ],
 
-            groups: [
-              {'id':'1', 'code':'1', 'name':'Refeição', 'description':'', 'image':'/static/images/commands/refeicao.jpg',
-                'products':[
-                  {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90, 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'image':'https://s2.glbimg.com/BcqNo5FTYhP497BmAHGs2NlP2lI=/620x430/e.glbimg.com/og/ed/f/original/2017/03/09/refeicao.jpg'},
-                  {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'description':'Self service sem churrasco', 'have_promotion':false},
-                  {'id':'3', 'code':'12', 'name':'Buffet com churrasco', 'price':42.00, 'description':'Self service com churrasco', 'have_promotion':false},
-                  {'id':'4', 'code':'13', 'name':'Buffet especial', 'price':69.90, 'description':'Comidas japonesas e arabes, moquecas e tortas especiais', 'have_promotion':true},
-                  {'id':'4', 'code':'13', 'name':'Marmitex', 'price':14.00, 'description':'Arroz, feijão, macarrão, duas carnes, farofa, batata frita e salada.', 'have_promotion':true},
-                ]
-              },
+            groups: [],
 
-
-              {'id':'1', 'code':'1', 'name':'Entradas', 'description':'', 'image':'/static/images/commands/entradas.jpg',
-                'products':[
-                  {'id':'1', 'code':'10', 'name':'Torradas', 'price':8.90, 'description':'250g de torradas amanteigadas com orégano', 'have_promotion':false},
-                  {'id':'2', 'code':'11', 'name':'Torresmo', 'price':13.50, 'description':'150g de torresmo', 'have_promotion':false},
-                  {'id':'3', 'code':'12', 'name':'Porção de frios', 'price':18.50, 'description':'Salame, ovos de codorna, palmito e queijo em cubinhos', 'have_promotion':false},
-                  {'id':'4', 'code':'13', 'name':'Pasteis sortidos', 'price':21.50, 'description':'6 unidades sortidas', 'have_promotion':true},
-                ]
-              },
-
-
-              {'id':'2', 'code':'2', 'name':'Porções', 'description':'', 'image':'/static/images/commands/porcoes.jpg',
-                'products':[
-                  {'id':'5', 'code':'20', 'name':'Pasteis sortidos', 'price':27.50, 'description':'', 'have_promotion':true},
-                  {'id':'6', 'code':'21', 'name':'Bolinhas de queijo', 'price':32.80, 'description':'', 'have_promotion':false},
-                  {'id':'7', 'code':'22', 'name':'Filé com fritas', 'price':39.90, 'description':'', 'have_promotion':true},
-                  {'id':'8', 'code':'23', 'name':'Filé de tilapia', 'price':45.50, 'description':'', 'have_promotion':false},
-                ]
-              },
-
-              {'id':'3', 'code':'3', 'name':'Pizzas', 'description':'', 'image':'/static/images/commands/pizza.jfif',
-                'products':[
-                  {'id':'9', 'code':'30', 'name':'Portuguesa', 'price':27.50, 'description':'', 'have_promotion':true},
-                  {'id':'10', 'code':'31', 'name':'Calabresa', 'price':33.80, 'description':'', 'have_promotion':false},
-                  {'id':'11', 'code':'32', 'name':'Marguerita', 'price':39.90, 'description':'', 'have_promotion':true},
-                  {'id':'12', 'code':'33', 'name':'Americana', 'price':45.50, 'description':'', 'have_promotion':false},
-                ]
-              },
-
-              {'id':'4', 'code':'4', 'name':'Drinks', 'description':'', 'image':'/static/images/commands/drinks.jpg',
-                'products':[
-                  {'id':'5', 'code':'21', 'name':'Caipivodka', 'price':10.00, 'description':'Vodka batida com limão, açucar e gelo', 'have_promotion':true},
-                  {'id':'6', 'code':'22', 'name':'Mad Max', 'price':8.00, 'description':'Vodka com energético', 'have_promotion':true},
-                  {'id':'7', 'code':'23', 'name':'Canelinha', 'price':5.00, 'description':'Dose de canelinha', 'have_promotion':false},
-                  {'id':'8', 'code':'24', 'name':'Pina colada', 'price':14.50, 'description':'Vodka batida com abacaxi, coco e leite condensado', 'have_promotion':false},
-                ]
-              },
-            ],
           }
         },
 
@@ -211,8 +167,23 @@
           },
 
           init_extras: function(){
+            //
+          },
 
-          }
+          load_groups: function () {
+            let scope = this;
+            let data_parameters = {};
+            let success_function = function(response) {
+              scope.groups = response.object;
+            };
+
+            let failure_function = function(response) {
+              return false;
+            };
+
+            this.request(scope.controls.urls.groups, "get", data_parameters, null, success_function, failure_function);
+          },
+
         },
 
         created: function () {
@@ -220,6 +191,7 @@
         },
 
         mounted: function () {
+          //
         }
       });
 
@@ -242,6 +214,7 @@
       window.addEventListener('resize', function(e) {
         app.verify_screen();
       });
+      app.load_groups();
     </script>
   </body>
 </html>
