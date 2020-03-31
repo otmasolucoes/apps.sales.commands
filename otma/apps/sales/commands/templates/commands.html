@@ -50,7 +50,7 @@
 
       /* Presentational styles */
       body {
-        background-image: url("/static/images/1024.png");
+        background-image: url("/media/images/commands/1024.png"); /* /static/images/1024.png */
         line-height: 1.4;
         font-family: Tahoma, Geneva, sans-serif;
       }
@@ -408,6 +408,9 @@
                 width: window.innerWidth,
                 height: window.screen.height,
               },
+              urls: {
+                groups: '/api/sales/commands/groups/load/',
+              }
             },
 
             forms: {
@@ -603,6 +606,20 @@
           open_menu: function(){
             this.selected.new_product = true;
           },
+
+          load_groups: function () {
+            let scope = this;
+            let data_parameters = {};
+            let success_function = function(response) {
+              scope.groups = response.object;
+            };
+
+            let failure_function = function(response) {
+              return false;
+            };
+
+            this.request(scope.controls.urls.groups, "get", data_parameters, null, success_function, failure_function);
+          },
         },
 
         computed: {
@@ -652,6 +669,7 @@
       window.addEventListener('resize', function(e) {
         app.verify_screen();
       });
+      //app.load_groups();
     </script>
   </body>
 </html>
