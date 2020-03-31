@@ -19,6 +19,7 @@
         Set the minimum item size with `--auto-grid-min-size` and you'll
         get a fully responsive grid with no media queries.
       */
+
       .auto-grid-large {
         --auto-grid-min-size: 14rem;
         display: grid;
@@ -33,6 +34,19 @@
         grid-gap: 1rem;
       }
 
+      #desk-panel .auto-grid-large {
+        --auto-grid-min-size: 8rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+      }
+
+      #desk-panel .auto-grid-small {
+        --auto-grid-min-size: 4rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+      }
 
       /* Presentational styles */
       body {
@@ -40,6 +54,25 @@
         line-height: 1.4;
         font-family: Tahoma, Geneva, sans-serif;
       }
+
+      #desk-panel li {
+        text-align: left;
+        background: #ccc;
+        color: #ffffff;
+      }
+
+      #desk-panel li.opened {
+        background: #6b8e23;
+      }
+
+      #desk-panel li.waiting {
+        background: #e38e00;
+      }
+
+      #consumed_products td {
+        padding:10px;
+      }
+
 
       ul #product-menu{
         list-style-type: none;
@@ -102,16 +135,16 @@
         font-size:11px;
       }
 
-      #extras {
+      #product_complements, #product_description {
         font-size:12px;
       }
 
-      #extras thead tr td{
+      #product_complements thead tr td{
         font-size:10px;
         border-top: none;
       }
 
-      #extras td{
+      #product_complements td, #product_description td{
         vertical-align:middle;
       }
 
@@ -119,11 +152,250 @@
   </head>
 
   <body>
-    <div id="app" @mousemove="" @keyup="">
-      <app_commands :controls="controls" :selected="selected" :groups="groups" :extras="extras" :init_extras="init_extras">
+    <div style='padding:0px;'>
 
-      </app_commands>
+      <div id="app" @mousemove="" @keyup="">
+        <div style='height:90px;background:#b22222;color: white;'>
+          {% verbatim %}
+          <br>
+          <div class="row" style="width:100%;">
+            <div v-if="selected.desk==null" class="col-lg-2 col-md-2 col-sm-3 col-xs-6" style="padding-left:20px;">
+              <sub>Filtrar mesas</sub>
+              <select class="form-control" v-model="selected.desk_group">
+                <option value="interno">Interno</option>
+                <option value="externo">Externo</option>
+                <option value='geral' selected="selected">Geral</option>
+              </select>
+            </div>
+
+            <div v-else class="col-lg-2 col-md-2 col-sm-3 col-xs-6" style="padding-left:20px;">
+              <h4 class="float-left">Mesa {{ selected.desk.id }}</h4>
+              <div class="float-right">
+                  <button class="btn btn-sm btn-light" @click="open_menu()">
+                    <i class="fas fa-plus"></i><br>
+                    <span>Adicionar</span>
+                  </button>
+
+                  <button class="btn btn-sm btn-light">
+                    <i class="fas fas fa-sign-out-alt"></i><br>
+                    <span>Fechar</span>
+                  </button>
+                </div>
+            </div>
+          </div>
+          {% endverbatim %}
+        </div>
+
+        {% verbatim %}
+        <div style="padding:15px;">
+          <template v-if="selected.new_product">
+            <app_commands :controls="controls" :selected="selected" :groups="groups" :complements="complements" :init_complements="init_complements">
+
+            </app_commands>
+          </template>
+
+          <div v-else-if='selected.desk==null' id="desk-panel">
+            <ul id='desks-list' :class="{'auto-grid-small':controls.screen.width<1024, 'auto-grid-large':controls.screen.width>=1024}" style='margin-left:-40px;'>
+              <template v-for='(desk,index) in desks'>
+                <li @click="select_desk(desk, index)" v-if="desk.group==selected.desk_group || selected.desk_group=='geral'" :class="{'opened':desk.status=='opened', 'waiting':desk.status=='opened' && desk.last_updated > 10}" style='vertical-align:middle;padding:5px;cursor:pointer;padding-bottom:10px;padding-top:10px;line-height:15px;'>
+                  <div style="text-align:center;">
+                    <i v-if="desk.status=='opened' && desk.last_updated > 10" class="fas fa-user-clock fa-3x"></i>
+                    <i v-else-if="desk.status=='opened'" class="fas fa-users fa-3x"></i>
+                    <i v-else class="fas fa-users fa-3x"></i>
+
+                    <br>
+                    <div class='menu-item-price'>
+                      <!--<div class='float-right' style='background:white;padding-left:3px;padding-right:3px;'>R$ 325,00</div>-->
+                    </div>
+                    <span style="position:relative;top:4px;">Mesa {{ desk.id }}</span><br>
+                    <span style="font-size:10px;">{{ desk.group }}</span>
+                  </div>
+                </li>
+              </template>
+            </ul>
+          </div>
+
+          <div class="" v-else style="height: calc(100vh - 150px);">
+            <div v-if="selected.new_products.length > 0" style="background:white;width:100%;padding:10px;border:1px solid #ddd;margin-bottom:15px;">
+              <div style="height:36px;">
+                <h6 class="float-left" style="position:relative;top:3px;"><i class="far fa-file-alt"></i> Novo pedido</h6>
+                <div class="float-right">
+                  <button class="btn btn-sm btn-success" style="font-size:10px;" @click="confirm_new_itens()">Confirmar</button>
+                </div>
+              </div>
+
+              <table class="table table-sm" border="0" style='width:100%;'>
+                <tr v-for='(product,index) in selected.new_products'>
+                  <td style="line-height:10px;padding:10px;">
+                    <span style='font-size:14px;font-weight:bold;'>{{ product.name }}</span><br>
+                    <span style='font-size:12px;color:#888;position:relative;top:2px;'>
+                      {{ product.quant }} x {{ product.price}}
+                    </span>
+                  </td>
+
+                  <td style='width:40px;padding:0px;vertical-align:middle;'>
+                    <span class="fa-stack fa-1x" @click='decrease_new_item(index)' style='cursor:pointer;font-size:12px;'>
+                      <i class="fas fa-square-full fa-stack-2x"></i>
+                      <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
+                    </span>
+                  </td>
+
+                  <td style='width:40px;padding:0px;vertical-align:middle;'>
+                    <span class="fa-stack fa-1x" @click='increase_new_item(index)' style='cursor:pointer;font-size:12px;'>
+                      <i class="fas fa-square-full fa-stack-2x"></i>
+                      <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+            <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #ddd;">
+              <div style="height:36px;">
+                <h6 class="float-left" style="position:relative;top:3px;">
+                  <i class="fas fa-tasks"></i> Comanda
+                </h6>
+
+                <div class="float-right" style="position:relative;top:3px;">
+                R$ 350,00
+              </div>
+              </div>
+
+
+
+              <table border="0" id='consumed_products' class='table table-sm table-stripped table-hover' style=''>
+                <template v-if='controls.screen.width>=1024'>
+                  <thead>
+                    <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
+                      <td style="text-align:left;border-top:none;"></td>
+                      <td style="text-align:left;border-top:none;"></td>
+                      <td style="text-align:center;border-top:none;">Quant</td>
+                      <td style="text-align:center;border-top:none;">Preço</td>
+                      <td style="text-align:center;border-top:none;">Total</td>
+                      <td style="text-align:center;border-top:none;"></td>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    <template v-for='product in selected.desk.products'>
+                    <tr style="cursor:pointer;" @click="select_item(product)"><!-- data-toggle="modal" data-target="#command_item_options"  -->
+                      <td style="width:100px;">
+                        <img :src="product.image" style='width:100px;height:80px;object-fit:cover;' />
+                      </td>
+
+                      <td>
+                        <span style='font-size:18px;'>{{ product.name }}</span><br>
+                        <span style='font-size:12px;color:#888;'>Pedido: 20:12:33 - Entregue: 20:35:21</span>
+                      </td>
+
+                      <td style='width:110px;text-align:center;vertical-align:middle;'>
+                        <span style='font-size:18px;'>{{ product.quant }}</span>
+                      </td>
+
+                      <td style="vertical-align:middle;width:110px;">
+                        <span style='font-size:18px;'>R$ {{ product.price }}</span>
+                      </td>
+
+                      <td style='width:110px;text-align:center;vertical-align:middle;'>
+                        <span style='font-size:18px;'>R$ {{ product.quant*product.price }}</span>
+                      </td>
+
+                      <td style='width:40px;vertical-align:middle;'>
+                        <span class="fa-stack fa-1x" style='cursor:pointer;'>
+                          <i class="fas fa-square-full fa-stack-2x"></i>
+                          <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
+                        </span>
+                      </td>
+
+                      <td style='width:40px;vertical-align:middle;'>
+                        <span class="fa-stack fa-1x" style='cursor:pointer;'>
+                          <i class="fas fa-square-full fa-stack-2x"></i>
+                          <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
+                        </span>
+                      </td>
+                    </tr>
+                    </template>
+                    <!--<tr style="font-weight:bold;">
+                      <td colspan="5">Total</td>
+                      <td colspan="2">R$ 280,00</td>
+                    </tr>-->
+                  </tbody>
+                </template>
+
+                <template v-else>
+                  <tbody>
+                    <template v-for='(product,index) in product_in_command'>
+                      <tr style="cursor:pointer;" @click="select_item(product)"><!-- product_in_command data-toggle="modal" data-target="#command_item_options"  -->
+                        <td style="line-height:10px;">
+                          <span style='font-size:14px;font-weight:bold;'>{{ product.name }}</span><br>
+                          <span style='font-size:12px;color:#888;position:relative;top:2px;'>
+                            {{ product.quant }} x {{ product.price}}
+                          </span>
+                        </td>
+
+                        <td style=padding:0px;'width:40px;text-align:center;vertical-align:middle;'>
+                          <span style='font-size:12px;'>146,00</span>
+                        </td>
+                      </tr>
+                    </template>
+
+                    <!--<tr>
+                      <td style="line-height:10px;vertical-align:middle;">
+                        <span style='font-size:14px;font-weight:bold;'>Total</span>
+                      </td>
+
+                      <td style=padding:0px;'width:40px;text-align:center;vertical-align:middle;'>
+                        <span style='font-size:12px;font-weight:bold;'>R$ 292,00</span>
+                      </td>
+                    </tr>-->
+                  </tbody>
+                </template>
+              </table>
+            </div>
+
+
+          </div>
+
+
+        </div>
+
+
+        {% endverbatim %}
+      </div>
     </div>
+
+
+
+
+    <div id="exampleModal3" class="modal" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-lg" role="document">
+        <div v-if='selected.product' class="modal-content">
+          <div class="modal-header" style='padding:0px;'>
+            <img :src="selected.product.image" style='width:100%;height:150px;object-fit:cover;' />
+            <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>-->
+          </div>
+
+          <span style='position:relative;top:-44px;left:-10px;padding:10px;'>
+            <span style='padding:10px;color:white;font-size:18px;font-weight:bold;background:#888;border-top-right-radius:5px;'>
+            {{ selected.product.name }}
+            </span>
+          </span>
+
+          <div class="modal-body" style='margin-top:-30px;'>
+
+
+          </div>
+
+          <div class="modal-footer">
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+
 
     <script>
       var app = new Vue({
@@ -138,25 +410,69 @@
               },
             },
 
+            forms: {
+              search:{
+                value: null,
+                field: 'name',
+                type: 'contains',
+              }
+            },
+
             selected:{
+              desk_group: 'geral',
+              desk: null,
+              desk_index: null,
+
+              command: null,
+              item: null,
+
               group:null,
               product:null,
+
+              new_product: false,
+              new_products: [],
             },
+
+            desks:[
+              {'id':'1', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'2', 'group':'interno', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:20, 'products':[
+                {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90,'quant':1,'total':69.90, 'is_confirmed':true, 'creation_date':'23/03/2020','creation_time':'20:21:35', 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'image':'/static/images/commands/entradas.jpg'},
+                {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'quant':1, 'total':69.90, 'is_confirmed':true, 'creation_date':'23/03/2020','creation_time':'20:21:35', 'description':'Self service sem churrasco', 'have_promotion':false, 'image':'/static/images/commands/refeicao.jpg'},
+              ]},
+              {'id':'3', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'4', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'5', 'group':'externo', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:5, 'products':[]},
+              {'id':'6', 'group':'externo', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:30, 'products':[]},
+              {'id':'7', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'8', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'9', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'10', 'group':'interno', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'11', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'12', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'13', 'group':'interno', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'14', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'15', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'16', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'17', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'18', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'19', 'group':'externo', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+              {'id':'20', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
+            ],
 
             commands:{},
 
-            extras:[
+            complements:[
               {'id':'1', 'name':'Ovo', 'price':1.50, 'quant':0},
               {'id':'1', 'name':'Queijo', 'price':2.00, 'quant':0},
               {'id':'1', 'name':'Presunto', 'price':2.00, 'quant':0},
-              {'id':'1', 'name':'Hamburgue', 'price':3.50, 'quant':0},
+              {'id':'1', 'name':'Hamburguer', 'price':3.50, 'quant':0},
             ],
 
             groups: [
               {'id':'1', 'code':'1', 'name':'Refeição', 'description':'', 'image':'/static/images/commands/refeicao.jpg',
                 'products':[
-                  {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90, 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'image':'https://s2.glbimg.com/BcqNo5FTYhP497BmAHGs2NlP2lI=/620x430/e.glbimg.com/og/ed/f/original/2017/03/09/refeicao.jpg'},
-                  {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'description':'Self service sem churrasco', 'have_promotion':false},
+                  {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90, 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'image':'/static/images/commands/entradas.jpg'},
+                  {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'description':'Self service sem churrasco', 'have_promotion':false, 'image':'/static/images/commands/refeicao.jpg'},
                   {'id':'3', 'code':'12', 'name':'Buffet com churrasco', 'price':42.00, 'description':'Self service com churrasco', 'have_promotion':false},
                   {'id':'4', 'code':'13', 'name':'Buffet especial', 'price':69.90, 'description':'Comidas japonesas e arabes, moquecas e tortas especiais', 'have_promotion':true},
                   {'id':'4', 'code':'13', 'name':'Marmitex', 'price':14.00, 'description':'Arroz, feijão, macarrão, duas carnes, farofa, batata frita e salada.', 'have_promotion':true},
@@ -205,18 +521,111 @@
         },
 
         methods: {
+          confirm_item: function(item){
+            alert("confirmei");
+          },
+
+          confirm_new_itens: function(){
+            let scope = this;
+            for (index in this.selected.new_products) {
+              var value = this.selected.new_products[index];
+              value.is_confirmed = true;
+              this.selected.desk.products.unshift(value);
+            }
+            this.selected.new_products = [];
+          },
+
+          select_item: function(item){
+            if(item.is_confirmed){
+              let new_item = JSON.parse(JSON.stringify(item));
+              new_item.quant = 1;
+              new_item.is_confirmed = false;
+              this.selected.new_products.push(new_item);
+            }
+          },
+
+          unselect_item: function(item){
+            this.selected.item = null;
+          },
+
+          increase_item: function(index){
+            this.selected.desk.products[index].quant = this.selected.desk.products[index].quant + 1
+            //item.quant = item.quant + 1;
+            //this.selected.item.quant = this.selected.item.quant + 1;
+          },
+
+          decrease_item: function(index){
+            if(this.selected.desk.products[index].quant >1){
+              this.selected.desk.products[index].quant = this.selected.desk.products[index].quant - 1
+            }
+            else{
+              this.selected.desk.products[index].quant = 0
+              //this.selected.desk.products.shift()
+              this.selected.desk.products.splice(index,1);
+            }
+          },
+
+
+          increase_new_item: function(index){
+            this.selected.new_products[index].quant = this.selected.new_products[index].quant + 1
+          },
+
+          decrease_new_item: function(index){
+            if(this.selected.new_products[index].quant >1){
+              this.selected.new_products[index].quant = this.selected.new_products[index].quant - 1
+            }
+            else{
+              this.selected.new_products[index].quant = 0
+              //this.selected.desk.products.shift()
+              this.selected.new_products.splice(index,1);
+            }
+          },
+
+
+          select_desk: function(desk, index){
+            this.selected.desk = desk;
+            this.selected.desk_index = index;
+          },
+
+          unselect_desk: function(desk){
+            this.selected.desk = null;
+          },
+
           verify_screen: function () {
             this.controls.screen.width = window.innerWidth;
             this.controls.screen.height = window.innerHeight;
           },
 
-          init_extras: function(){
+          init_complements: function(){
 
-          }
+          },
+
+          open_menu: function(){
+            this.selected.new_product = true;
+          },
+        },
+
+        computed: {
+          product_in_command: function(){
+            let new_array = [];
+            this.selected.desk.products.forEach(function(item, chave){
+              if(item.quant > 0){
+                //alert(item.name+":"+item.quant);
+                new_array.push(item);
+              }
+              else{
+                alert(item.name+":"+item.quant+"TIRAR");
+              }
+            });
+
+            console.log("VEJA COMO FICOU ENTAO:"+JSON.stringify(new_array));
+            this.selected.desk.products = new_array;
+            return this.selected.desk.products;
+          },
         },
 
         created: function () {
-          this.init_extras();
+          //this.init_product_complements();
         },
 
         mounted: function () {
@@ -229,6 +638,7 @@
     </script>
 
     <script src="{% static 'vali/js/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'vali/js/popper.min.js' %}"></script>
     <script src="{% static 'vali/js/bootstrap.min.js' %}"></script>
     <script async defer src="{% static 'apps/core/authentication/action.js' %}"></script>
     <script>
