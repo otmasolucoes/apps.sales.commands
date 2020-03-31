@@ -1,14 +1,10 @@
-from django.db import models
-from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
-from django.core.files.base import ContentFile
 from django.utils.deconstruct import deconstructible
-import sysconfig
-import datetime
-import requests
-import base64
-import json
+
+from django.conf import settings
+from django.db import models
 import os
+
 
 STATUS_OF_COMMAND = (
     ('OPEN', 'Aberto'),
@@ -16,7 +12,7 @@ STATUS_OF_COMMAND = (
 )
 
 STATUS_OF_ORDER = (
-    ('AWAITING', 'Aguardando'),
+    ('WAITING', 'Aguardando'),
     ('IN_PROGRESS', 'Em andamento'),
     ('READY', 'Pronto'),
     ('CANCELED', 'Cancelado'),
@@ -48,12 +44,10 @@ class Group(models.Model):
         verbose_name = _('Grupo')
         verbose_name_plural = _('Grupos')
 
-    #upload_path = 'images/'
     code = models.CharField(_('Código do grupo'), max_length=10, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
     name = models.CharField(_('Nome do grupo'), max_length=50, null=False, blank=False, unique=False, error_messages=settings.ERRORS_MESSAGES)
     description = models.CharField(_('Descrição do grupo'), max_length=200, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
     image = models.ImageField(max_length=100, upload_to=PathAndRename("images/commands/groups/"), null=True, blank=True)
-    #image_url = models.URLField(null=True, blank=True, default='')
 
     """def save(self, *args, **kwargs):
         if self.image:
@@ -84,9 +78,10 @@ class Product(models.Model):
     code = models.CharField(_('Código do produto'), max_length=10, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
     name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
     description = models.CharField(_('Descrição do produto'), max_length=200, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
-    price = models.FloatField(_("Preço do produto"), max_length=10, null=True, blank=True)
+
+    price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     image = models.ImageField(max_length=100, upload_to=PathAndRename("images/commands/products/"), null=True, blank=True)
-    #image_url = models.URLField(null=True, blank=True, default='')
+    have_promotion = models.BooleanField(default=False)
 
 
 class Command(models.Model):
@@ -95,14 +90,17 @@ class Command(models.Model):
         verbose_name = _('Comanda')
         verbose_name_plural = _('Comandas')
 
-    official_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
-    branch = models.CharField(_('Código da loja'), max_length=2, null=False, blank=False, error_messages=settings.ERRORS_MESSAGES)
-    waiter = models.CharField(_('Identificação do garçom'), max_length=2, null=False, blank=False, error_messages=settings.ERRORS_MESSAGES)
-    number = models.CharField(_('Número da comanda'), max_length=10, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
-    enter = models.DateTimeField(_('Entrada de pedido'), null=True, auto_now_add=True)
-    exit = models.DateTimeField(_('Saída de pedido'), null=True, blank=True)
+    code = models.CharField(_('Número da comanda'), max_length=10, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
     table = models.CharField(_('Identificação da mesa'), max_length=10, null=False, blank=False, error_messages=settings.ERRORS_MESSAGES)
     status = models.CharField(_('Status da comanda'), max_length=20, default='OPEN', choices=STATUS_OF_COMMAND, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
+    attendant = models.CharField(_('Identificação do garçom'), max_length=2, null=False, blank=False, error_messages=settings.ERRORS_MESSAGES)
+    client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
+    branch = models.CharField(_('Código da loja'), max_length=2, null=False, blank=False, error_messages=settings.ERRORS_MESSAGES)
+    checkin_time = models.DateTimeField(_('Entrada de pedido'), null=True, auto_now_add=True)
+    checkout_time = models.DateTimeField(_('Saída de pedido'), null=True, blank=True)
+    permanence_time = models.DurationField(null=True, blank=True)
+    peoples = models.IntegerField(null=True, blank=True)
+    value = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
 
 
 class Order(models.Model):
@@ -113,11 +111,14 @@ class Order(models.Model):
 
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
     command = models.ForeignKey(Command, on_delete=models.DO_NOTHING)
-    enter = models.DateTimeField(_('Entrada de pedido'), null=True, auto_now_add=True)
-    exit = models.DateTimeField(_('Saída de pedido'), null=True, blank=True)
-    quantity = models.CharField(_('Quantidade'), max_length=2, null=False, blank=False, error_messages=settings.ERRORS_MESSAGES)
-    note = models.TextField('Complemento', null=True, blank=True)
-    status = models.CharField(_('Status do pedido'), max_length=20, default='AWAITING', choices=STATUS_OF_ORDER, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
+    checkin_time = models.DateTimeField(_('Entrada de pedido'), null=True, auto_now_add=True)
+    checkout_time = models.DateTimeField(_('Saída de pedido'), null=True, blank=True)
+    waiting_time = models.DurationField(null=True, blank=True)
+    implement_time = models.DurationField(null=True, blank=True)
+    duration_time = models.DurationField(null=True, blank=True)
+    quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
+    observations = models.TextField('Observações', null=True, blank=True)
+    status = models.CharField(_('Status'), max_length=20, default='WAITING', choices=STATUS_OF_ORDER, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
 
 
 class Additional(models.Model):

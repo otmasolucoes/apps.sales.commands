@@ -8,21 +8,21 @@ class GroupsAdmin(admin.ModelAdmin):
     ordering = ('id',)
 
 
-@admin.register(Command)
-class CommandsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'official_document', 'branch', 'waiter', 'number', 'enter', 'exit', 'table', 'status')
+@admin.register(Product)
+class ProductsAdmin(admin.ModelAdmin):
+    list_display = ('id', 'group', 'code', 'name', 'description', 'price', 'image', 'have_promotion')
     ordering = ('id',)
 
 
-@admin.register(Product)
-class ProductsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'group', 'code', 'name', 'description', 'price', 'image')
+@admin.register(Command)
+class CommandsAdmin(admin.ModelAdmin):
+    list_display = ('id', 'code', 'table', 'status', 'attendant', 'client_document', 'branch', 'checkin_time', 'checkout_time', 'permanence_time', 'peoples', 'value')
     ordering = ('id',)
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'command', 'product', 'enter', 'exit', 'quantity', 'note', 'status')
+    list_display = ('id', 'command', 'product', 'status', 'checkin_time', 'checkout_time','waiting_time','implement_time','duration_time', 'quantity', 'observations')
     ordering = ('id',)
 
 

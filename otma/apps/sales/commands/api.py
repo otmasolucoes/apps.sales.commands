@@ -54,7 +54,7 @@ class CommandController(BaseController):
             for item in items['object']:
                 total_result += int(order["quantity"])*item["price"]
                 total = f'TOTAL||||||{total_result}|'
-                data = f'{command.official_document}|{command.number}|{table}|{command.waiter}|{item["code"]}|{order["quantity"]}|{item["price"]}|\n'
+                data = f'{command.client_document}|{command.code}|{table}|{command.attendant}|{item["code"]}|{order["quantity"]}|{item["price"]}|\n'
                 manager = CommunicationController()
                 create_file = manager.write_txt_file(data=data, file_name=str(command.id) , out_folder_path='/home/cleiton/clientes/gigabyte/controller', mode='a')
         create_file = manager.write_txt_file(data=total, file_name=str(command.id) , out_folder_path='/home/cleiton/clientes/gigabyte/controller', mode='a', delete=True)
