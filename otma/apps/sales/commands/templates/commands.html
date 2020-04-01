@@ -325,7 +325,7 @@
                 <template v-else>
                   <tbody>
                     <template v-for='(product,index) in product_in_command'>
-                      <tr style="cursor:pointer;" @click="select_item(product)"><!-- product_in_command data-toggle="modal" data-target="#command_item_options"  -->
+                      <tr style="cursor:pointer;" @click="show_options(product)"><!-- product_in_command data-toggle="modal" data-target="#command_item_options"  -->
                         <td style="line-height:10px;">
                           <span style='font-size:14px;font-weight:bold;'>{{ product.name }}</span><br>
                           <span style='font-size:12px;color:#888;position:relative;top:2px;'>
@@ -333,8 +333,24 @@
                           </span>
                         </td>
 
-                        <td style=padding:0px;'width:40px;text-align:center;vertical-align:middle;'>
-                          <span style='font-size:12px;'>146,00</span>
+                        <td style='width:40px;padding:0px;vertical-align:middle;'>
+                          <template v-if="product.show_options">
+                          <span class="fa-stack fa-1x" style='cursor:pointer;font-size:12px;' title="Cancelar pedido">
+                            <i class="fas fa-square-full fa-stack-2x"></i>
+                            <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
+                          </span>
+                          </template>
+                        </td>
+
+                        <td style='width:40px;padding:0px;vertical-align:middle;font-size:12px;'>
+                          <template v-if="product.show_options">
+                            <span class="fa-stack fa-1x" @click='select_item(product)' style='cursor:pointer;font-size:12px;' title="Repetir o pedido">
+                              <i class="fas fa-square-full fa-stack-2x"></i>
+                              <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
+                            </span>
+                          </template>
+
+                          <template v-else style=''>146,00</template>
                         </td>
                       </tr>
                     </template>
@@ -439,8 +455,8 @@
             desks:[
               {'id':'1', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
               {'id':'2', 'group':'interno', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:20, 'products':[
-                {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90,'quant':1,'total':69.90, 'is_confirmed':true, 'creation_date':'23/03/2020','creation_time':'20:21:35', 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'image':'/static/images/commands/entradas.jpg'},
-                {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'quant':1, 'total':69.90, 'is_confirmed':true, 'creation_date':'23/03/2020','creation_time':'20:21:35', 'description':'Self service sem churrasco', 'have_promotion':false, 'image':'/static/images/commands/refeicao.jpg'},
+                {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90,'quant':1,'total':69.90, 'is_confirmed':true, 'creation_date':'23/03/2020','creation_time':'20:21:35', 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'show_options':false,'image':'/static/images/commands/entradas.jpg'},
+                {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'quant':1, 'total':69.90, 'is_confirmed':true, 'creation_date':'23/03/2020','creation_time':'20:21:35', 'description':'Self service sem churrasco', 'have_promotion':false, 'show_options':false,'image':'/static/images/commands/refeicao.jpg'},
               ]},
               {'id':'3', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
               {'id':'4', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
@@ -538,11 +554,21 @@
             this.selected.new_products = [];
           },
 
+          show_options: function(item){
+            if(item.show_options == true){
+              item.show_options = false;
+            }
+            else{
+              item.show_options = true;
+            }
+          },
+
           select_item: function(item){
             if(item.is_confirmed){
               let new_item = JSON.parse(JSON.stringify(item));
               new_item.quant = 1;
               new_item.is_confirmed = false;
+              new_item.show_options = false;
               this.selected.new_products.push(new_item);
             }
           },
