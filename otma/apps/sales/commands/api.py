@@ -77,8 +77,8 @@ class CommandController(BaseController):
                 total = f'TOTAL||||||{total_result}|'
                 data = f'{command.client_document}|{command.code}|{table}|{command.attendant}|{item["code"]}|{order["quantity"]}|{item["price"]}|\n'
                 manager = CommunicationController()
-                create_file = manager.write_txt_file(data=data, file_name=str(command.id) , out_folder_path='/home/cleiton/clientes/gigabyte/controller', mode='a')
-        create_file = manager.write_txt_file(data=total, file_name=str(command.id) , out_folder_path='/home/cleiton/clientes/gigabyte/controller', mode='a', delete=True)
+                create_file = manager.write_txt_file(data=data, file_name=str(command.id), out_folder_path='/home/cleiton/clientes/gigabyte/controller', mode='a')
+        create_file = manager.write_txt_file(data=total, file_name=str(command.id), out_folder_path='/home/cleiton/clientes/gigabyte/controller', mode='a', delete=True)
 
 
 class TableController(BaseController):
@@ -280,7 +280,8 @@ class MenuProductController(BaseController):
 class VerifierRequest:
     request = None
     queryset = None
-    def __init__(self,request, queryset):
+
+    def __init__(self, request, queryset):
         self.request = request
         self.queryset = queryset
 
@@ -288,7 +289,7 @@ class VerifierRequest:
         return self.queryset.filter(**query)
 
     def get_field(self, field):
-        if (field in self.request.GET and self.request.GET[field]):
+        if field in self.request.GET and self.request.GET[field]:
             return self.request.GET[field]
         return None
 
