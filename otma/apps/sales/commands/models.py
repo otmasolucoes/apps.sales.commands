@@ -1,6 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 from django.utils.deconstruct import deconstructible
 
+
 from django.conf import settings
 from django.db import models
 from decimal import Decimal
@@ -148,17 +149,39 @@ class Order(models.Model):
     expected_time = models.DateTimeField(_('Término previsto'), null=True, blank=True)
     expected_duration = models.DurationField(null=True, blank=True)
 
-
+    barcode = models.CharField(_('Código de barras'), max_length=20, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
     status = models.CharField(_('Status'), max_length=20, default='WAITING', choices=STATUS_OF_ORDER, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
     observations = models.TextField('Observações', null=True, blank=True)
 
     def show_options(self):
         return False
 
+    def create_barcode(self):
+        import barcode
+        from barcode.writer import ImageWriter
+
+        """
+        checkin_year = str(self.checkin_time.year)[2:]
+        checkin_month = "%.2d" % (self.checkin_time.month)
+        checkin_day = "%.2d" % (self.checkin_time.day)
+        checkin_hour = "%.2d" % (self.checkin_time.hour)
+        checkin_minute = "%.2d" % (self.checkin_time.minute)
+        checkin_second = "%.2d" % (self.checkin_time.second)
+        value = checkin_year + checkin_month + checkin_day + checkin_hour + checkin_minute + checkin_second
+        """
+        value = str(self.id).zfill(12)
+        ean = barcode.get('ean13', value, writer=ImageWriter())
+        filename = ean.save("media/barcodes/"+value)
+        self.barcode = value+".png"
+        super(Order, self).save()
+
     def save(self, *args, **kwargs):
         self.total = Decimal(self.quantity) * Decimal(self.product_price)
         self.command.total = self.command.total + self.total
         super(Order, self).save(*args, **kwargs)
+        if self.barcode is None:
+            self.create_barcode()
+
 
 
 class Additional(models.Model):

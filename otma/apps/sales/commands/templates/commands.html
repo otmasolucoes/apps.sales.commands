@@ -269,6 +269,7 @@
                     <!--<button class="btn btn-sm btn-secondary" @click="open_menu(command, index)">
                       <i class="fas fa-plus"></i><span> Adicionar</span>
                     </button>-->
+                    <button type="button" class="btn btn-sm btn-success" @click="print_command(command)"><i class="fas fa-print"></i> Imprimir</button>
                     <button type="button" class="btn btn-sm btn-success" @click="open_menu(selected.table.commands[0], index)"><i class="fas fa-plus"></i> Adicionar</button>
                     <button type="button" class="btn btn-sm btn-success"><i class="fas fa-sign-out-alt"></i> Fechar</button>
                   </div>
@@ -300,7 +301,7 @@
                           <span style='font-size:18px;'>{{ order.product_name }}</span><br>
                           <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time }} -
                           <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time }}</template>
-                          <template v-else>{{ order.checkout_time | format_time }}</template></span>
+                          <template v-else>Entrega: {{ order.checkout_time | format_time }}</template></span>
                           <br>
                           <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
                         </td>
@@ -348,7 +349,7 @@
                         <template v-else>
                         <td colspan="4" style="vertical-align:middle;">
                           <div class="float-right">
-                          <button class="btn btn-sm btn-secondary"><i class="fas fa-search"></i><br>Visualizar</button>
+                          <button class="btn btn-sm btn-secondary" @click="print_order(order)"><i class="fas fa-search"></i><br>Visualizar</button>
                           <button class="btn btn-sm btn-secondary"><i class="fas fa-redo-alt"></i><br>Repetir</button>
                           <button class="btn btn-sm btn-danger" :disabled="(order.status=='READY') || (order.status=='CLOSED') || (order.status=='CANCELED')"><i class="fas fa-times"></i><br>Cancelar</button>
                           </div>
@@ -1017,6 +1018,14 @@
         },
 
         methods: {
+          print_command: function(command){
+            window.open("/api/sales/command/"+command.code+"/", "_blank");
+          },
+
+          print_order: function(order){
+            window.open("/api/sales/commands/order/"+order.id+"/", "_blank");
+          },
+
           confirm_item: function(item){
             alert("confirmei");
           },

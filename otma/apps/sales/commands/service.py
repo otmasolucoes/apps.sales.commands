@@ -4,10 +4,11 @@ from django.template.loader import get_template
 #from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.generic import View
-#from barcode.writer import ImageWriter
+
+from barcode.writer import ImageWriter
 from barcode import get_barcode_class
 from barcode import generate
-from cups import Connection
+
 import os
 #import sys
 import json
@@ -16,7 +17,6 @@ import shutil
 import django
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'test_project.settings')
-
 django.setup()
 
 
@@ -160,6 +160,7 @@ class CommunicationController:
 class PrinterController:
 
     def __init__(self):
+        from cups import Connection
         self.connect = Connection()
 
     def scan(self):
@@ -202,11 +203,12 @@ class PDFController(View):
 
 class BarcodeControlller:
 
-    def __init__(self):
-        self.ean = get_barcode_class('ean13')
-
     def create(self, code):
-        #ean = self.ean(code, writer=ImageWriter())
-        #fullname = ean.save('barcode')
-        name = generate(self.ean, code, output='barcode_svg')
-        return name
+        import barcode
+        from barcode.writer import ImageWriter
+        code = "000000000451"
+        ean = barcode.get('ean13', code, writer=ImageWriter())
+        filename = ean.save('media/barcodes/'+code)
+        return filename
+
+

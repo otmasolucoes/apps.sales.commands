@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Teste PDF</title>
+		<meta charset="utf-8">
+
+		<style>
+			@page {
+				margin: 0.5cm;
+				size: A4 portrait;
+
+				@frame {
+					-pdf-frame-content: company_logo;
+					left: 1cm;
+					top: 0.7cm;
+					height: 1.9cm;
+				}
+
+				@frame {
+					-pdf-frame-content: page_title;
+					/* -pdf-frame-border: 1; */
+					width: 4cm;
+					height: 1cm;
+					left: 9.1cm;
+					top: 1.1cm;
+				}
+
+				@frame {
+					-pdf-frame-content: hr_titulo;
+					left: 9.0cm;
+					top: 1.7cm;
+				}
+
+				@frame {
+					-pdf-frame-content: codigo_protocolo;
+					text-align: right;
+					width: 5cm;
+					height: 1.5cm;
+					right: 1cm;
+					top: 1.0cm;
+
+				}
+
+				@frame {
+					-pdf-frame-content: painel_emissor;
+					/* -pdf-frame-border: 1; */
+					width: 19cm;
+					height: 1.5cm;
+					left: 1.1cm;
+					top: 3.4cm;
+				}
+
+				@frame {
+					-pdf-frame-content: label_emissor;
+					/* -pdf-frame-border: 1; */
+					width: 2cm;
+					height: 0.8cm;
+					left: 1.1cm;
+					top: 2.75cm;
+				}
+
+				@frame {
+					-pdf-frame-content: painel_telefone_emissor;
+					/* -pdf-frame-border: 1; */
+					text-align: center;
+					width: 4.0cm;
+					height: 1.3cm;
+					right: 0.7cm;
+					top: 3.3cm;
+					padding-top: 1px;
+				}
+
+				@frame {
+					-pdf-frame-content: line_separator_entidades;
+					padding-left: 39px;
+					padding-right: 39px;
+					top: 4.7cm;
+				}
+
+				@frame {
+					-pdf-frame-content: label_destinatario;
+					width: 2cm;
+					height: 0.8cm;
+					left: 1.1cm;
+					top: 5cm;
+				}
+
+				@frame {
+					-pdf-frame-content: painel_destinatario;
+					/* -pdf-frame-border: 1; */
+					width: 19cm;
+					height: 1.5cm;
+					left: 1.1cm;
+					top: 5.7cm;
+				}
+
+				@frame {
+					-pdf-frame-content: painel_telefone_destinatario;
+					/* -pdf-frame-border: 1; */
+					text-align: center;
+					width: 4cm;
+					height: 1.3cm;
+					right: 0.7cm;
+					top: 5.6cm;
+					padding-top: 1px;
+				}
+
+				@frame {
+					-pdf-frame-content: tabela_documentos;
+					/*width: 18.8cm; */
+					left: 1.28cm;
+					top: 7.97cm;
+				}
+
+				@frame {
+					-pdf-frame-content: background_tabela;
+					width: 19cm;
+					left: 1cm;
+					top: 7.2cm;
+					padding-left: 5px;
+				}
+
+				@frame {
+					-pdf-frame-content: recebido_por;
+					width: 19cm;
+					left: 1cm;
+					top: 12cm;
+					padding-top: 1px;
+				}
+
+				@frame {
+					-pdf-frame-content: nome_receptor;
+					/* -pdf-frame-border: 1; */
+					width: 10cm;
+					height: 0.7cm;
+					left: 3cm;
+					top: 12.2cm;
+				}
+
+				@frame {
+					-pdf-frame-content: cpf_receptor;
+					/* -pdf-frame-border: 1;*/
+					width: 3.35cm;
+					height: 0.7cm;
+					left: 2.5cm;
+					top: 12.8cm;
+				}
+
+				@frame {
+					-pdf-frame-content: data_entrega;
+					/* -pdf-frame-border: 1;*/
+					width: 2.2cm;
+					height: 0.7cm;
+					left: 6.1cm;
+					top: 12.81cm;
+				}
+
+				@frame {
+					-pdf-frame-content: hora_entrega;
+					/* -pdf-frame-border: 1;*/
+					width: 2.2cm;
+					height: 0.7cm;
+					left: 8.45cm;
+					top: 12.81cm;
+				}
+
+				@frame {
+					-pdf-frame-content: primeira_via_label;
+					width: 3cm;
+					right: -0.42cm;
+					top: 13.95cm;
+					padding-top: 1px;
+				}
+
+				@frame {
+					-pdf-frame-content: segunda_via_label;
+					width: 3cm;
+					right: -0.1cm;
+					top: 28.7cm;
+					padding-top: 1px;
+				}
+
+				@frame {
+					-pdf-frame-content: line_separador_vias;
+					padding-left: 0px;
+					padding-right: -20px;
+					top: 14.60cm; /* 14.85cm */
+				}
+
+
+				/* ------------ */
+				/*  SEGUNDA VIA */
+				/* ------------ */
+
+				@frame {
+					-pdf-frame-content: company_logo2;
+					width: 6cm;
+					left: 1cm;
+					top: 15.6cm;
+					height: 1.9cm;
+				}
+
+				@frame {
+					-pdf-frame-content: page_title2;
+					/* -pdf-frame-border: 1; */
+					width: 3cm;
+					height: 1.5cm;
+					left: 9cm;
+					top: 16cm;
+				}
+
+				@frame {
+					-pdf-frame-content: hr_titulo2;
+					left: 9.1cm;
+					top: 16.6cm;
+				}
+
+				@frame {
+					-pdf-frame-content: codigo_protocolo2;
+					text-align: right;
+					width: 5cm;
+					height: 1.5cm;
+					right: 1cm;
+					top: 15.9cm;
+				}
+
+				@frame {
+					-pdf-frame-content: painel_emissor2;
+					/* -pdf-frame-border: 1; */
+					width: 19cm;
+					height: 1.5cm;
+					left: 1cm;
+					top: 18.3cm; /* 17.8cm; */
+				}
+
+				@frame {
+					-pdf-frame-content: label_emissor2;
+					/* -pdf-frame-border: 1; */
+					width: 2cm;
+					height: 0.8cm;
+					left: 1cm;
+					top: 17.65cm;
+				}
+
+				@frame {
+					-pdf-frame-content: painel_telefone_emissor2;
+					/* -pdf-frame-border: 1; */
+					text-align: center;
+					width: 4.0cm;
+					height: 1.3cm;
+					right: 1cm;
+					top: 18.2cm;
+					padding-top: 1px;
+				}
+
+				@frame {
+					-pdf-frame-content: line_separator_entidades2;
+					padding-left: 39px;
+					padding-right: 39px;
+					top: 19.6cm;
+				}
+
+				@frame {
+					-pdf-frame-content: label_destinatario2;
+					width: 2cm;
+					height: 0.8cm;
+					left: 1cm;
+					top: 19.9cm;
+				}
+
+				@frame {
+					-pdf-frame-content: painel_destinatario2;
+					/* -pdf-frame-border: 1; */
+					width: 19cm;
+					height: 1.5cm;
+					left: 1cm;
+					top: 20.6cm;
+				}
+
+				@frame {
+					-pdf-frame-content: painel_telefone_destinatario2;
+					/* -pdf-frame-border: 1; */
+					text-align: center;
+					width: 4cm;
+					height: 1.3cm;
+					right: 1cm;
+					top: 20.5cm;
+					}
+
+				@frame {
+					-pdf-frame-content: tabela_documentos2;
+					/*width: 18.8cm; */
+					left: 1.28cm;
+					top: 22.87cm;
+				}
+
+				@frame {
+					-pdf-frame-content: background_tabela2;
+					width: 19cm;
+					left: 1cm;
+					top: 22.1cm;
+					padding-left: 5px;
+				}
+
+
+
+				@frame {
+					-pdf-frame-content: recebido_por2;
+					width: 19cm;
+					left: 1cm;
+					top: 26.9cm;
+					padding-top: 1px;
+				}
+
+				@frame {
+					-pdf-frame-content: nome_receptor2;
+					/* -pdf-frame-border: 1; */
+					width: 10cm;
+					height: 0.7cm;
+					left: 3cm;
+					top: 27.1cm;
+				}
+
+				@frame {
+					-pdf-frame-content: cpf_receptor2;
+					/* -pdf-frame-border: 1;*/
+					width: 3.35cm;
+					height: 0.7cm;
+					left: 2.5cm;
+					top: 27.7cm;
+				}
+
+				@frame {
+					-pdf-frame-content: data_entrega2;
+					/* -pdf-frame-border: 1;*/
+					width: 2.2cm;
+					height: 0.7cm;
+					left: 6.1cm;
+					top: 27.71cm;
+				}
+
+				@frame {
+					-pdf-frame-content: hora_entrega2;
+					/* -pdf-frame-border: 1;*/
+					width: 2.2cm;
+					height: 0.7cm;
+					left: 8.45cm;
+					top: 27.71cm;
+				}
+			}
+
+			#page-content {
+        background: white;width: 80mm; /* height: 210mm; */
+        font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
+      }
+
+		</style>
+
+		<style>
+			html {
+
+			}
+
+			body {
+				width: 80mm;
+				padding: 0px;
+				background:#ccc;
+			}
+
+			@page { size: 58mm }
+
+			@media print  and (width: 8cm) and (height: 21cm){
+				@page {
+					size: 58mm;
+					margin: 2cm;
+				}
+
+				body {
+					width: 58mm
+
+				}
+			}
+
+			#page-content {
+				padding: 0px;
+				background: blue;
+				background: white;width: 80mm;
+				font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
+			}
+
+			#page-header {
+				padding:10px;
+				line-height: 1;
+			}
+
+			#page-body {
+				padding-top:5px;
+				padding-bottom:5px;
+				padding-left:10px;
+				padding-right:10px;
+				line-height: 1;
+			}
+
+			#company-name {
+				font-size:14px;
+				font-weight: bold;
+			}
+
+			#company-attendent {
+				font-size:12px;
+			}
+
+			#order-date {
+				font-size:12px;
+			}
+
+			.order-label {
+				font-size:12px;
+			}
+
+			#order-checkin {
+				font-size:25px;
+			}
+
+			#order-product {
+				font-size:18px;
+				padding-left:5px;
+				padding-right:5px;
+				font-weight: normal;
+			}
+
+			#order-complements {
+				line-height: 1.2;
+				padding-left:5px;
+				padding-right:5px;
+				padding-bottom: 10px;
+				border-bottom: 1px solid #ccc;
+			}
+
+			#order-observations {
+				padding-top:10px;
+				padding-bottom:10px;
+				padding-left:5px;
+				padding-right:5px;
+				border-bottom: 1px solid #ccc;
+			}
+		</style>
+	</head>
+
+	<body id="pagina">
+		<div id='page-content'>
+			<div id="page-header">
+				<table style='border-bottom: 1px solid #ccc;width: 100%;padding-bottom:3px;'>
+					<tr>
+						<td style='width: 70px;'><img src="/static/apps/sales/commands/images/mcdonalds-logo.jpg" style='width: 70px;'></td>
+						<td>
+							<span id='company-name'>Capixabão Burguer</span><br>
+							<span id='order-date'>{{ order.checkin_time | date:"d/m/Y h:m:s" }}</span><br>
+							<span id='company-attendent'>Diego Pasti</span>
+						</td>
+					</tr>
+				</table>
+
+				<table style='border-bottom: 1px solid #ccc;width: 100%;padding-top: 10px;padding-bottom: 10px;'>
+					<tr>
+						<td style='width: 50px;text-align: center;'>
+							<span class='order-label'>MESA</span><br>
+							<span id='table-number'>12</span>
+						</td>
+
+						<td style='width: 100px;text-align: center;border-left:1px solid #ccc;border-right:1px solid #ccc;'>
+							<span class='order-label'>PEDIDO</span><br>
+							<span id='table-number'>{{ order.id }}</span>
+						</td>
+
+						<td style='text-align: center;'>
+							<span id='order-checkin'>{{ order.checkin_time | date:"h:m" }}</span>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div id="page-body" style='line-height: 1;'>
+				<div id='order-product'>
+					{{ order.quantity }} x {{ order.product_name }}
+				</div>
+				<br>
+
+				<div id='order-complements'>
+					<div class='complement'>
+						+ Calabresa
+					</div>
+
+					<div class='complement'>
+						+ Cebola Crispy
+					</div>
+				</div>
+
+
+				<div id='order-observations'>
+					<div style='font-size:11px;'>Observações</div>
+
+					<div style='padding-top:3px;'>
+						{{ order.observations }}
+					</div>
+				</div>
+
+				<div id='order-barcode' style='text-align: center;padding:10px;'>
+					<img src='/media/barcodes/{{ order.barcode }}' style='width: 185px;position:relative;left:-5px;'><br>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

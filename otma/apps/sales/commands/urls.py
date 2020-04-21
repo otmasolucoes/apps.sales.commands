@@ -1,14 +1,18 @@
 from django.conf.urls import url
 from django.urls import path, include
 from otma.apps.sales.commands.api import TableController, CommandController, OrderController, MenuGroupController, MenuProductController
-
+from otma.apps.sales.commands.views import command_view_page, order_page
 
 urlpatterns = [
     url(r'^load/$', CommandController().load),
+
+    #url(r'^(?P<code>+)/print/$', CommandController().load),
+
     url(r'^table/load/$', TableController().load),
     url(r'^table/open/$', TableController().open),
     url(r'^table/close/$', TableController().close),
     url(r'^order/save/$', OrderController().save),
+    url(r'^order/(?P<id>\d+)/$', order_page),
 
     url(r'^groups/load/$', MenuGroupController().load_groups),
     url(r'^products/load/$', MenuProductController().load_products),
