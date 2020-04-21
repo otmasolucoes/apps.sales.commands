@@ -1,12 +1,9 @@
-from otma.apps.sales.commands.utils import render_to_pdf
 from django.conf import settings
 from django.template.loader import get_template
 #from django.shortcuts import render
 from django.http import HttpResponse
 from django.views.generic import View
-#from barcode.writer import ImageWriter
-from barcode import get_barcode_class
-from barcode import generate
+from otma.apps.sales.commands.utils import render_to_pdf
 from cups import Connection
 import os
 #import sys
@@ -29,16 +26,21 @@ class CommunicationController:
         self.file_path = json_file
         with open(json_file, 'r') as f:
             data = f.read()
-        return json.loads(data)
+            try:
+                result_json = json.loads(data)
+            except:
+                result_json = json.loads(json.dumps(data))
+        return result_json
 
     def find_files(self, filename=None, extension=None):
         list_files = []
         if not extension:
             extension = '.json'
-        path = os.path.dirname('/home/clientes/gigabyte/controller')
+        path = os.path.dirname('/home/cleiton/clientes/gigabyte/01/')
         #path = os.path.expanduser("~/")
         if filename:
-            file_path = os.path.join(path, filename)
+            file_path = os.path.join(path, filename + extension)
+            print(file_path)
             if os.path.exists(file_path):
                 list_files.append(file_path)
         else:
@@ -58,6 +60,7 @@ class CommunicationController:
         if update:
             os.remove(self.file_path)
             print('Objeto atualizado com sucesso!!!')
+            return update
         else:
             print('Erro,não foi possível efetuar a operação...')
 
@@ -69,8 +72,10 @@ class CommunicationController:
         if update:
             os.remove(self.file_path)
             print('Objeto salvo com sucesso!!!')
+            return update
         else:
             print('Erro,não foi possível efetuar a operação...')
+            return False
 
     def load_data(self, item, model):
         try:
@@ -82,7 +87,7 @@ class CommunicationController:
         else:
             object = model()
             for field in item:
-                if hasattr(object, field):
+                if hasattr(object, field) and field != 'group' and field != 'image':
                     try:
                         if field == 'price':
                             item[field] = item[field].replace(',', '.')
@@ -92,8 +97,7 @@ class CommunicationController:
             try:
                 object.save()
             except:
-                raise
-                #return False
+                pass
         return True
 
     def execute_update(self, item, model):
@@ -116,14 +120,14 @@ class CommunicationController:
             files = self.find_files(filename, extension)
             if files:
                 for file in files:
-                    self.execute_load(file, model=model)
+                    return self.execute_load(file, model=model)
             else:
                 print('Nenhum arquivo de alteração encontrado!!!')
         else:
             files = self.find_files(extension)
             if files:
                 for file in files:
-                    self.check_update(file, model=model)
+                    return self.check_update(file, model=model)
             else:
                 print('Nenhum arquivo de alteração encontrado!!!')
 

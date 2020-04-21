@@ -338,3 +338,19 @@ class VerifierRequest:
             itens_per_page = int(itens_per_page)
             self.queryset = self.queryset[itens_per_page * (package - 1):itens_per_page * package]
         return self.queryset, package, size_package
+
+
+class DatabaseController(BaseController):
+
+    def load_data(self, request):
+        self.start_process(request)
+        communication = CommunicationController()
+        load = communication.field_search(model=Product, filename='products', extension='.json')
+        response_dict = {}
+        if load:
+            response_dict['result'] = True
+            response_dict['message'] = "Operação realizada com sucesso."
+        else:
+            response_dict['result'] = False
+            response_dict['message'] = "Algo deu errado."
+        return self.response(response_dict)
