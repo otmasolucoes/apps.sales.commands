@@ -202,15 +202,3 @@ class PDFController(View):
             response['Content-Disposition'] = content
             return response
         return HttpResponse("Not found")
-
-
-class BarcodeControlller:
-
-    def __init__(self):
-        self.ean = get_barcode_class('ean13')
-
-    def create(self, code):
-        #ean = self.ean(code, writer=ImageWriter())
-        #fullname = ean.save('barcode')
-        name = generate(self.ean, code, output='barcode_svg')
-        return name
