@@ -1,11 +1,12 @@
 from django.conf.urls import url
 from django.urls import path, include
-from otma.apps.sales.commands.api import TableController, CommandController, OrderController, MenuGroupController, MenuProductController, DatabaseController
-from otma.apps.sales.commands.service import PDFController, PrinterController
+from otma.apps.sales.commands.api import TableController, CommandController, OrderController, MenuGroupController, MenuProductController
 from otma.apps.sales.commands.views import command_view_page, order_page
 
 urlpatterns = [
     url(r'^load/$', CommandController().load),
+    url(r'^open/$', CommandController().open),
+
 
     #url(r'^(?P<code>+)/print/$', CommandController().load),
 
@@ -27,7 +28,5 @@ urlpatterns = [
     url(r'^commands/(?P<id>[^/]+)/close/$', CommandController().close_commands_by_id),
     url(r'^commands/table/(?P<table>[^/]+)/$', CommandController().commands_by_table),
     url(r'^commands/table/(?P<table>[^/]+)/command/(?P<id>[^/]+)/close/$', CommandController().close_commands_by_table),
-    url(r'^commands/pdf/$', PDFController().get),
-    url(r'^commands/database/update/$', DatabaseController().load_data),
     #path(r'user/', include('otma.apps.entities.user.urls')),
 ]

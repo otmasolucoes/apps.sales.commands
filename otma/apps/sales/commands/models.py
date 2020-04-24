@@ -64,6 +64,9 @@ class Table(models.Model):
     def __str__(self):
         return "MESA"+self.code+" ("+self.area+")"
 
+    def commands(self):
+        return []
+
 
 class Group(models.Model):
 

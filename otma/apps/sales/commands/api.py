@@ -14,6 +14,46 @@ class CommandController(BaseController):
     def load(self, request):
         return super().filter(request, self.model, queryset=Command.objects.all(), extra_fields=self.extra_fields, is_response=True)
 
+    def open(self, request):
+        self.start_process(request)
+        command = Command()
+        command.table_id = request.POST['table_id']
+        #command.status = "OPEN"
+        command.attendant = request.user
+        #command.client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
+        command.branch = "1"
+        #command.checkin_time = 
+        #command.checkout_time = None
+        #command.permanence_time = None
+        #command.peoples = None
+        command.total = 0.0        
+        command.save()
+        
+        command.code = command.id 
+        return self.response(self.execute(command, command.save))
+
+    def close(self, request):
+        self.start_process(request)
+        command = Command.objects.filter(pk=request.POST['command_id'])
+        if command.count() > 0:
+            command = command[0]
+            command.checkout_time = datetime.now()
+            command.permanence_time = command.checkout_time - command.checkin_time
+            command.status = "CLOSED"
+            self.create_integration_file(request, command, table)
+
+        #command.attendant = request.user
+        # command.client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
+        #command.branch = "1"
+        # command.checkin_time =
+        # command.checkout_time = None
+        # command.permanence_time = None
+        # command.peoples = None
+        #command.total = 0.0
+        command.save()
+        return self.response(self.execute(command, command.save))
+
+
     def load_open_commands(self, request, table=None, is_response=False):
         return self.load_command(request, table, "OPEN", is_response)
 
@@ -101,7 +141,7 @@ class TableController(BaseController):
         if table.count() > 0:
             table = table[0]
             table.status = "ACTIVE"
-            response = self.execute(table, table.save)
+            response = self.execute(table, table.save, extra_fields=['commands'])
         else:
             response = self.error({'table':'Falha na operação, mesa não cadastrada!'})
         return self.response(response)
@@ -338,19 +378,3 @@ class VerifierRequest:
             itens_per_page = int(itens_per_page)
             self.queryset = self.queryset[itens_per_page * (package - 1):itens_per_page * package]
         return self.queryset, package, size_package
-
-
-class DatabaseController(BaseController):
-
-    def load_data(self, request):
-        self.start_process(request)
-        communication = CommunicationController()
-        load = communication.field_search(model=Product, filename='products', extension='.json')
-        response_dict = {}
-        if load:
-            response_dict['result'] = True
-            response_dict['message'] = "Operação realizada com sucesso."
-        else:
-            response_dict['result'] = False
-            response_dict['message'] = "Algo deu errado."
-        return self.response(response_dict)

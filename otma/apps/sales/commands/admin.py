@@ -13,12 +13,10 @@ class ProductsAdmin(admin.ModelAdmin):
     list_display = ('id', 'group', 'code', 'name', 'description', 'price', 'image', 'have_promotion')
     ordering = ('id',)
 
-
 @admin.register(Table)
 class TableAdmin(admin.ModelAdmin):
     list_display = ('id', 'code', 'area', 'status', 'capacity')
     ordering = ('id',)
-
 
 @admin.register(Command)
 class CommandsAdmin(admin.ModelAdmin):

@@ -155,39 +155,72 @@
     <div style='padding:0px;'>
 
       <div id="app" @mousemove="" @keyup="">
-        <div style='height:90px;background:#b22222;color: white;'>
+        <div style='background:#b22222;color: white;'>
           {% verbatim %}
-          <br>
-          <div class="row" style="width:100%;">
-            <div v-if="selected.table==null" class="col-lg-2 col-md-2 col-sm-3 col-xs-6" style="padding-left:20px;">
-              <sub>Filtrar mesas</sub>
-              <select class="form-control" v-model="selected.table_group">
-                <option value="INTERNA">Interno</option>
-                <option value="EXTERNA">Externo</option>
-                <option value='GERAL' selected="selected">Geral</option>
-              </select>
-            </div>
+          <div style="border-bottom: 2px solid #b36363;">
+            <table border='0' style="width:100%;">
+              <tr>
 
-            <div v-else class="col-lg-12 col-md-12 col-sm-12 col-xs-12" style="padding-left:20px;">
-              <h4 class="float-left">Mesa {{ selected.table.code }}</h4>
-              <div class="float-right">
-                <button class="btn btn-sm btn-light" @click="selected.table=null">
-                  <i class="fas fa-reply"></i><br>
-                  <span>Voltar</span>
-                </button>
 
-                <button class="btn btn-sm btn-light" @click="close_table(selected.table, selected.table_index)">
-                  <i class="fas fa-clock"></i><br>
-                  <span>Histórico</span>
-                </button>
+                <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">Madero</td>
 
-                <button class="btn btn-sm btn-light" @click="open_table(selected.table, selected.table_index)">
-                  <i class="fas fa-plus"></i><br>
-                  <span>Nova Comanda</span>
-                </button>
-              </div>
-            </div>
+                <td style="width:40px;">
+                  <span v-if="selected.table!=null" @click="selected.table=null" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                    <i class="fas fa-arrow-left"></i>
+                  </span>
+                </td>
+
+                <td style="width:40px;">
+                  <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                    <i class="fas fa-bell"></i>
+                  </span>
+                </td>
+
+                <td v-if="selected.table==null" style="width:40px;">
+                  <div class="dropdown">
+                    <span class="" id="dropdownMenuButton" title="Filtrar mesas" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                      <i class="fas fa-filter"></i>
+                    </span>
+
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="font-size:12px;">
+                      <a class="dropdown-item" href="#" @click="selected.table_group='INTERNA'" style="padding-right:10px;">
+                        Mesas internas <i v-if="selected.table_group=='INTERNA'" class="float-right fas fa-check" style="position:relative;top:3px"></i>
+                      </a>
+
+                      <a class="dropdown-item" href="#" @click="selected.table_group='EXTERNA'" style="padding-right:10px;">
+                        Mesas externas <i v-if="selected.table_group=='EXTERNA'" class="float-right fas fa-check" style="position:relative;top:3px"></i>
+                      </a>
+                      <a class="dropdown-item" href="#" @click="selected.table_group='WAITING'" style="padding-right:10px;">
+                        Mesas aguardando <i v-if="selected.table_group=='WAITING'" class="float-right fas fa-check" style="position:relative;top:3px"></i>
+                      </a>
+
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item" href="#" @click="selected.table_group='GERAL'" style="padding-right:10px;">
+                        Todas as mesas <i v-if="selected.table_group=='GERAL'" class="float-right fas fa-check" style="position:relative;top:3px"></i>
+                      </a>
+                    </div>
+                  </div>
+                </td>
+
+
+                <td style="width:40px;">
+                  <div class="dropdown">
+                    <span class="" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                      <i class="fas fa-user"></i>
+                    </span>
+
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                      <a class="dropdown-item" href="#">Coisas</a>
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item" href="#">Another action</a>
+                      <a class="dropdown-item" href="#">Sair</a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            </table>
           </div>
+
           {% endverbatim %}
         </div>
 
@@ -202,7 +235,7 @@
           <div v-else-if='selected.table==null' id="table-panel">
             <ul id='tables-list' :class="{'auto-grid-small':controls.screen.width<1024, 'auto-grid-large':controls.screen.width>=1024}" style='margin-left:-40px;'>
               <template v-for='(table,index) in tables'>
-                <li @click="select_table(table, index)" v-if="table.group==selected.table_group || selected.table_group=='geral'" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:5px;cursor:pointer;padding-bottom:10px;padding-top:10px;line-height:15px;'>
+                <li v-if="table.area==selected.table_group || table.status==selected.table_group || selected.table_group=='GERAL'" @click="select_table(table, index)" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:5px;cursor:pointer;padding-bottom:10px;padding-top:10px;line-height:15px;'>
                   <div style="text-align:center;">
                     <i v-if="table.status=='WAITING'" class="fas fa-user-clock fa-3x"></i>
                     <i v-else-if="table.status=='ACTIVE'" class="fas fa-users fa-3x"></i>
@@ -258,20 +291,53 @@
               </table>
             </div>-->
 
-            <template v-for="(command,index) in selected.table.commands">
+            <template v-if="selected.table.commands.length==0">
+              Nenhuma comanda aberta.. clique aqui para abrir nova comanda
+            </template>
+
+            <template v-else v-for="(command,command_index) in selected.table.commands">
               <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #eee;">
-                <div style="height:36px;padding-bottom:40px;border-bottom:1px solid #ddd;">
+                <div style="height:50px;padding-bottom:40px;border-bottom:1px solid #ddd;">
                   <h6 class="float-left" style="position:relative;top:3px;">
-                    <i class="fas fa-tasks"></i> Comanda {{ command.code }}
+                    <i class="fas fa-tasks"></i> Comanda {{ command.code }} - <span>{{ command.status }}</span><br>
+                    <span style="font-size:12px;color:#666;">Entrada: {{ command.checkin_time | format_datetime }}</span>
                   </h6>
 
                   <div class="float-right" style="position:relative;top:0px;padding-right:0px;">
-                    <!--<button class="btn btn-sm btn-secondary" @click="open_menu(command, index)">
-                      <i class="fas fa-plus"></i><span> Adicionar</span>
-                    </button>-->
-                    <button type="button" class="btn btn-sm btn-success" @click="print_command(command)"><i class="fas fa-print"></i> Imprimir</button>
-                    <button type="button" class="btn btn-sm btn-success" @click="open_menu(selected.table.commands[0], index)"><i class="fas fa-plus"></i> Adicionar</button>
-                    <button type="button" class="btn btn-sm btn-success"><i class="fas fa-sign-out-alt"></i> Fechar</button>
+                    <button type="button" class="btn btn-sm btn-light" @click="print_command(command)" style="line-height:1;height:38px;"><i class="fas fa-print"></i><br><span style="font-size:10px;">Imprimir</span></button>
+                    <button type="button" class="btn btn-sm btn-light" @click="open_menu(selected.table.commands[0], command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button>
+                    <!--<button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:110px;height:38px;"><span style="font-size:13px;font-weight:bold;">R$ {{ command.total }}</span><br><span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span></button>-->
+
+                    <div class="btn-group">
+                      <button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:125px;height:38px;" @click="close_command(command)"><span style="font-weight:bold;font-size:15px;">R$ {{ command.total }}</span><br><span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span></button>
+                      <template v-if="command.total>0">
+                      <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="sr-only">Toggle Dropdown</span>
+                      </button>
+                      <div class="dropdown-menu">
+                        <a class="dropdown-item" href="#">Para 2 pessoas <span class="float-right">R$ {{ command.total/2 | round }}</span></a>
+                        <a class="dropdown-item" href="#">Para 3 pessoas <span class="float-right">R$ {{ command.total/3 | round }}</span></a>
+                        <a class="dropdown-item" href="#">Para 4 pessoas <span class="float-right">R$ {{ command.total/4 | round }}</span></a>
+                        <a class="dropdown-item" href="#">Para 5 pessoas <span class="float-right">R$ {{ command.total/5 | round }}</span></a>
+                        <a class="dropdown-item" href="#">Para 6 pessoas <span class="float-right">R$ {{ command.total/6 | round }}</span></a>
+
+                        <template v-if="command.total >= 300">
+                        <a class="dropdown-item" href="#">Para 7 pessoas <span class="float-right">R$ {{ command.total/7 | round }}</span></a>
+                        <a class="dropdown-item" href="#">Para 8 pessoas <span class="float-right">R$ {{ command.total/8 | round }}</span></a>
+                        <a class="dropdown-item" href="#">Para 9 pessoas <span class="float-right">R$ {{ command.total/9 | round }}</span></a>
+                        <a class="dropdown-item" href="#">Para 10 pessoas <span class="float-right">R$ {{ command.total/10 | round }}</span></a>
+                        </template>
+
+                        <template v-if="command.total >= 500">
+                        <a class="dropdown-item" href="#">Para 11 pessoas R$ {{ command.total/11 | round }}</a>
+                        <a class="dropdown-item" href="#">Para 12 pessoas R$ {{ command.total/12 | round }}</a>
+                        <a class="dropdown-item" href="#">Para 13 pessoas R$ {{ command.total/13 | round }}</a>
+                        <a class="dropdown-item" href="#">Para 14 pessoas R$ {{ command.total/14 | round }}</a>
+                        <a class="dropdown-item" href="#">Para 15 pessoas R$ {{ command.total/15 | round }}</a>
+                        </template>
+                      </div>
+                      </template>
+                    </div>
                   </div>
                 </div>
 
@@ -291,13 +357,13 @@
                     </thead>
 
                     <tbody>
-                      <template v-for='(order,index) in command.orders'>
+                      <template v-for='(order,order_index) in command.orders'>
                       <tr style="cursor:pointer;" @click="show_options(order)"><!-- data-toggle="modal" data-target="#command_item_options" -->
                         <td style="width:100px;">
-                          <img :src="'/media/'+order.product_image" style='width:100px;height:70px;object-fit:cover;' />
+                          <img :src="'/media/'+order.product_image" style='width:90px;height:60px;object-fit:cover;' />
                         </td>
 
-                        <td>
+                        <td style="line-height:1.1;">
                           <span style='font-size:18px;'>{{ order.product_name }}</span><br>
                           <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time }} -
                           <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time }}</template>
@@ -467,97 +533,17 @@
                     </tbody>
                   </template>
                 </table>
-
-                <div style="height:60px;padding-top:10px;padding-bottom:30px;">
-                  <div style="width:100%;">
-                    <a class="form-control btn" data-toggle="collapse" href="#value_per_person" role="button" aria-expanded="false" aria-controls="collapseExample" style="height:47.4px;background:#eee;">
-                      <span class="float-left" style="position:relative;top:4px;">
-                        <span style="font-size:10px;"><i class="fas fa-chevron-down"></i> </span>
-                        <!--<span style="font-size:10px;"><i class="fas fa-chevron-down"></i> </span>-->
-                        Valor total
-                      </span>
-
-                      <span class="float-right" style="position:relative;top:4px;">R$ {{ command.total }}</span>
-                    </a>
-
-                    <div class="collapse" id="value_per_person" style="width:100%;background:#fff;">
-                      <table class='table table-sm table-striped' style="width:100%;">
-                        <tr><td>Para 2 pessoas <span class="float-right">R$ {{ command.total/2 | round }}</span></td></tr>
-                        <tr><td>Para 3 pessoas <span class="float-right">R$ {{ command.total/3 | round }}</span></td></tr>
-                        <tr><td>Para 4 pessoas <span class="float-right">R$ {{ command.total/4 | round }}</span></td></tr>
-                        <tr><td>Para 5 pessoas <span class="float-right">R$ {{ command.total/5 | round }}</span></td></tr>
-                        <tr><td>Para 6 pessoas <span class="float-right">R$ {{ command.total/6 | round }}</span></td></tr>
-
-                        <template v-if="command.total >= 300">
-                        <tr><td>Para 7 pessoas <span class="float-right">R$ {{ command.total/7 | round }}</span></td></tr>
-                        <tr><td>Para 8 pessoas <span class="float-right">R$ {{ command.total/8 | round }}</span></td></tr>
-                        <tr><td>Para 9 pessoas <span class="float-right">R$ {{ command.total/9 | round }}</span></td></tr>
-                        <tr><td>Para 10 pessoas <span class="float-right">R$ {{ command.total/10 | round }}</span></td></tr>
-                        </template>
-
-                        <template v-if="command.total >= 500">
-                        <tr><td>R$ {{ command.total/11 | round }} p/ 11 pessoas</td></tr>
-                        <tr><td>R$ {{ command.total/12 | round }} p/ 12 pessoas</td></tr>
-                        <tr><td>R$ {{ command.total/13 | round }} p/ 13 pessoas</td></tr>
-                        <tr><td>R$ {{ command.total/14 | round }} p/ 14 pessoas</td></tr>
-                          <tr><td>R$ {{ command.total/15 | round }} p/ 15 pessoas</td></tr>
-                        </template>
-
-                      </table>
-                    </div>
-
-                    <!--<div class="btn-group" style="width:100%;">
-                      <button type="button" class="btn btn-sm btn-default dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width:100%;">
-                        <span>Valor total</span>
-
-                        <span class="float-right">R$ {{ command.total }}</span>
-                        <span class="sr-only float-right">Toggle Dropdown</span>
-                      </button>
-
-                      <div class="dropdown-menu" style="font-size:11px;">
-                        <a class="dropdown-item" href="#">R$ {{ command.total/2 | round }} p/ 2 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/3 | round }} p/ 3 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/4 | round }} p/ 4 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/5 | round }} p/ 5 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/6 | round }} p/ 6 pessoas</a>
-
-                        <template v-if="command.total >= 100">
-                        <a class="dropdown-item" href="#">R$ {{ command.total/7 | round }} p/ 7 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/8 | round }} p/ 8 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/9 | round }} p/ 9 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/10 | round }} p/ 10 pessoas</a>
-                        </template>
-
-                        <template v-if="command.total >= 200">
-                        <a class="dropdown-item" href="#">R$ {{ command.total/11 | round }} p/ 11 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/12 | round }} p/ 12 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/13 | round }} p/ 13 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/14 | round }} p/ 14 pessoas</a>
-                        <a class="dropdown-item" href="#">R$ {{ command.total/15 | round }} p/ 15 pessoas</a>
-                        </template>
-                      </div>
-                    </div>-->
-                  </div>
-
-                  <!--<div class="float-right" style="padding-right:10px;">
-                    R$ {{ command.total }}
-                  </div>-->
-                </div>
               </div>
               <br>
             </template>
           </div>
         </div>
 
-
         <div id="exampleModal" class="modal" tabindex="-1" role="dialog">
           <div class="modal-dialog modal-lg" role="document">
             <div v-if='selected.product ' class="modal-content">
               <div class="modal-header" style='padding:0px;'>
                 <img :src="'/media/'+selected.product.image" style='width:100%;height:150px;object-fit:cover;' />
-                <!--<button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>-->
               </div>
 
               <span style='position:relative;top:-44px;left:-10px;padding:10px;'>
@@ -909,7 +895,7 @@
             },
 
             selected:{
-              table_group: 'geral',
+              table_group: 'GERAL',
               table: null,
               table_index: null,
 
@@ -1018,6 +1004,11 @@
         },
 
         methods: {
+          filter_tables: function(option){
+            this.selected.table_group = option;
+            alert("troquei "+option);
+          },
+
           print_command: function(command){
             window.open("/api/sales/command/"+command.code+"/", "_blank");
           },
@@ -1155,14 +1146,6 @@
           },
 
 
-          select_table: function(table, index){
-            this.selected.table = table;
-            this.selected.table_index = index;
-          },
-
-          unselect_table: function(table){
-            this.selected.table = null;
-          },
 
           verify_screen: function () {
             this.controls.screen.width = window.innerWidth;
@@ -1192,6 +1175,71 @@
             this.request('/api/sales/commands/table/load/', "get", null, null, success_function, failure_function);
           },
 
+          select_table: function(table, index){
+            let scope = this;
+            if(table.status=='CLOSED'){
+              if (confirm("Abrir nova comanda na mesa "+table.code)) {
+                scope.open_table(table, index);
+                this.open_command(table, index);
+              }
+            }
+
+            else{
+              this.selected.table = table;
+              this.selected.table_index = index;
+            }
+          },
+
+          unselect_table: function(table){
+            this.selected.table = null;
+          },
+
+
+          open_command: function(table, index){
+            let scope = this;
+            let data_paramters = {'table_id':table.id}
+
+            let success_function = function(response) {
+              scope.tables[index].commands.push(response.object);
+              scope.selected.table = table;
+              scope.selected.table_index = index;
+            };
+
+            let failure_function = function(response) {
+
+            };
+
+            this.request('/api/sales/commands/open/', "post", data_paramters, null, success_function, failure_function);
+          },
+
+          close_command: function(command, index){
+            let scope = this;
+            let data_paramters = {'command_id':command.id}
+
+            if(table.status=='CLOSED'){
+              if (confirm("Deseja mesmo Encerrar a command "+command.code)) {
+                //scope.open_table(table, index);
+                //this.open_command(table, index);
+                alert("ihh cara.. vc quer encerrar mesmo");
+
+                let success_function = function(response) {
+                  scope.tables[index].commands.push(response.object);
+                  scope.selected.table = table;
+                  scope.selected.table_index = index;
+                };
+
+                let failure_function = function(response) {
+
+                };
+
+                this.request('/api/sales/commands/close/', "post", data_paramters, null, success_function, failure_function);
+              }
+            }
+
+
+
+          },
+
           open_table: function (table, index) {
             let scope = this;
             let data_paramters = {'table_id':table.id}
@@ -1200,9 +1248,7 @@
               scope.tables[index] = response.object;
             };
 
-            let failure_function = function(response) {
-
-            };
+            let failure_function = function(response) {};
 
             this.request('/api/sales/commands/table/open/', "post", data_paramters, null, success_function, failure_function);
           },

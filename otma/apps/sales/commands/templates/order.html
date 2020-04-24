@@ -455,7 +455,7 @@
 						<td style='width: 70px;'><img src="/static/apps/sales/commands/images/mcdonalds-logo.jpg" style='width: 70px;'></td>
 						<td>
 							<span id='company-name'>Capixabão Burguer</span><br>
-							<span id='order-date'>{{ order.checkin_time | date:"d/m/Y h:m:s" }}</span><br>
+							<span id='order-date'>{{ order.checkin_time | date:"d/m/Y H:m:s" }}</span><br>
 							<span id='company-attendent'>Diego Pasti</span>
 						</td>
 					</tr>
@@ -474,7 +474,7 @@
 						</td>
 
 						<td style='text-align: center;'>
-							<span id='order-checkin'>{{ order.checkin_time | date:"h:m" }}</span>
+							<span id='order-checkin'>{{ order.checkin_time | date:"H:m" }}</span>
 						</td>
 					</tr>
 				</table>
