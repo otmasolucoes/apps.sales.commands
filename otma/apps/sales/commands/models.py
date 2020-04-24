@@ -50,6 +50,7 @@ class PathAndRename(object):
 
         return os.path.join(self.path, filename)
 
+
 class Table(models.Model):
     class Meta:
         db_table = 'apps_sales_commands_tables'
@@ -176,12 +177,14 @@ class Order(models.Model):
         super(Order, self).save()
 
     def save(self, *args, **kwargs):
+        self.product_price = self.product.price
+        self.product_name = self.product.name
+        self.product_image = self.product.image
         self.total = Decimal(self.quantity) * Decimal(self.product_price)
         self.command.total = self.command.total + self.total
         super(Order, self).save(*args, **kwargs)
         if self.barcode is None:
             self.create_barcode()
-
 
 
 class Additional(models.Model):

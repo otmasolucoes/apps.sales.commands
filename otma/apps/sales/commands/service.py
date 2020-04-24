@@ -1,4 +1,5 @@
 from django.conf import settings
+from conf import profile
 from django.template.loader import get_template
 #from django.shortcuts import render
 from django.http import HttpResponse
@@ -25,6 +26,7 @@ class CommunicationController:
 
     def __init__(self):
         self.file_path = None
+        self.dependency_model = None
 
     def read_json_file(self, json_file):
         self.file_path = json_file
@@ -40,11 +42,13 @@ class CommunicationController:
         list_files = []
         if not extension:
             extension = '.json'
-        path = os.path.dirname('/home/cleiton/clientes/gigabyte/01/')
-        #path = os.path.expanduser("~/")
+        melinux_path = profile.MELINUX_INTEGRATION_PATH
+        if not melinux_path.endswith('/'):
+            path = os.path.dirname(melinux_path + '/')
+        else:
+            path = os.path.dirname(melinux_path)
         if filename:
             file_path = os.path.join(path, filename + extension)
-            print(file_path)
             if os.path.exists(file_path):
                 list_files.append(file_path)
         else:
@@ -57,7 +61,6 @@ class CommunicationController:
 
     def check_update(self, object, model):
         content = self.read_json_file(object)['cardapio']
-        #self.file_path = object
         update = None
         for item in content:
             update = self.execute_update(item, model)
@@ -83,29 +86,59 @@ class CommunicationController:
 
     def load_data(self, item, model):
         try:
-            object = model.objects.filter(code=int(item['code'].strip()))
+            object = model.objects.filter(code=item['code'].strip())
         except:
-            object = model.objects.filter(code=int(item['code']))
+            object = model.objects.filter(code=item['code'])
         if object.count() > 0:
-            print('JÁ EXISTE ESSE CARA NO BANCO.')
+            object = object[0]
+            #print('JÁ EXISTE ESSE CARA NO BANCO.', item['name'])
+            self.update(item, object)
         else:
             object = model()
-            for field in item:
-                if hasattr(object, field) and field != 'group' and field != 'image':
+            self.save(item, object)
+        return True
+
+    def save(self, item, object):
+        for field in item:
+            if hasattr(object, field):
+                if field == 'group':
+                    group = self.dependency_model.objects.filter(code=item[field])
+                    if group.count() > 0:
+                        group = group[0]
+                        object.group = group
+                else:
                     try:
                         if field == 'price':
                             item[field] = item[field].replace(',', '.')
                         object.__setattr__(field, item[field].strip())
                     except:
+                        print(field)
                         object.__setattr__(field, item[field])
-            try:
-                object.save()
-            except:
-                pass
-        return True
+        try:
+            object.save()
+        except:
+            print('DEU ERRO...')
+            #raise
+            pass
+
+    def update(self, item, object):
+        for field in item:
+            if hasattr(object, field) and field != 'group':
+                try:
+                    if field == 'price':
+                        item[field] = item[field].replace(',', '.')
+                    object.__setattr__(field, item[field].strip())
+                except:
+                    object.__setattr__(field, item[field])
+        try:
+            object.save()
+        except:
+            print('DEU ERRO...')
+            #raise
+            pass
 
     def execute_update(self, item, model):
-        object = model.objects.filter(code=int(item['code'].strip()))
+        object = model.objects.filter(code=item['code'].strip())
         if object.count() > 0:
             try:
                 object = object[0]
@@ -119,7 +152,9 @@ class CommunicationController:
         else:
             return False
 
-    def field_search(self, model=None, filename=None, extension=None):
+    def field_search(self, model=None, filename=None, extension=None, dependency=None):
+        if dependency:
+            self.dependency_model = dependency
         if filename:
             files = self.find_files(filename, extension)
             if files:
@@ -152,6 +187,7 @@ class CommunicationController:
 
         try:
             _data = data
+            print(data)
             with open(file_dir, mode_open) as f:
                 file_txt = f.write(str(_data))
                 print(f'\nArquivo salvo em: {file_dir}')

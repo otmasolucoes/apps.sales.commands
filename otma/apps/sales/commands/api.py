@@ -1,3 +1,4 @@
+from conf import profile
 from otma.apps.core.communications.api import BaseController
 from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Additional
 from otma.apps.sales.commands.service import CommunicationController
@@ -34,7 +35,6 @@ class CommandController(BaseController):
         else:
             return super().filter(request, self.model, queryset=Command.objects.filter(status=status), extra_fields=self.extra_fields, is_response=is_response)
 
-
     def commands_by_table(self, request, table):
         return super().filter(request, self.model, queryset=Command.objects.filter(table=table), extra_fields=self.extra_fields, is_response=True)
 
@@ -43,9 +43,10 @@ class CommandController(BaseController):
         command = Command.objects.filter(pk=int(id))
         if command.count() > 0:
             command = command[0]
+            command.status = 'CLOSED'
             table = command.table
-            self.create_integration_file(request, command, table)
-            command.exit = datetime.now(tz=timezone.utc)
+            command.checkout_time = datetime.now(tz=timezone.utc)
+            self.create_integration_file(request, command, table.code)
         command.save()
         response_dict = {}
         response_dict['result'] = True
@@ -58,8 +59,8 @@ class CommandController(BaseController):
         if command.count() > 0:
             command = command[0]
             command.status = 'CLOSED'
+            command.checkout_time = datetime.now(tz=timezone.utc)
             self.create_integration_file(request, command, table)
-            command.exit = datetime.now(tz=timezone.utc)
         command.save()
         response_dict = {}
         response_dict['result'] = True
@@ -68,17 +69,25 @@ class CommandController(BaseController):
 
     def create_integration_file(self, request, command, table):
         controller = OrderController()
+        manager = CommunicationController()
         orders = controller.orders_by_command(request, command.id, is_response=False)
+        total = self.calcula_total(request, orders)
+        first_line = f'{table}|{command.attendant}|{total}|{command.client_document}|\n'
+        create_file = manager.write_txt_file(data=first_line, file_name='comanda' + str(command.id), out_folder_path=profile.MELINUX_INTEGRATION_PATH, mode='a')
+        for order in orders['object']:
+            items = MenuProductController().load_by_id(request, order['product'], is_response=False)
+            for item in items['object']:
+                data = f'{item["code"]}|{order["quantity"]}|{item["price"]}|\n'
+                create_file = manager.write_txt_file(data=data, file_name='comanda' + str(command.id), out_folder_path=profile.MELINUX_INTEGRATION_PATH, mode='a')
+        create_file = manager.write_txt_file(data='', file_name='comanda' + str(command.id), out_folder_path=profile.MELINUX_INTEGRATION_PATH, mode='a', delete=True)
+
+    def calcula_total(self, request, orders):
         total_result = 0
         for order in orders['object']:
             items = MenuProductController().load_by_id(request, order['product'], is_response=False)
             for item in items['object']:
-                total_result += int(order["quantity"])*item["price"]
-                total = f'TOTAL||||||{total_result}|'
-                data = f'{command.client_document}|{command.code}|{table}|{command.attendant}|{item["code"]}|{order["quantity"]}|{item["price"]}|\n'
-                manager = CommunicationController()
-                create_file = manager.write_txt_file(data=data, file_name=str(command.id), out_folder_path='/home/cleiton/clientes/gigabyte/controller', mode='a')
-        create_file = manager.write_txt_file(data=total, file_name=str(command.id), out_folder_path='/home/cleiton/clientes/gigabyte/controller', mode='a', delete=True)
+                total_result += float(order["quantity"]) * float(item["price"])
+        return "{0:.2f}".format(total_result)
 
 
 class TableController(BaseController):
@@ -156,13 +165,11 @@ class OrderController(BaseController):
         minutes = random.randint(0,59)
         seconds = random.randint(0, 59)
         duration = timedelta(hours=hours, minutes=minutes, seconds=seconds)
-        print("DURATION:",duration)
         return duration
 
 
     def save(self, request):
         self.start_process(request)
-        print("VOU SALVAR:",request.POST)
 
         order = Order()
         order.command_id = int(request.POST['command_id'])
@@ -175,7 +182,6 @@ class OrderController(BaseController):
         order.save()
 
         order.expected_duration = self.get_prevision_duration()
-        print("PREVISAO:",order.checkin_time + order.expected_duration)
         order.expected_time = order.checkin_time + order.expected_duration
         #checkout_time = models.DateTimeField(_('Saída de pedido'), null=True, blank=True)
         #waiting_time = models.DurationField(null=True, blank=True)
@@ -187,8 +193,6 @@ class OrderController(BaseController):
 
         order.command.total = order.command.total + order.total
         order.command.save()
-        print("VEJA O RESULTADO:",response)
-
         return self.response(response)
 
 
@@ -342,10 +346,42 @@ class VerifierRequest:
 
 class DatabaseController(BaseController):
 
-    def load_data(self, request):
+    def __init__(self):
+        self.filename = None
+        self.extension = None
+        self.model = None
+        self.dependency_model = None
+
+    def load(self, request):
         self.start_process(request)
+        try:
+            self.extension = request.GET['extension']
+        except:
+            pass
+        if 'filename' in request.GET:
+            self.filename = request.GET['filename']
+            if self.filename == 'products':
+                self.model = Product
+                self.dependency_model = Group
+            elif self.filename == 'groups':
+                self.model = Group
         communication = CommunicationController()
-        load = communication.field_search(model=Product, filename='products', extension='.json')
+        load = communication.field_search(model=self.model, filename=self.filename, extension=self.extension, dependency=self.dependency_model)
+        response_dict = {}
+        if load:
+            response_dict['result'] = True
+            response_dict['message'] = "Operação realizada com sucesso."
+        else:
+            response_dict['result'] = False
+            response_dict['message'] = "Algo deu errado."
+        return self.response(response_dict)
+
+    def update(self, request):
+        self.start_process(request)
+        if 'extension' in request.GET:
+            self.extension = request.GET['extension']
+        communication = CommunicationController()
+        load = communication.field_search()
         response_dict = {}
         if load:
             response_dict['result'] = True
