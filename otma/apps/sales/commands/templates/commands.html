@@ -234,8 +234,8 @@
 
           <div v-else-if='selected.table==null' id="table-panel">
             <ul id='tables-list' :class="{'auto-grid-small':controls.screen.width<1024, 'auto-grid-large':controls.screen.width>=1024}" style='margin-left:-40px;'>
-              <template v-for='(table,index) in tables'>
-                <li v-if="table.area==selected.table_group || table.status==selected.table_group || selected.table_group=='GERAL'" @click="select_table(table, index)" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:5px;cursor:pointer;padding-bottom:10px;padding-top:10px;line-height:15px;'>
+              <template v-for='(table, table_index) in tables'>
+                <li v-if="table.area==selected.table_group || table.status==selected.table_group || selected.table_group=='GERAL'" @click="select_table(table, table_index)" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:5px;cursor:pointer;padding-bottom:10px;padding-top:10px;line-height:15px;'>
                   <div style="text-align:center;">
                     <i v-if="table.status=='WAITING'" class="fas fa-user-clock fa-3x"></i>
                     <i v-else-if="table.status=='ACTIVE'" class="fas fa-users fa-3x"></i>
@@ -1172,7 +1172,7 @@
               return false;
             };
 
-            this.request('/api/sales/commands/table/load/', "get", null, null, success_function, failure_function);
+            this.request('/api/sales/commands/tables/load/', "get", null, null, success_function, failure_function);
           },
 
           select_table: function(table, index){
@@ -1232,7 +1232,7 @@
 
                 };
 
-                this.request('/api/sales/commands/close/', "post", data_paramters, null, success_function, failure_function);
+                //this.request('/api/sales/commands/close/', "post", data_paramters, null, success_function, failure_function);
               }
             }
 
@@ -1250,7 +1250,7 @@
 
             let failure_function = function(response) {};
 
-            this.request('/api/sales/commands/table/open/', "post", data_paramters, null, success_function, failure_function);
+            this.request('/api/sales/commands/tables/open/', "post", data_paramters, null, success_function, failure_function);
           },
 
           close_table: function (table, index) {
@@ -1314,7 +1314,7 @@
         },
 
         created: function () {
-          this.load_tables();
+          //this.load_tables();
           //this.init_product_complements();
         },
 
@@ -1333,6 +1333,7 @@
       }
 
       window.addEventListener('load', function () {
+        app.load_tables();
         app.load_groups();
         register_action();
       }, false);

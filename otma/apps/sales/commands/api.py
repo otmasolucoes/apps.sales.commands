@@ -136,6 +136,7 @@ class TableController(BaseController):
     extra_names = {}
 
     def load(self, request):
+        print("EH AQUI QUE EU TO")
         response_tables = super().filter(request, self.model, queryset=self.model.objects.all().order_by('id'), extra_fields=self.extra_fields, is_response=False)
         count = 0
         for table in response_tables['object']:
