@@ -292,24 +292,29 @@
             </div>-->
 
             <template v-if="selected.table.commands.length==0">
-              Nenhuma comanda aberta.. clique aqui para abrir nova comanda
+              Nenhuma comanda aberta nessa mesa
             </template>
 
             <template v-else v-for="(command,command_index) in selected.table.commands">
               <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #eee;">
                 <div style="height:50px;padding-bottom:40px;border-bottom:1px solid #ddd;">
                   <h6 class="float-left" style="position:relative;top:3px;">
-                    <i class="fas fa-tasks"></i> Comanda {{ command.code }} - <span>{{ command.status }}</span><br>
-                    <span style="font-size:12px;color:#666;">Entrada: {{ command.checkin_time | format_datetime }}</span>
+                    <i class="fas fa-tasks"></i> Comanda {{ command.code }}<br>
+                    <span style="font-size:12px;color:#666;">
+                      <template v-if="controls.screen.width>600">Entrada:</template>{{ command.checkin_time | format_datetime }}
+                    </span>
                   </h6>
 
                   <div class="float-right" style="position:relative;top:0px;padding-right:0px;">
-                    <button type="button" class="btn btn-sm btn-light" @click="print_command(command)" style="line-height:1;height:38px;"><i class="fas fa-print"></i><br><span style="font-size:10px;">Imprimir</span></button>
-                    <button type="button" class="btn btn-sm btn-light" @click="open_menu(selected.table.commands[0], command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button>
+                    <template v-if="controls.screen.width>600"><button type="button" class="btn btn-sm btn-light" @click="open_menu(selected.table.commands[0], command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button></template>
                     <!--<button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:110px;height:38px;"><span style="font-size:13px;font-weight:bold;">R$ {{ command.total }}</span><br><span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span></button>-->
 
                     <div class="btn-group">
-                      <button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:125px;height:38px;" @click="close_command(command)"><span style="font-weight:bold;font-size:15px;">R$ {{ command.total }}</span><br><span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span></button>
+                      <button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:115px;height:38px;" @click="close_command(command)">
+                        <span style="font-weight:bold;font-size:15px;">R$ {{ command.total }}</span><br>
+                        <span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span>
+                      </button>
+
                       <template v-if="command.total>0">
                       <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                         <span class="sr-only">Toggle Dropdown</span>
@@ -342,6 +347,13 @@
                 </div>
 
                 <br>
+
+                <template v-if="command.orders.length>0">
+                <template v-if="controls.screen.width<=600">
+                <div style="padding-bottom:10px;">
+                  <button type="button" class="form-control btn btn-sm btn-light" @click="open_menu(selected.table.commands[0], command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button>
+                </div>
+                </template>
 
                 <table border="0" id='consumed_products' class='table table-sm table-stripped table-hover' style='margin-bottom:0px;'>
                   <template v-if='controls.screen.width>=1024'>
@@ -533,6 +545,14 @@
                     </tbody>
                   </template>
                 </table>
+                </template>
+
+                <template else>
+                  <div style="text-align:center;padding:10px;">
+                    Nenhum pedido feito.. <br><span @click="open_menu(selected.table.commands[command_index], command_index)" style="cursor:pointer;font-weight:bold;">clique aqui para adicionar um novo pedido..</span>
+                    <br>
+                  </div>
+                </template>
               </div>
               <br>
             </template>
@@ -1145,8 +1165,6 @@
             }
           },
 
-
-
           verify_screen: function () {
             this.controls.screen.width = window.innerWidth;
             this.controls.screen.height = window.innerHeight;
@@ -1175,12 +1193,40 @@
             this.request('/api/sales/commands/tables/load/', "get", null, null, success_function, failure_function);
           },
 
+          open_table: function (table, index) {
+            let scope = this;
+            let data_paramters = {'table_id':table.id}
+
+            let success_function = function(response) {
+              Vue.set(scope.tables,index,response.object);
+              scope.open_command(table, index);
+            };
+
+            let failure_function = function(response) {};
+
+            this.request('/api/sales/commands/tables/open/', "post", data_paramters, null, success_function, failure_function);
+          },
+
+          close_table: function (table, index) {
+            let scope = this;
+            let data_paramters = {'table_id':table.id}
+
+            let success_function = function(response) {
+              scope.tables[index] = response.object;
+            };
+
+            let failure_function = function(response) {
+
+            };
+
+            this.request('/api/sales/commands/table/close/', "post", data_paramters, null, success_function, failure_function);
+          },
+
           select_table: function(table, index){
             let scope = this;
             if(table.status=='CLOSED'){
               if (confirm("Abrir nova comanda na mesa "+table.code)) {
                 scope.open_table(table, index);
-                this.open_command(table, index);
               }
             }
 
@@ -1195,14 +1241,19 @@
           },
 
 
-          open_command: function(table, index){
+          open_command: function(table, table_index){
             let scope = this;
             let data_paramters = {'table_id':table.id}
 
             let success_function = function(response) {
-              scope.tables[index].commands.push(response.object);
-              scope.selected.table = table;
-              scope.selected.table_index = index;
+              scope.tables[table_index].commands.push(response.object);
+              if(scope.selected.table==null){
+                scope.selected.table = scope.tables[table_index];
+                scope.selected.table_index = table_index;
+              }
+              else{
+                //alert("provavelmente o cara abriu uma nova comanda denotro da tela de comadnas")
+              }
             };
 
             let failure_function = function(response) {
@@ -1235,38 +1286,9 @@
                 //this.request('/api/sales/commands/close/', "post", data_paramters, null, success_function, failure_function);
               }
             }
-
-
-
           },
 
-          open_table: function (table, index) {
-            let scope = this;
-            let data_paramters = {'table_id':table.id}
 
-            let success_function = function(response) {
-              scope.tables[index] = response.object;
-            };
-
-            let failure_function = function(response) {};
-
-            this.request('/api/sales/commands/tables/open/', "post", data_paramters, null, success_function, failure_function);
-          },
-
-          close_table: function (table, index) {
-            let scope = this;
-            let data_paramters = {'table_id':table.id}
-
-            let success_function = function(response) {
-              scope.tables[index] = response.object;
-            };
-
-            let failure_function = function(response) {
-
-            };
-
-            this.request('/api/sales/commands/table/close/', "post", data_paramters, null, success_function, failure_function);
-          },
 
 
           load_groups: function () {
