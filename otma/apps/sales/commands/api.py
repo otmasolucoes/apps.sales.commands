@@ -54,7 +54,6 @@ class CommandController(BaseController):
         command.save()
         return self.response(self.execute(command, command.save))
 
-
     def load_open_commands(self, request, table=None, is_response=False):
         return self.load_command(request, table, "OPEN", is_response)
 
@@ -65,7 +64,7 @@ class CommandController(BaseController):
             for item in commands['object']:
                 orders = OrderController().orders_by_command(request, item['id'], is_response=is_response)
                 commands['object'][count]['orders'] = orders['object']
-                print("VEJA O PEDIDO:",orders['object'])
+                print("VEJA O PEDIDO:", orders['object'])
                 count = count + 1
 
             if is_response:
@@ -419,10 +418,11 @@ class DatabaseController(BaseController):
 
     def update(self, request):
         self.start_process(request)
+        self.model = Product
         if 'extension' in request.GET:
             self.extension = request.GET['extension']
         communication = CommunicationController()
-        load = communication.field_search()
+        load = communication.field_search(model=self.model)
         response_dict = {}
         if load:
             response_dict['result'] = True
