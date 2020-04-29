@@ -1,6 +1,7 @@
 from django.shortcuts import render, HttpResponse
 from otma.apps.sales.commands.models import Command, Order
-
+from otma.apps.sales.commands.service import PDFController
+import os.path
 
 
 def format_datetime(value):
@@ -9,7 +10,6 @@ def format_datetime(value):
 
     if value is not None:
         datetime_with_timezone = value.astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
-        print("VEJA DATA:",datetime_with_timezone)
         return datetime_with_timezone
         #return value.strftime("%d/%m/%Y, %H:%M:%S")
     else:
@@ -22,7 +22,6 @@ def command_view_page(request, code):
     command = Command.objects.filter(code=int(code))
     if command.count() > 0:
         command = command[0]
-        #barcode = BarcodeControlller().create("200421143412")
 
         """response = {
             'id':command.id,
@@ -41,11 +40,9 @@ def command_view_page(request, code):
             #'barcode':barcode
         }"""
 
-        #print("OLHA A SAIDA:",barcode)
         return render(request, "order.html", context=response)
 
 def order_page(request, id):
-    import os.path
     order = Order.objects.filter(pk=int(id))
     if order.count() > 0:
         order = order[0]
@@ -53,10 +50,8 @@ def order_page(request, id):
         if barcode is None:
             barcode = order.create_barcode()
         else:
-            if not os.path.isfile("/media/barcodes/"+order.barcode):
-                print("nao tem esse codigo de barras, vou criar")
+            if not os.path.isfile("/media/barcodes/" + order.barcode):
                 barcode = order.create_barcode()
-
         response = {
             'id':order.id,
             'command':order.command_id,
@@ -82,13 +77,15 @@ def order_page(request, id):
             'observations':order.observations,
         }
 
-        # print("OLHA A SAIDA:",barcode)
-        return render(request, "order.html", context={"order":response})
+        if request.POST:
+            print('VOU GERAR O PDF...')
+            return PDFController().generate_PDF(data=response, filename=id + '.pdf')
+    print('AGORA VOU VER SE AINDA CONTINUA DEPOIS DE GERAR O PDF...')
+    return render(request, "order.html", context={"order":response})
 
 def print_command(request):
     from django_xhtml2pdf.utils import generate_pdf
     path = os.path.join(BASE_DIR, "static/imagens/")
-    # print(request.POST)
     resultado = list(resultado)
     descricao_destinatario = ""
     descricao_periodo = ""
@@ -139,7 +136,6 @@ def print_command(request):
     novo_result = []
 
     nova_lista = split_subparts(resultado, 50)
-    # print("VEJA QUANTAS PAGINAS DEVEM TER:",len(resultado),"REGISTROS EM ",len(nova_lista)," PAGINA(S)")
 
     protocolo.index = 0;
     parametros = {
@@ -152,11 +148,9 @@ def print_command(request):
         'filtro_status': status,
         'filtro_periodo': descricao_periodo,
         'filtro_cliente': cliente,
-
         'data_emissao': data,
         'hora_emissao': hora
     }
-    # context = Context(parametros)
     resp = HttpResponse(content_type='application/pdf')
     result = generate_pdf('protocolo/imprimir_relatorio_simples.html', file_object=resp, context=parametros)
     return result

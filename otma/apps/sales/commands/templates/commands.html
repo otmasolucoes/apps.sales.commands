@@ -427,7 +427,8 @@
                         <template v-else>
                         <td colspan="4" style="vertical-align:middle;">
                           <div class="float-right">
-                          <button class="btn btn-sm btn-secondary" @click="print_order(order)"><i class="fas fa-search"></i><br>Visualizar</button>
+                          <button class="btn btn-sm btn-secondary" @click="print_order(order, false)"><i class="fas fa-search"></i><br>Visualizar</button>
+                          <button class="btn btn-sm btn-secondary" @click="print_order(order, true)"><i class="fas fa-print"></i><br>Imprimir</button>
                           <button class="btn btn-sm btn-secondary"><i class="fas fa-redo-alt"></i><br>Repetir</button>
                           <button class="btn btn-sm btn-danger" :disabled="(order.status=='READY') || (order.status=='CLOSED') || (order.status=='CANCELED')"><i class="fas fa-times"></i><br>Cancelar</button>
                           </div>
@@ -1030,11 +1031,38 @@
           },
 
           print_command: function(command){
-            window.open("/api/sales/command/"+command.code+"/", "_blank");
+            //window.open("/api/sales/command/"+command.code+"/", "_blank");
+            let scope = this;
+            let data_paramters = {};
+            let success_function = function(response) {
+              $('#exampleModal').modal('hide');
+            };
+
+            let failure_function = function(response) {
+              return false;
+            };
+
+            this.request("/api/sales/command/"+command.code+"/", "post", data_paramters, null, success_function, failure_function);
           },
 
-          print_order: function(order){
-            window.open("/api/sales/commands/order/"+order.id+"/", "_blank");
+          print_order: function(order, print){
+            let method = null;
+            if(print){
+              method = 'post';
+            }else{
+              window.open("/api/sales/commands/order/"+order.id+"/", "_blank");
+            }
+            let scope = this;
+            let data_paramters = {};
+            let success_function = function(response) {
+              $('#exampleModal').modal('hide');
+            };
+
+            let failure_function = function(response) {
+              return false;
+            };
+
+            this.request("/api/sales/commands/order/"+order.id+"/", method, data_paramters, null, success_function, failure_function);
           },
 
           confirm_item: function(item){

@@ -1,21 +1,18 @@
-from otma.apps.sales.commands.utils import render_to_pdf
 from django.conf import settings
 from conf import profile
-from django.template.loader import get_template
-#from django.shortcuts import render
 from django.http import HttpResponse
-from django.views.generic import View
-
+from django.template.loader import get_template, render_to_string
 from barcode.writer import ImageWriter
 from barcode import get_barcode_class
+from weasyprint import HTML
 from barcode import generate
-
+import qrcode
 import os
-#import sys
 import json
 import glob
 import shutil
 import django
+import datetime
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'test_project.settings')
 django.setup()
@@ -182,7 +179,6 @@ class CommunicationController:
 
         try:
             _data = data
-            print(data)
             with open(file_dir, mode_open) as f:
                 file_txt = f.write(str(_data))
                 print(f'\nArquivo salvo em: {file_dir}')
@@ -216,28 +212,25 @@ class PrinterController:
         self.connect.printFile(printer, filename, title, kwargs)
 
 
-class PDFController(View):
+class PDFController:
 
-    def get(self, request, *args, **kwargs):
-        template = get_template('pdf/orders.html')
-        context = {
-            "invoice_id": 123,
-            "customer_name": "John Cooper",
-            "amount": 1399.99,
-            "today": "Today",
-        }
-        html = template.render(context)
-        pdf = render_to_pdf('pdf/orders.html', context)
-        if pdf:
-            response = HttpResponse(pdf, content_type='application/pdf')
-            filename = "Order_%s.pdf" %("12341231")
-            content = "inline; filename='%s'" %(filename)
-            download = request.GET.get("download")
-            if download:
-                content = "attachment; filename='%s'" %(filename)
-            response['Content-Disposition'] = content
-            return response
-        return HttpResponse("Not found")
+    def generate_PDF(self, data, filename):
+        #import sysconfig
+        html_string = render_to_string('order.html', {'order': data})
+        pdf_path = f'media/pdf/{filename}'
+        #pdf_path = sysconfig.get_paths()['purelib'] + '/otma/apps/sales/commands/templates/pdf/test.pdf'
+        pdf = HTML(string=html_string, base_url='http://0.0.0.0:8000/').write_pdf(pdf_path)
+        if os.path.isfile(pdf_path):
+            printer = PrinterController()
+            print('O PDF FOI GERADO PREPARANDO PARA IMPRIMIR...', pdf_path)
+            printer.print(profile.PRINTER_CONFIG, pdf_path, title="test_python")
+            print('IMPRIMIDO COM SUCESSO!!!')
+        else:
+            print('ERRO, NÃO CONSEGUI GERAR O PDF E IMPRIMIR...')
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'inline; filename={}'.format(filename)
+        response['Content-Transfer-Encoding'] = 'binary'
+        return response
 
 
 class BarcodeControlller:
@@ -245,9 +238,23 @@ class BarcodeControlller:
     def create(self, code):
         import barcode
         from barcode.writer import ImageWriter
-        code = "000000000451"
         ean = barcode.get('ean13', code, writer=ImageWriter())
-        filename = ean.save('media/barcodes/'+code)
+        filename = ean.save('media/barcodes/' + code)
         return filename
 
 
+class QrCodeController:
+
+    def create(self, data, id):
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+        value = str(self.id).zfill(12)
+        img = qr.make_image(fill_color="black", back_color="white")
+        filename = img.save('media/qrcodes/' + id + '.png')
+        return filename

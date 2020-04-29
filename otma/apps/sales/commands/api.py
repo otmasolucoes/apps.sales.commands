@@ -3,7 +3,8 @@ from otma.apps.core.communications.api import BaseController
 from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Additional
 from otma.apps.sales.commands.service import CommunicationController
 from django.utils import timezone
-from datetime import datetime
+from datetime import datetime, timedelta
+import random
 import math
 
 
@@ -29,7 +30,6 @@ class CommandController(BaseController):
         #command.peoples = None
         command.total = 0.0
         command.save()
-
         command.code = command.id
         return self.response(self.execute(command, command.save))
 
@@ -64,7 +64,6 @@ class CommandController(BaseController):
             for item in commands['object']:
                 orders = OrderController().orders_by_command(request, item['id'], is_response=is_response)
                 commands['object'][count]['orders'] = orders['object']
-                print("VEJA O PEDIDO:", orders['object'])
                 count = count + 1
 
             if is_response:
@@ -135,7 +134,6 @@ class TableController(BaseController):
     extra_names = {}
 
     def load(self, request):
-        print("EH AQUI QUE EU TO")
         response_tables = super().filter(request, self.model, queryset=self.model.objects.all().order_by('id'), extra_fields=self.extra_fields, is_response=False)
         count = 0
         for table in response_tables['object']:
@@ -195,12 +193,9 @@ class OrderController(BaseController):
     extra_names = {}
 
     def get_prevision_duration(self):
-        import random
-        from datetime import datetime, timedelta
         # we specify the input and the format...
         #t = datetime.strptime("05:20:25", "%H:%M:%S")
         # ...and use datetime's hour, min and sec properties to build a timedelta
-
         hours = random.randint(0,2)
         minutes = random.randint(0,59)
         seconds = random.randint(0, 59)
@@ -210,7 +205,6 @@ class OrderController(BaseController):
 
     def save(self, request):
         self.start_process(request)
-
         order = Order()
         order.command_id = int(request.POST['command_id'])
         order.product_id = int(request.POST['product_id'])
@@ -230,7 +224,6 @@ class OrderController(BaseController):
         #status = models.CharField(_('Status'), max_length=20, default='WAITING', choices=STATUS_OF_ORDER, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
         order.observations = request.POST['observations']
         response = self.execute(order, order.save)
-
         order.command.total = order.command.total + order.total
         order.command.save()
         return self.response(response)
