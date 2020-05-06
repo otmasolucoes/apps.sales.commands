@@ -178,6 +178,7 @@ class Order(models.Model):
         filename = ean.save("media/barcodes/"+value)
         self.barcode = value+".png"
         super(Order, self).save()
+        return filename
 
     def save(self, *args, **kwargs):
         self.product_price = self.product.price
@@ -190,12 +191,17 @@ class Order(models.Model):
             self.create_barcode()
 
 
-class Additional(models.Model):
+class Complement(models.Model):
     class Meta:
-        db_table = 'apps_sales_commands_additional'
-        verbose_name = _('Adicional')
-        verbose_name_plural = _('Adicionais')
+        db_table = 'apps_sales_commands_complement'
+        verbose_name = _('Complemento')
+        verbose_name_plural = _('Complementos')
 
     command = models.ForeignKey(Command, on_delete=models.DO_NOTHING)
-    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
     order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
+
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
+    product_name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
+    product_price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+    quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
+

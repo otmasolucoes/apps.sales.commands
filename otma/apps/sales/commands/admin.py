@@ -1,4 +1,4 @@
-from otma.apps.sales.commands.models import Group, Table, Command, Product, Order, Additional
+from otma.apps.sales.commands.models import Group, Table, Command, Product, Order, Complement
 from django.contrib import admin
 
 
@@ -30,7 +30,7 @@ class OrderAdmin(admin.ModelAdmin):
     ordering = ('id',)
 
 
-@admin.register(Additional)
-class AdditionalAdmin(admin.ModelAdmin):
+@admin.register(Complement)
+class ComplementAdmin(admin.ModelAdmin):
     list_display = ('id', 'command', 'product', 'order')
     ordering = ('id',)

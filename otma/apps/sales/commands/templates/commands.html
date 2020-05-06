@@ -153,8 +153,8 @@
 
   <body>
     <div style='padding:0px;'>
-
       <div id="app" @mousemove="" @keyup="">
+        {{ controls }}
         <div style='background:#b22222;color: white;'>
           {% verbatim %}
           <div style="border-bottom: 2px solid #b36363;">
@@ -164,13 +164,19 @@
 
                 <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">Madero</td>
 
-                <td style="width:40px;">
+                <td style="width:40px;" title="Retornar a pagina anterior">
                   <span v-if="selected.table!=null" @click="selected.table=null" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
                     <i class="fas fa-arrow-left"></i>
                   </span>
                 </td>
 
-                <td style="width:40px;">
+                <td v-if="selected.table!=null" style="width:40px;" title="Adicionar comanda">
+                  <span @click="open_command(selected.table, selected.table_index)" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                    <i class="fas fa-plus"></i>
+                  </span>
+                </td>
+
+                <td style="width:40px;" title="Minhas Notificações">
                   <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
                     <i class="fas fa-bell"></i>
                   </span>
@@ -296,7 +302,7 @@
             </template>
 
             <template v-else v-for="(command,command_index) in selected.table.commands">
-              <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #eee;">
+              <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #ddd;">
                 <div style="height:50px;padding-bottom:40px;border-bottom:1px solid #ddd;">
                   <h6 class="float-left" style="position:relative;top:3px;">
                     <i class="fas fa-tasks"></i> Comanda {{ command.code }}<br>
@@ -306,7 +312,7 @@
                   </h6>
 
                   <div class="float-right" style="position:relative;top:0px;padding-right:0px;">
-                    <template v-if="controls.screen.width>600"><button type="button" class="btn btn-sm btn-light" @click="open_menu(selected.table.commands[0], command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button></template>
+                    <template v-if="controls.screen.width>600"><button type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button></template>
                     <!--<button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:110px;height:38px;"><span style="font-size:13px;font-weight:bold;">R$ {{ command.total }}</span><br><span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span></button>-->
 
                     <div class="btn-group">
@@ -348,206 +354,203 @@
 
                 <br>
 
-                <template v-if="command.orders.length>0">
-                <template v-if="controls.screen.width<=600">
-                <div style="padding-bottom:10px;">
-                  <button type="button" class="form-control btn btn-sm btn-light" @click="open_menu(selected.table.commands[0], command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button>
-                </div>
-                </template>
+                <template v-if="command.orders && command.orders.length>0">
+                  <template v-if="controls.screen.width<=600">
+                  <div style="padding-bottom:10px;">
+                    <button type="button" class="form-control btn btn-sm btn-light" @click="open_menu(selected.table.commands[0], command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button>
+                  </div>
+                  </template>
 
-                <table border="0" id='consumed_products' class='table table-sm table-stripped table-hover' style='margin-bottom:0px;'>
-                  <template v-if='controls.screen.width>=1024'>
-                    <thead>
-                      <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
-                        <td style="text-align:left;border-top:none;">Produto</td>
-                        <td style="text-align:center;border-top:none;"></td>
-                        <td style="text-align:center;border-top:none;"></td>
-                        <td style="text-align:center;border-top:none;">Quant</td>
-                        <td style="text-align:center;border-top:none;">Preço</td>
-                        <td style="text-align:center;border-top:none;">Total</td>
-                      </tr>
-                    </thead>
+                  <table border="0" id='consumed_products' class='table table-sm table-stripped table-hover' style='margin-bottom:0px;'>
+                    <template v-if='controls.screen.width>=1024'>
+                      <thead>
+                        <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
+                          <td style="text-align:left;border-top:none;">Produto</td>
+                          <td style="text-align:center;border-top:none;"></td>
+                          <td style="text-align:center;border-top:none;"></td>
+                          <td style="text-align:center;border-top:none;">Quant</td>
+                          <td style="text-align:center;border-top:none;">Preço</td>
+                          <td style="text-align:center;border-top:none;">Total</td>
+                        </tr>
+                      </thead>
 
-                    <tbody>
-                      <template v-for='(order,order_index) in command.orders'>
-                      <tr style="cursor:pointer;" @click="show_options(order)"><!-- data-toggle="modal" data-target="#command_item_options" -->
-                        <td style="width:100px;">
-                          <img :src="'/media/'+order.product_image" style='width:90px;height:60px;object-fit:cover;' />
-                        </td>
+                      <tbody>
+                        <template v-for='(order,order_index) in command.orders'>
+                        <tr style="cursor:pointer;" @click="show_options(order)"><!-- data-toggle="modal" data-target="#command_item_options" -->
+                          <td style="width:100px;">
+                            <img :src="'/media/'+order.product_image" style='width:90px;height:60px;object-fit:cover;' />
+                          </td>
 
-                        <td style="line-height:1.1;">
-                          <span style='font-size:18px;'>{{ order.product_name }}</span><br>
-                          <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time }} -
-                          <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time }}</template>
-                          <template v-else>Entrega: {{ order.checkout_time | format_time }}</template></span>
-                          <br>
-                          <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
-                        </td>
+                          <td style="line-height:1.1;">
+                            <span style='font-size:18px;'>{{ order.product_name }} - {{ order.show_options }}</span><br>
+                            <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time }} -
+                            <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time }}</template>
+                            <template v-else>Entrega: {{ order.checkout_time | format_time }}</template></span>
+                            <br>
+                            <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
+                          </td>
 
-                        <template v-if="order.show_options==false">
-                        <td style='width:40px;vertical-align:middle;text-align:center;'>
-                          <template v-if="order.status=='WAITING'">
-                            AGUARDANDO
-                          </template>
+                          <template v-if="order.show_options==false">
+                          <td style='width:40px;vertical-align:middle;text-align:center;'>
+                            <template v-if="order.status=='WAITING'">
+                              AGUARDANDO
+                            </template>
 
-                          <template v-else-if="order.status=='IN_PROGRESS'">
-                            ANDAMENTO
-                          </template>
+                            <template v-else-if="order.status=='IN_PROGRESS'">
+                              ANDAMENTO
+                            </template>
 
-                          <template v-else-if="order.status=='READY'">
-                            PRONTO
-                          </template>
+                            <template v-else-if="order.status=='READY'">
+                              PRONTO
+                            </template>
 
-                          <template v-else-if="order.status=='CANCELED'">
-                            CANCELADO
+                            <template v-else-if="order.status=='CANCELED'">
+                              CANCELADO
+                            </template>
+
+                            <template v-else>
+                              ENTREGUE
+                            </template>
+
+                            <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
+                              <span style="color:red;font-size:12px;"><b>ATRASADO</b></span>
+                            </template>
+                          </td>
+
+                          <td style='width:110px;text-align:center;vertical-align:middle;'>
+                            <span style='font-size:18px;'>{{ order.quantity }}</span>
+                          </td>
+
+                          <td style="vertical-align:middle;text-align:center;width:110px;">
+                            <span style='font-size:18px;'>R$ {{ order.product_price }}</span>
+                          </td>
+
+                          <td style='width:110px;text-align:center;vertical-align:middle;'>
+                            <span style='font-size:18px;'>R$ {{ order.total }}</span>
+                          </td>
                           </template>
 
                           <template v-else>
-                            ENTREGUE
-                          </template>
-
-                          <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
-                            <span style="color:red;font-size:12px;"><b>ATRASADO</b></span>
-                          </template>
-                        </td>
-
-                        <td style='width:110px;text-align:center;vertical-align:middle;'>
-                          <span style='font-size:18px;'>{{ order.quantity }}</span>
-                        </td>
-
-                        <td style="vertical-align:middle;text-align:center;width:110px;">
-                          <span style='font-size:18px;'>R$ {{ order.product_price }}</span>
-                        </td>
-
-                        <td style='width:110px;text-align:center;vertical-align:middle;'>
-                          <span style='font-size:18px;'>R$ {{ order.total }}</span>
-                        </td>
-                        </template>
-
-                        <template v-else>
-                        <td colspan="4" style="vertical-align:middle;">
-                          <div class="float-right">
-                          <button class="btn btn-sm btn-secondary" @click="print_order(order)"><i class="fas fa-search"></i><br>Visualizar</button>
-                          <button class="btn btn-sm btn-secondary"><i class="fas fa-redo-alt"></i><br>Repetir</button>
-                          <button class="btn btn-sm btn-danger" :disabled="(order.status=='READY') || (order.status=='CLOSED') || (order.status=='CANCELED')"><i class="fas fa-times"></i><br>Cancelar</button>
-                          </div>
-                        </td>
-                        <!--<td style='width:40px;vertical-align:middle;'>
-                          <span class="fa-stack fa-1x" style='cursor:pointer;'>
-                            <i class="fas fa-square-full fa-stack-2x"></i>
-                            <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
-                          </span>
-                        </td>
-
-                        <td style='width:40px;vertical-align:middle;'>
-                          <a @click="select_item(command, order)" data-toggle="modal" data-target="#exampleModal">
-                          <span class="fa-stack fa-1x" style='cursor:pointer;'>
-                            <i class="fas fa-square-full fa-stack-2x"></i>
-                            <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
-                          </span>
-                          </a>
-                        </td>-->
-                        </template>
-                      </tr>
-                      </template>
-                      <!--<tr style="font-weight:bold;">
-                        <td colspan="5">Total</td>
-                        <td colspan="2">R$ 280,00</td>
-                      </tr>-->
-                    </tbody>
-                  </template>
-
-                  <template v-else>
-                    <tbody>
-                      <template v-for='(order,index) in command.orders'>
-                        <tr>
-                          <!--<td style="width:90px;padding-left:0px;"><img :src="'/media/'+order.product_image" style="object-fit:cover;width:100%;height:50px;"></td>-->
-                          <td @click="show_options(order)" style="padding-top:4px;padding-bottom:10px;line-height:1;">
-                            <span style="font-size:14px;">{{ order.quantity }} x {{ order.product_name }}</span><br>
-                            <!--<span style='font-size:12px;color:#888;position:relative;top:2px;'>
-                              {{ order.quantity }} x {{ order.product_price }}
-                            </span>-->
-                            <span style='font-size:12px;color:#888;position:relative;top:2px;'>
-                              <span style="padding-right:8px;"><i class="fas fa-arrow-up" style=""></i> {{ order.checkin_time | format_time }}</span>
-
-                              <span style="padding-right:8px;"><template v-if="order.checkout==null"><i class="fas fa-arrow-down"></i> {{ order.expected_time | format_time }}</template>
-                              <template v-else><i class="fas fa-arrow-down" style="color:green;"> {{ order.checkout | format_time }}</i></template></span>
-
-                              <span style="">
-                                <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
-                                  <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
-                                </template>
-                              </span>
+                          <td colspan="4" style="vertical-align:middle;">
+                            <div class="float-right">
+                            <button class="btn btn-sm btn-secondary" @click="print_order(order)"><i class="fas fa-print"></i><br>Imprimir</button>
+                            <button class="btn btn-sm btn-secondary" @click="view_order(order)"><i class="fas fa-search"></i><br>Visualizar</button>
+                            <button class="btn btn-sm btn-secondary"><i class="fas fa-redo-alt"></i><br>Repetir</button>
+                            <button class="btn btn-sm btn-danger" :disabled="(order.status=='READY') || (order.status=='CLOSED') || (order.status=='CANCELED')"><i class="fas fa-times"></i><br>Cancelar</button>
+                            </div>
+                          </td>
+                          <!--<td style='width:40px;vertical-align:middle;'>
+                            <span class="fa-stack fa-1x" style='cursor:pointer;'>
+                              <i class="fas fa-square-full fa-stack-2x"></i>
+                              <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
                             </span>
                           </td>
 
-                          <td style="text-align:right;">
-                            <template v-if="order.show_options">
+                          <td style='width:40px;vertical-align:middle;'>
+                            <a @click="select_item(command, order)" data-toggle="modal" data-target="#exampleModal">
+                            <span class="fa-stack fa-1x" style='cursor:pointer;'>
+                              <i class="fas fa-square-full fa-stack-2x"></i>
+                              <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
+                            </span>
+                            </a>
+                          </td>-->
+                          </template>
+                        </tr>
+                        </template>
+                      </tbody>
+                    </template>
+
+                    <template v-else>
+                      <tbody>
+                        <template v-for='(order,index) in command.orders'>
+                          <tr>
+                            <!--<td style="width:90px;padding-left:0px;"><img :src="'/media/'+order.product_image" style="object-fit:cover;width:100%;height:50px;"></td>-->
+                            <td @click="show_options(order)" style="padding-top:4px;padding-bottom:10px;line-height:1;">
+                              <span style="font-size:14px;">{{ order.quantity }} x {{ order.product_name }}</span><br>
+                              <!--<span style='font-size:12px;color:#888;position:relative;top:2px;'>
+                                {{ order.quantity }} x {{ order.product_price }}
+                              </span>-->
+                              <span style='font-size:12px;color:#888;position:relative;top:2px;'>
+                                <span style="padding-right:8px;"><i class="fas fa-arrow-up" style=""></i> {{ order.checkin_time | format_time }}</span>
+
+                                <span style="padding-right:8px;"><template v-if="order.checkout==null"><i class="fas fa-arrow-down"></i> {{ order.expected_time | format_time }}</template>
+                                <template v-else><i class="fas fa-arrow-down" style="color:green;"> {{ order.checkout | format_time }}</i></template></span>
+
+                                <span style="">
+                                  <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
+                                    <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
+                                  </template>
+                                </span>
+                              </span>
+                            </td>
+
+                            <td style="text-align:right;">
+                              <template v-if="order.show_options">
+                                <span class="fa-stack fa-1x" style='cursor:pointer;font-size:12px;' title="Cancelar pedido">
+                                  <i class="fas fa-square-full fa-stack-2x"></i>
+                                  <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
+                                </span>
+
+                                <span class="fa-stack fa-1x" @click='select_item(order)' style='cursor:pointer;font-size:12px;' title="Repetir o pedido">
+                                  <i class="fas fa-square-full fa-stack-2x"></i>
+                                  <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
+                                </span>
+                              </template>
+
+                              <template v-else style=''>
+                                <div @click="show_options(order)">{{ order.total }}</div>
+                              </template>
+                            </td>
+                          </tr>
+                        </template>
+
+                        <!--<template v-for='(product,index) in product_in_command'>
+                          <tr style="cursor:pointer;" @click="show_options(product)"><!- product_in_command data-toggle="modal" data-target="#command_item_options"  ->
+                            <td style="line-height:10px;">
+                              <span style='font-size:14px;font-weight:bold;'>{{ product.name }}</span><br>
+                              <span style='font-size:12px;color:#888;position:relative;top:2px;'>
+                                {{ product.quant }} x {{ product.price}}
+                              </span>
+                            </td>
+
+                            <td style='width:40px;padding:0px;vertical-align:middle;'>
+                              <template v-if="product.show_options">
                               <span class="fa-stack fa-1x" style='cursor:pointer;font-size:12px;' title="Cancelar pedido">
                                 <i class="fas fa-square-full fa-stack-2x"></i>
                                 <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
                               </span>
+                              </template>
+                            </td>
 
-                              <span class="fa-stack fa-1x" @click='select_item(order)' style='cursor:pointer;font-size:12px;' title="Repetir o pedido">
-                                <i class="fas fa-square-full fa-stack-2x"></i>
-                                <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
-                              </span>
-                            </template>
+                            <td style='width:40px;padding:0px;vertical-align:middle;font-size:12px;'>
+                              <template v-if="product.show_options">
+                                <span class="fa-stack fa-1x" @click='select_item(product)' style='cursor:pointer;font-size:12px;' title="Repetir o pedido">
+                                  <i class="fas fa-square-full fa-stack-2x"></i>
+                                  <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
+                                </span>
+                              </template>
 
-                            <template v-else style=''>
-                              <div @click="show_options(order)">{{ order.total }}</div>
-                            </template>
-                          </td>
-                        </tr>
-                      </template>
+                              <template v-else style=''>146,00</template>
+                            </td>
+                          </tr>
+                        </template>
+                        -->
 
-                      <!--<template v-for='(product,index) in product_in_command'>
-                        <tr style="cursor:pointer;" @click="show_options(product)"><!- product_in_command data-toggle="modal" data-target="#command_item_options"  ->
-                          <td style="line-height:10px;">
-                            <span style='font-size:14px;font-weight:bold;'>{{ product.name }}</span><br>
-                            <span style='font-size:12px;color:#888;position:relative;top:2px;'>
-                              {{ product.quant }} x {{ product.price}}
-                            </span>
-                          </td>
-
-                          <td style='width:40px;padding:0px;vertical-align:middle;'>
-                            <template v-if="product.show_options">
-                            <span class="fa-stack fa-1x" style='cursor:pointer;font-size:12px;' title="Cancelar pedido">
-                              <i class="fas fa-square-full fa-stack-2x"></i>
-                              <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
-                            </span>
-                            </template>
+                        <!--<tr>
+                          <td style="line-height:10px;vertical-align:middle;">
+                            <span style='font-size:14px;font-weight:bold;'>Total</span>
                           </td>
 
-                          <td style='width:40px;padding:0px;vertical-align:middle;font-size:12px;'>
-                            <template v-if="product.show_options">
-                              <span class="fa-stack fa-1x" @click='select_item(product)' style='cursor:pointer;font-size:12px;' title="Repetir o pedido">
-                                <i class="fas fa-square-full fa-stack-2x"></i>
-                                <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
-                              </span>
-                            </template>
-
-                            <template v-else style=''>146,00</template>
+                          <td style=padding:0px;'width:40px;text-align:center;vertical-align:middle;'>
+                            <span style='font-size:12px;font-weight:bold;'>R$ 292,00</span>
                           </td>
-                        </tr>
-                      </template>
-                      -->
-
-                      <!--<tr>
-                        <td style="line-height:10px;vertical-align:middle;">
-                          <span style='font-size:14px;font-weight:bold;'>Total</span>
-                        </td>
-
-                        <td style=padding:0px;'width:40px;text-align:center;vertical-align:middle;'>
-                          <span style='font-size:12px;font-weight:bold;'>R$ 292,00</span>
-                        </td>
-                      </tr>-->
-                    </tbody>
-                  </template>
-                </table>
+                        </tr>-->
+                      </tbody>
+                    </template>
+                  </table>
                 </template>
 
-                <template else>
+                <template v-else>
                   <div style="text-align:center;padding:10px;">
                     Nenhum pedido feito.. <br><span @click="open_menu(selected.table.commands[command_index], command_index)" style="cursor:pointer;font-weight:bold;">clique aqui para adicionar um novo pedido..</span>
                     <br>
@@ -827,36 +830,6 @@
       </div>
     </div>
 
-
-
-    <!--<div id="exampleModal3" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog modal-lg" role="document">
-        <div v-if='selected.product' class="modal-content">
-          <div class="modal-header" style='padding:0px;'>
-            <img :src="selected.product.image" style='width:100%;height:150px;object-fit:cover;' />
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-
-          <span style='position:relative;top:-44px;left:-10px;padding:10px;'>
-            <span style='padding:10px;color:white;font-size:18px;font-weight:bold;background:#888;border-top-right-radius:5px;'>
-            {{ selected.product.name }}
-            </span>
-          </span>
-
-          <div class="modal-body" style='margin-top:-30px;'>
-
-
-          </div>
-
-          <div class="modal-footer">
-
-          </div>
-        </div>
-      </div>
-    </div>-->
-
     {% csrf_token %}
     <script src="{% static 'vali/js/jquery-3.2.1.min.js' %}"></script>
     <script src="{% static 'vali/js/popper.min.js' %}"></script>
@@ -1033,8 +1006,21 @@
             window.open("/api/sales/command/"+command.code+"/", "_blank");
           },
 
-          print_order: function(order){
+          view_order: function(order){
             window.open("/api/sales/commands/order/"+order.id+"/", "_blank");
+          },
+
+          print_order: function(order){
+            let data_paramters = {"order_id":order.id}
+            success_function = function(){
+              alert("Pedido gerado com sucesso!");
+            }
+
+            failure_function = function(){
+              alert("Erro! Não foi possivel gerar o pedido")
+            }
+
+            this.request('/api/sales/commands/order/print/', "post", data_paramters, null, success_function, failure_function);
           },
 
           confirm_item: function(item){
@@ -1060,9 +1046,10 @@
             }
           },
 
-          save_order: function(){
+          save_order: function(command, command_index){
             let scope = this;
             let data_paramters = {};
+            alert("QUEM EH QUEM:"+this.selected.command.id+" - "+this.selected.command.code)
             data_paramters['command_id'] = this.selected.command.id;
             data_paramters['product_id'] = this.selected.product.id;
             data_paramters['product_name'] = this.selected.product.name;
@@ -1080,6 +1067,13 @@
             data_paramters['observations'] = this.forms.order.object.observations;
 
             let success_function = function(response) {
+              scope.print_order(response.object);
+              response.object.show_options = false;
+              //this.selected.command = command;
+              //this.selected.command_index
+
+              alert("TENHO QUE JOGAR NA COMANDA:"+scope.selected.command.code)
+
               scope.selected.command.orders.unshift(response.object);
               scope.selected.command.total = parseFloat(scope.selected.command.total) + parseFloat(response.object.total);
               scope.selected.new_product = null;
@@ -1178,6 +1172,7 @@
             this.selected.command = command;
             this.selected.command_index = index;
             this.selected.new_product = true;
+            alert("olha vou jogar isso na comanda: "+command.id)
           },
 
           load_tables: function () {
@@ -1240,14 +1235,15 @@
             this.selected.table = null;
           },
 
-
           open_command: function(table, table_index){
             let scope = this;
             let data_paramters = {'table_id':table.id}
 
             let success_function = function(response) {
+              alert("vou abrir a comanda");
               scope.tables[table_index].commands.push(response.object);
               if(scope.selected.table==null){
+                alert("po cara.. selected_table tava null");
                 scope.selected.table = scope.tables[table_index];
                 scope.selected.table_index = table_index;
               }
@@ -1257,7 +1253,7 @@
             };
 
             let failure_function = function(response) {
-
+              alert("acho que nao foi")
             };
 
             this.request('/api/sales/commands/open/', "post", data_paramters, null, success_function, failure_function);

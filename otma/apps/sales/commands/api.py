@@ -1,11 +1,22 @@
 from conf import profile
 from otma.apps.core.communications.api import BaseController
-from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Additional
+from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Complement
 from otma.apps.sales.commands.service import CommunicationController
+from django.shortcuts import render, HttpResponse
 from django.utils import timezone
 from datetime import datetime
 import math
 
+
+def format_datetime(value):
+    from datetime import timezone, datetime, timedelta
+    if value is not None:
+        datetime_with_timezone = value.astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
+        print("VEJA DATA:",datetime_with_timezone)
+        return datetime_with_timezone
+        #return value.strftime("%d/%m/%Y, %H:%M:%S")
+    else:
+        return None
 
 class CommandController(BaseController):
     model = Command
@@ -20,6 +31,7 @@ class CommandController(BaseController):
         command = Command()
         command.table_id = request.POST['table_id']
         #command.status = "OPEN"
+        print("VEJA O REQUEST USER: ",request.user)
         command.attendant = request.user
         #command.client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
         command.branch = "1"
@@ -233,8 +245,8 @@ class OrderController(BaseController):
 
         order.command.total = order.command.total + order.total
         order.command.save()
+        #self.print(request, order.id)
         return self.response(response)
-
 
     def load_orders(self, request):
         return super().filter(request, self.model, queryset=Order.objects.all(), extra_fields=self.extra_fields, is_response=True)
@@ -278,6 +290,70 @@ class OrderController(BaseController):
         response_dict['result'] = True
         response_dict['message'] = "Operação realizada com sucesso."
         return self.response(response_dict)
+
+    def prepare_order(self, order):
+        import math
+        import os
+
+        barcode = order.barcode
+        if barcode is None:
+            barcode = order.create_barcode()
+        else:
+            if not os.path.isfile("media/barcodes/" + order.barcode):
+                barcode = order.create_barcode()
+
+        complements = Complement.objects.filter(order=order)
+
+        main_content_height_space = 55
+        complements_height_space = 8 * complements.count()
+
+        observation_height_space = 0
+        if order.observations is not None:
+            observation_height_space = math.ceil(len(order.observations) / 40) * 8
+
+        barcode_height_space = 48
+        total_height = main_content_height_space + complements_height_space + observation_height_space + barcode_height_space
+
+        response = {
+            'id': order.id, 'command': order.command_id, 'product': order.product_id, 'product_name': order.product_name,
+            'product_image': order.product_image, 'product_price': order.product_price, 'quantity': order.quantity,
+            'total': order.total, 'status': order.status, 'barcode': order.barcode,
+            'checkin_time': order.checkin_time, 'checkin_time_hours': order.checkin_time,
+            'checkout_time': format_datetime(order.checkout_time), 'waiting_time': order.waiting_time,
+            'implement_time': order.implement_time, 'closed_time': format_datetime(order.closed_time),
+            'duration_time': order.duration_time, 'expected_time': order.expected_time,
+            'expected_duration': order.expected_duration, 'complements': complements,
+            'observations': order.observations, 'total_height': total_height,
+        }
+        return response
+
+    def view(self, request, id=None):
+        self.start_process(request)
+        from django_xhtml2pdf.utils import generate_pdf
+
+        id = id or request.POST['order_id']
+        order = Order.objects.filter(pk=int(id))
+        if order.count() > 0:
+            response_order = self.prepare_order(order[0])
+            respone_content = HttpResponse(content_type='application/pdf')
+            result = generate_pdf('order_pdf.html', file_object=respone_content, context={'order': response_order})
+            return result
+        return self.response({"result":False,"object":None,"message":"Object not found"})
+
+    def print(self, request, id=None):
+        self.start_process(request)
+        import requests
+
+        order_id = id or request.POST["order_id"]
+        order = Order.objects.filter(pk=int(order_id))
+        if order.count() > 0:
+            route = "http://" + request.get_host() + "/api/sales/commands/order/" + str(order_id) + "/"
+            filename = 'media/orders/' + str(order_id) + '.pdf'
+            response = requests.get(route, params={"order_id":int(order_id)})
+            with open(filename, 'wb') as file:
+                file.write(response.content)
+                return self.response({"result": True, "object": None, "message": "Order was printed"})
+        return self.response({"result": False, "object": None, "message": "Object not found"})
 
 
 class MenuProductController(BaseController):

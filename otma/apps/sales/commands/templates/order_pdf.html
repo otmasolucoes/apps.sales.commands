@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Teste PDF</title>
+		<meta charset="utf-8">
+
+		<style>
+			#page-content {
+				background: white;
+				width: 80mm;
+				font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
+			}
+
+			@page {
+				size: 80mm {{ order.total_height }}mm;
+				margin: 2mm;
+
+				@frame {
+					-pdf-frame-content: company_logo;
+					left: 1cm;
+					top: 0.7cm;
+					height: 1.9cm;
+				}
+
+				@frame {
+					-pdf-frame-content: page_title;
+					/* -pdf-frame-border: 1; */
+					width: 4cm;
+					height: 1cm;
+					left: 9.1cm;
+					top: 1.1cm;
+				}
+			}
+		</style>
+
+		<style>
+			body {
+				width: 80mm;
+				padding: 0px;
+				background:#ccc;
+			}
+
+			#page-header {
+				padding:10px;
+				line-height: 1;
+			}
+
+			#page-body {
+				padding-top:5px;
+				padding-bottom:5px;
+				padding-left:10px;
+				padding-right:10px;
+				line-height: 1;
+			}
+
+			#company-name {
+				font-size:14px;
+				font-weight: bold;
+			}
+
+			#company-attendent {
+				font-size:12px;
+			}
+
+			#order-date {
+				font-size:12px;
+			}
+
+			.order-label {
+				font-size:12px;
+			}
+
+			#order-checkin {
+				font-size:25px;
+			}
+
+			#order-product {
+				font-size:16px;
+				padding:10px;
+				font-weight: bold;
+			}
+
+			#order-complements {
+				line-height: 1.2;
+				padding-left:5px;
+				padding-right:5px;
+				padding-bottom: 10px;
+				border-bottom: 1px solid #ccc;
+			}
+
+			#order-observations {
+				padding-top:10px;
+				padding-bottom:10px;
+				padding-left:5px;
+				padding-right:5px;
+				border-bottom: 1px solid #ccc;
+			}
+		</style>
+
+	</head>
+
+	<body id="pagina">
+		<div id='page-content'>
+			<div id="page-header">
+				<table border='0' style='width: 100%;padding-bottom:5px;margin-bottom:5px;'>
+					<tr>
+						<td style='padding:0px;margin:0px;width:70px;'>
+							<img src="/static/apps/sales/commands/images/mcdonalds-logo.jpg" style='width: 70px;height:50px;'>
+						</td>
+
+						<td style="padding:0px;margin:0px;padding-left:4px;line-height:1.3;">
+							<span id='company-name'>Capixabão Burguer</span><br>
+							<span id='order-date'>{{ order.checkin_time | date:"d/m/Y H:m:s" }}</span><br>
+							<span id='company-attendent'>Diego Pasti</span>
+						</td>
+					</tr>
+				</table>
+
+				<table style='margin-top:8px;border-bottom: 1px solid #ccc;border-top: 1px solid #ccc;width: 100%;padding-top:5px;padding-bottom: 5px;'>
+					<tr>
+						<td style='padding-top:8px;width: 70px;text-align: center;'>
+							<span class='order-label'>MESA</span><br>
+							<span id='table-number'>12</span>
+						</td>
+
+						<td style='padding-top:8px;width: 100px;text-align: center;border-left:1px solid #ccc;border-right:1px solid #ccc;'>
+							<span class='order-label'>PEDIDO</span><br>
+							<span id='table-number'>{{ order.id }}</span>
+						</td>
+
+						<td style='padding-top:8px;text-align: center;'>
+							<span id='order-checkin'>{{ order.checkin_time | date:"H:m" }}</span>
+						</td>
+					</tr>
+				</table>
+			</div>
+
+			<div id="page-body" style='line-height: 1.3;padding-top:5px;padding-bottom:5px;'>
+				<div id='order-product'>
+					{{ order.quantity }} x {{ order.product_name }}
+				</div>
+
+				<div style="font-weight:bold;font-size:14px;padding:15px;padding-top:5px;padding-bottom:5px;border-bottom:1px solid #ccc;">
+				{% for complement in complements %}
+					{{ complement. }}
+					+ 2 x Bacon<br>
+				+ 1 x Calabresa<br>
+				{% endfor %}
+				</div>
+
+
+				<div style="border-bottom:1px solid #ccc;padding-top:10px;line-height:1.5">Observações:<br>
+					<span style="margin-top:20px;font-weight:bold;font-size:14px;padding:15px;">
+					1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890
+					<br>
+					</span>
+				</div>
+
+			</div>
+
+			<div id='order-barcode' style='text-align: center;padding:10px;'>
+				<img src='/media/barcodes/{{ order.barcode }}' style='width: 185px;position:relative;left:-5px;'><br>
+			</div>
+
+		</div>
+	</body>
+</html>

@@ -5,9 +5,15 @@
 		<meta charset="utf-8">
 
 		<style>
+			#page-content {
+				background: white;width: 80mm;height: 210mm;
+				font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
+			}
+
 			@page {
-				margin: 0.5cm;
-				size: A4 portrait;
+				size: 80mm 210mm;
+				margin: 0px;
+				margin-right: 2mm;
 
 				@frame {
 					-pdf-frame-content: company_logo;
@@ -349,43 +355,14 @@
 				}
 			}
 
-			#page-content {
-        background: white;width: 80mm; /* height: 210mm; */
-        font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
-      }
-
 		</style>
 
 		<style>
-			html {
-
-			}
 
 			body {
 				width: 80mm;
 				padding: 0px;
 				background:#ccc;
-			}
-
-			@page { size: 58mm }
-
-			@media print  and (width: 8cm) and (height: 21cm){
-				@page {
-					size: 58mm;
-					margin: 2cm;
-				}
-
-				body {
-					width: 58mm
-
-				}
-			}
-
-			#page-content {
-				padding: 0px;
-				background: blue;
-				background: white;width: 80mm;
-				font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
 			}
 
 			#page-header {
@@ -445,6 +422,7 @@
 				border-bottom: 1px solid #ccc;
 			}
 		</style>
+
 	</head>
 
 	<body id="pagina">

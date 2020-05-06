@@ -1,12 +1,10 @@
 from django.shortcuts import render, HttpResponse
-from otma.apps.sales.commands.models import Command, Order
-
+from django.template.loader import render_to_string
+from otma.apps.sales.commands.models import Command, Order, Complement
 
 
 def format_datetime(value):
     from datetime import timezone, datetime, timedelta
-
-
     if value is not None:
         datetime_with_timezone = value.astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
         print("VEJA DATA:",datetime_with_timezone)
@@ -54,7 +52,6 @@ def order_page(request, id):
             barcode = order.create_barcode()
         else:
             if not os.path.isfile("/media/barcodes/"+order.barcode):
-                print("nao tem esse codigo de barras, vou criar")
                 barcode = order.create_barcode()
 
         response = {
@@ -81,82 +78,4 @@ def order_page(request, id):
             'status':order.status,
             'observations':order.observations,
         }
-
-        # print("OLHA A SAIDA:",barcode)
         return render(request, "order.html", context={"order":response})
-
-def print_command(request):
-    from django_xhtml2pdf.utils import generate_pdf
-    path = os.path.join(BASE_DIR, "static/imagens/")
-    # print(request.POST)
-    resultado = list(resultado)
-    descricao_destinatario = ""
-    descricao_periodo = ""
-
-    status = request.POST['filtrar_por_status']
-    if status == 'TODOS PROTOCOLOS':
-        status = "GERAL"
-
-    if request.POST['filtrar_por_cliente'] != '' and request.POST['filtrar_por_cliente'] != 'TODOS':
-        cliente = entidade.objects.get(pk=request.POST['filtrar_por_cliente']).nome_razao
-
-        if request.POST['filtrar_por_status'] == 'ABERTOS':
-            descricao_destinatario = descricao_destinatario + u"Relatório de Protocolos em aberto do cliente " + cliente
-        else:
-            descricao_destinatario = descricao_destinatario + u"Relatório de Protocolos do cliente " + cliente
-    else:
-        cliente = "TODOS"
-        if request.POST['filtrar_por_status'] == 'ABERTOS':
-            descricao_destinatario = descricao_destinatario + u"Relatório de protocolos em aberto dos clientes"
-        else:
-            descricao_destinatario = descricao_destinatario + u"Relatório de protocolos dos clientes"
-
-    if request.POST['filtrar_desde'] != '':
-        if request.POST['filtrar_por_operacao'] == 'EMITIDOS':
-            # descricao_periodo = descricao_periodo +"Emitidos desde "+request.POST['filtrar_desde']
-            descricao_periodo = descricao_periodo + request.POST['filtrar_desde']
-
-        elif request.POST['filtrar_por_operacao'] == 'RECEBIDOS':
-            descricao_periodo = descricao_periodo + request.POST['filtrar_desde']
-
-    else:
-        pass
-        # if request.POST['filtrar_por_operacao'] == 'EMITIDOS':
-        #    descricao_periodo = descricao_periodo +" Emitidos"
-        #
-        # elif request.POST['filtrar_por_operacao'] == 'RECEBIDOS':
-        #    descricao_periodo = descricao_periodo +"Recebidos"
-        # else:
-        #    pass
-
-    if request.POST['filtrar_ate'] != '':
-        descricao_periodo = descricao_periodo + u" ATÉ " + request.POST['filtrar_ate']
-
-    data = date.today()
-    hora = datetime.datetime.now().strftime("%H:%M")
-
-    resultado = resultado
-    novo_result = []
-
-    nova_lista = split_subparts(resultado, 50)
-    # print("VEJA QUANTAS PAGINAS DEVEM TER:",len(resultado),"REGISTROS EM ",len(nova_lista)," PAGINA(S)")
-
-    protocolo.index = 0;
-    parametros = {
-        'protocolos': nova_lista,
-        'counter': 0,
-        'path_imagens': path,
-        'emitido_por': request.user.get_full_name(),
-        'descricao_destinatario': descricao_destinatario,
-        'filtro_operacao': request.POST['filtrar_por_operacao'].capitalize(),
-        'filtro_status': status,
-        'filtro_periodo': descricao_periodo,
-        'filtro_cliente': cliente,
-
-        'data_emissao': data,
-        'hora_emissao': hora
-    }
-    # context = Context(parametros)
-    resp = HttpResponse(content_type='application/pdf')
-    result = generate_pdf('protocolo/imprimir_relatorio_simples.html', file_object=resp, context=parametros)
-    return result

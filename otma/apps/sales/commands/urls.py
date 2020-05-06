@@ -14,7 +14,10 @@ urlpatterns = [
     #url(r'^(?P<code>+)/print/$', CommandController().load),
 
     url(r'^order/save/$', OrderController().save),
-    url(r'^order/(?P<id>\d+)/$', order_page),
+    url(r'^order/(?P<id>\d+)/$', OrderController().view),
+    url(r'^order/view/$', OrderController().view),
+    url(r'^order/print/$', OrderController().print),
+
 
     url(r'^groups/load/$', MenuGroupController().load_groups),
     url(r'^products/load/$', MenuProductController().load_products),
