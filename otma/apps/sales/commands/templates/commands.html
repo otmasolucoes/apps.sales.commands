@@ -154,7 +154,6 @@
   <body>
     <div style='padding:0px;'>
       <div id="app" @mousemove="" @keyup="">
-        {{ controls }}
         <div style='background:#b22222;color: white;'>
           {% verbatim %}
           <div style="border-bottom: 2px solid #b36363;">
@@ -1049,7 +1048,6 @@
           save_order: function(command, command_index){
             let scope = this;
             let data_paramters = {};
-            alert("QUEM EH QUEM:"+this.selected.command.id+" - "+this.selected.command.code)
             data_paramters['command_id'] = this.selected.command.id;
             data_paramters['product_id'] = this.selected.product.id;
             data_paramters['product_name'] = this.selected.product.name;
@@ -1069,11 +1067,6 @@
             let success_function = function(response) {
               scope.print_order(response.object);
               response.object.show_options = false;
-              //this.selected.command = command;
-              //this.selected.command_index
-
-              alert("TENHO QUE JOGAR NA COMANDA:"+scope.selected.command.code)
-
               scope.selected.command.orders.unshift(response.object);
               scope.selected.command.total = parseFloat(scope.selected.command.total) + parseFloat(response.object.total);
               scope.selected.new_product = null;
@@ -1172,7 +1165,6 @@
             this.selected.command = command;
             this.selected.command_index = index;
             this.selected.new_product = true;
-            alert("olha vou jogar isso na comanda: "+command.id)
           },
 
           load_tables: function () {
