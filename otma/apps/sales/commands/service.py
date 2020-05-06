@@ -1,18 +1,18 @@
+from django.template.loader import get_template, render_to_string
+from django.http import HttpResponse
 from django.conf import settings
 from conf import profile
-from django.http import HttpResponse
-from django.template.loader import get_template, render_to_string
+
+from barcode import get_barcode_class, generate
 from barcode.writer import ImageWriter
-from barcode import get_barcode_class
-from weasyprint import HTML
-from barcode import generate
+
+import datetime
 import qrcode
-import os
-import json
-import glob
 import shutil
 import django
-import datetime
+import json
+import glob
+import os
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'test_project.settings')
 django.setup()
@@ -216,6 +216,7 @@ class PDFController:
 
     def generate_PDF(self, data, filename):
         #import sysconfig
+        from weasyprint import HTML
         html_string = render_to_string('order.html', {'order': data})
         pdf_path = f'media/pdf/{filename}'
         #pdf_path = sysconfig.get_paths()['purelib'] + '/otma/apps/sales/commands/templates/pdf/test.pdf'
