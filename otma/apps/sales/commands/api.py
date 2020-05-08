@@ -335,6 +335,7 @@ class OrderController(BaseController):
 
     def print(self, request, id=None):
         self.start_process(request)
+        from conf import profile
         import requests
 
         order_id = id or request.POST["order_id"]
@@ -345,7 +346,18 @@ class OrderController(BaseController):
             response = requests.get(route, params={"order_id":int(order_id)})
             with open(filename, 'wb') as file:
                 file.write(response.content)
-                return self.response({"result": True, "object": None, "message": "Order was printed"})
+
+            #printer_controller = PrinterController()
+            #printers = printer_controller.scan()
+            #printer_controller.print(printers[0],filename)
+            printer = PrinterController()
+            print('O PDF FOI GERADO PREPARANDO PARA IMPRIMIR...', pdf_path)
+            printer.print(profile.PRINTER_CONFIG, pdf_path, title="test_python")
+            print('IMPRIMIDO COM SUCESSO!!!')
+
+            print("SERA QUE IMPRIMIU?")
+
+            return self.response({"result": True, "object": None, "message": "Order was printed"})
         return self.response({"result": False, "object": None, "message": "Object not found"})
 
 

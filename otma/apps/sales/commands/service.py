@@ -202,6 +202,7 @@ class PrinterController:
         printers = self.connect.getPrinters()
         for printer in printers:
             print(printer, printers[printer]["device-uri"])
+        return printers
 
     def set_printer(self):
         return list(self.connect.getPrinters())
@@ -209,7 +210,10 @@ class PrinterController:
     def print(self, printer, filename, title=None, *args, **kwargs):
         if not title:
             title = ""
-        self.connect.printFile(printer, filename, title, kwargs)
+        try:
+            self.connect.printFile(printer, filename, title, kwargs)
+        except:
+            print("Não foi possivel enviar a impressao")
 
 
 class PDFController:
