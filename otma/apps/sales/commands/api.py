@@ -480,12 +480,14 @@ class DatabaseController(BaseController):
         except:
             pass
         if 'filename' in request.GET:
-            self.filename = request.GET['filename']
-            if self.filename == 'products':
+            self.filename = request.GET['filename'].replace('.json', '')
+            if 'groups' in self.filename:
+                print('GROUP: ', self.filename)
+                self.model = Group
+            if 'products' in self.filename:
+                print('PRODUCTS: ', self.filename)
                 self.model = Product
                 self.dependency_model = Group
-            elif self.filename == 'groups':
-                self.model = Group
         communication = CommunicationController()
         load = communication.field_search(model=self.model, filename=self.filename, extension=self.extension, dependency=self.dependency_model)
         response_dict = {}
