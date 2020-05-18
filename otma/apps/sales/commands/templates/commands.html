@@ -231,6 +231,7 @@
 
         {% verbatim %}
         <div style="padding:15px;">
+          OLHA AÊ QUEM É O GARÇOM: {{user.username }}
           <template v-if="selected.new_product">
             <app_commands :controls="controls" :selected="selected" :groups="groups" :complements="complements" :init_complements="init_complements" :new_products="selected.new_products">
 
@@ -860,7 +861,6 @@
                 type: 'contains',
               },
 
-
               order:{
                 object:{
                   command: null,        // = models.ForeignKey(Command, on_delete=models.DO_NOTHING)
@@ -985,6 +985,9 @@
                 ]
               },*/
             ],
+
+            user: {},
+
           }
         },
 
@@ -1285,7 +1288,27 @@
           update_clock: function(){
             this.controls.clock = moment().utc().format();
             //this.controls.clock = new Date().utc().format();
-          }
+          },
+
+          get_user: function () {
+            let scope = this;
+            let data_parameters = {};
+            let success_function = function(response) {
+              scope.errors = response.message;
+              scope.user = response.object;
+              scope.user.password = '';
+              alert('OLHA AÊ: ' + JSON.stringify(response));
+              //scope.session.is_blocked = response.object.session.is_blocked;
+              //localStorage.setItem("is_blocked", response.object.session.is_blocked);
+              //scope.controls.page.loaded = true;
+            };
+
+            let failure_function = function(response) {
+              window.location.href = "/sales/commands/login";
+            };
+
+            this.request('/api/core/authentication/get_user/', 'get', data_parameters, null, success_function, failure_function);
+          },
         },
 
         computed: {
@@ -1330,9 +1353,11 @@
 
     <script>
       function success_notify(){
+
       }
 
       window.addEventListener('load', function () {
+        app.get_user();
         app.load_tables();
         app.load_groups();
         register_action();
