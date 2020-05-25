@@ -473,6 +473,7 @@ class DatabaseController(BaseController):
         self.model = None
         self.dependency_model = None
 
+    """
     def load(self, request):
         self.start_process(request)
         try:
@@ -490,6 +491,39 @@ class DatabaseController(BaseController):
                 self.dependency_model = Group
         communication = CommunicationController()
         load = communication.field_search(model=self.model, filename=self.filename, extension=self.extension, dependency=self.dependency_model)
+        response_dict = {}
+        if load:
+            response_dict['result'] = True
+            response_dict['message'] = "Operação realizada com sucesso."
+        else:
+            response_dict['result'] = False
+            response_dict['message'] = "Algo deu errado."
+        return self.response(response_dict)
+    """
+
+    def load(self, request):
+        self.start_process(request)
+        try:
+            self.extension = request.GET['extension']
+        except:
+            pass
+        print(request.GET)
+        if 'filename' in request.GET:
+            communication = CommunicationController()
+            self.filename = request.GET['filename'].replace('.json', '')
+            if 'grupos' in self.filename:
+                print('GROUP: ', self.filename)
+                self.model = Group
+                load = communication.field_search(model=self.model, filename=self.filename, extension=self.extension, dependency=self.dependency_model)
+            if 'produtos' in self.filename:
+                print('PRODUCTS: ', self.filename)
+                self.model = Product
+                self.dependency_model = Group
+                load = communication.field_search(model=self.model, filename=self.filename, extension=self.extension, dependency=self.dependency_model)
+        else:
+            print('PRICES: ', 'Alteração de preços')
+            self.model = Product
+            load = communication.field_search(model=self.model, filename=self.filename, extension=self.extension, dependency=self.dependency_model)
         response_dict = {}
         if load:
             response_dict['result'] = True
