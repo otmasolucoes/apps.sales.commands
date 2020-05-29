@@ -472,36 +472,29 @@ class DatabaseController(BaseController):
         self.dependency_model = None
 
     def load(self, request):
+        print(request)
         self.start_process(request)
+        print('ENTREI NA FUNÇÃO LOAD', request.GET)
+        communication = CommunicationController()
         try:
             self.extension = request.GET['extension']
         except:
             pass
         if 'filename' in request.GET:
-            self.filename = request.GET['filename']
-            if self.filename == 'products':
+            self.filename = request.GET['filename'].replace('.json', '')
+            if 'grupos' in self.filename:
+                print('GROUPS: ', self.filename)
+                self.model = Group
+            if 'produtos' in self.filename:
+                print('PRODUCTS: ', self.filename)
                 self.model = Product
                 self.dependency_model = Group
-            elif self.filename == 'groups':
-                self.model = Group
-        communication = CommunicationController()
-        load = communication.field_search(model=self.model, filename=self.filename, extension=self.extension, dependency=self.dependency_model)
-        response_dict = {}
-        if load:
-            response_dict['result'] = True
-            response_dict['message'] = "Operação realizada com sucesso."
+            load = communication.field_search(model=self.model, filename=self.filename, extension=self.extension, dependency=self.dependency_model)
         else:
-            response_dict['result'] = False
-            response_dict['message'] = "Algo deu errado."
-        return self.response(response_dict)
-
-    def update(self, request):
-        self.start_process(request)
-        self.model = Product
-        if 'extension' in request.GET:
-            self.extension = request.GET['extension']
-        communication = CommunicationController()
-        load = communication.field_search(model=self.model)
+            print('PRODUCTS_UPDATE: ', self.filename)
+            self.model = Product
+            load = communication.field_search(model=self.model)
+        print('NÃO POSSO VIR AQUI')
         response_dict = {}
         if load:
             response_dict['result'] = True

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <title>Melinux</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bower_components/font-awesome/css/all.min.css' %}">
+    <!--<link rel="stylesheet" href="{% static 'vali/css/main.css' %}">-->
+    <!--<link rel="stylesheet" href="{% static 'css/lockscreen.css' %}">-->
+    <link rel="stylesheet" href="{% static 'apps/test_project/styles/otma-base.css' %}">
+
+    <script src="{% static 'bower_components/font-awesome/js/all.js' %}"></script>
+    <script src="{% static 'bower_components/vue/dist/vue.js' %}"></script>
+    <script src="{% static 'base_controller.js' %}"></script>
+
+    <style>
+      body, html {
+        background-image: url("/static/apps/sales/commands/images/background-sm.png");
+        line-height: 1.4;
+        font-family: Tahoma, Geneva, sans-serif;
+      }
+      .content {
+        text-align: center;
+        width: 100%;
+      }
+      .img-center {
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
+      }
+      .company-title {
+        text-align: center;
+        font-family: "Brush Script MT", "Brush Script Std", cursive;
+        font-size: 30px;
+      }
+      .FlexContainer {
+        position: fixed;
+        align-items: center;
+        background: hsla(0,0%,0%,.1);
+        /*background: hsla(0,0%,0%,.1);*/
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        justify-content: center;
+        width: 100vw;
+      }
+      .FlexItem {
+        box-sizing: border-box; /* 2 */
+        max-width: 100%; /* 1 */
+        padding: 1em;
+      }
+
+    </style>
+  </head>
+  <body class="app sidebar-mini">
+    <div id="app_commands_login">
+      <div style='background:#b22222;color: white;'>
+        {% verbatim %}
+        <div style="border-bottom: 2px solid #b36363;">
+          <table border='0' style="width:100%;">
+            <tr>
+              <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">Giga Byte</td>
+              <td style="width:40px;" title="Adicionar comanda">
+                <span @click="" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                  <i class="fas fa-plus"></i>
+                </span>
+              </td>
+
+              <td style="width:40px;" title="Minhas Notificações">
+                <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                  <i class="fas fa-bell"></i>
+                </span>
+              </td>
+
+              <td style="width:40px;">
+                <div class="dropdown">
+                  <span class="" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-user"></i>
+                  </span>
+
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="#">Coisas</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="#">Another action</a>
+                    <a class="dropdown-item" href="#">Sair</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+        {% endverbatim %}
+      </div>
+      <div class="FlexContainer">
+        <div class="FlexItem">
+          <div class="img-center">
+            <img class="rounded-circle user-image" src="{% static '/company/logoemp.jpg' %}" style="width: 100px;height: 100px;">
+            <h4 class="text-center user-name"></h4>
+            <p class="company-title">Giga Byte</p>
+          </div>
+          {% csrf_token %}
+          <template>
+            <app_commands_user_login :form="forms.login"></app_commands_user_login>
+          </template>
+        </div>
+      </div>
+    </div>
+    {% load static %}
+    <script src="{% static 'vali/js/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'vali/js/popper.min.js' %}"></script>
+    <script src="{% static 'vali/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'bower_components/moment/min/moment.min.js' %}"></script>
+    <script src="{% static 'apps/core/commons/scripts/locales.js' %}"></script>
+    <script src="{% static 'commons_widgets.js' %}"></script>
+    <script src="{% static 'bower_components/pnotify/dist/pnotify.js' %}"></script>
+    <script src="{% static 'apps/test_project/util/js/notify.js' %}"></script>
+    <script src="{% static '/commands_controller.js' %}"></script>
+    <script src="{% static 'vali/js/main.js' %}"></script>
+
+    <script>
+      var app = new Vue({
+        el: '#app_commands_login',
+        mixins: [base_communications],
+        data: function() {
+          return {
+            pages: {
+              active: "login",
+            },
+            forms: {
+              login:{
+                object:{
+                  username:null,
+                  password:null
+                },
+                errors:{},
+                selected:{
+                  index: null,
+                  register: null
+                },
+              },
+              signup:{
+                object:{
+                  first_name: null,
+                  family_name: null,
+                  email: null,
+                  username:null,
+                  password:null
+                },
+                errors:{},
+                selected:{
+                  index: null,
+                  register: null
+                },
+              },
+              reset_password:{
+                object:{
+                  email: null,
+                },
+                errors:{},
+                selected:{
+                  index: null,
+                  register: null
+                },
+              },
+            },
+          }
+        },
+        methods: {
+          change_page: function (page){
+            this.pages.active = page;
+          }
+        }
+      });
+
+      window.addEventListener('load', function () {
+        //app.get_user();
+      }, false);
+    </script>
+  </body>
+</html>

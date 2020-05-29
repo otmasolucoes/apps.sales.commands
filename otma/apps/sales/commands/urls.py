@@ -32,7 +32,6 @@ urlpatterns = [
     url(r'^table/(?P<table>[^/]+)/$', CommandController().commands_by_table),
     url(r'^table/(?P<table>[^/]+)/command/(?P<id>[^/]+)/close/$', CommandController().close_commands_by_table),
     #url(r'^pdf/$', PDFController().get),
-    url(r'^database/update/$', DatabaseController().update),
     url(r'^database/load/$', DatabaseController().load),
     #path(r'user/', include('otma.apps.entities.user.urls')),
 ]
