@@ -1,4 +1,5 @@
 from otma.apps.sales.commands.models import Group, Table, Command, Product, Order, Complement
+from django.utils.html import format_html
 from django.contrib import admin
 
 
@@ -10,12 +11,29 @@ class GroupsAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductsAdmin(admin.ModelAdmin):
-    list_display = ('id', 'group', 'code', 'name', 'description', 'price', 'image', 'have_promotion')
-    ordering = ('id',)
+    list_display = ('name_preview', )
+    ordering = ('group',)
+
+    def name_preview(self, obj):
+        description = obj.description or ""
+        base_template = """
+            <a href='/admin/commands/product/{}/change/'>
+            <table border='0' style='margin:0px;width:100%;'>
+                <tr style='height:50px;'>
+                    <td style='padding:0px;width:60px;height:100%;border-bottom: 0px;'>
+                        <img src='{}' style='width:60px;height:50px;'>
+                    </td>
+                    <td style='border-bottom: 0px;'><b>{}.{}. {} <span style='font-size:10px;position:relative;top:-1px;'>({})</span></b><br><span style='font-weight:normal;'>{}</span></td>
+                    <td style='width:70px;text-align:center;vertical-align:middle;border-bottom:0px; '>R$ {}</td>
+                </tr>
+            </table>
+            </a>
+        """.format(obj.id ,obj.image.url, obj.group.code, obj.code, obj.name, obj.group.name,description, obj.price)
+        return format_html(base_template)
 
 @admin.register(Table)
 class TableAdmin(admin.ModelAdmin):
-    list_display = ('id', 'code', 'area', 'status', 'capacity')
+    list_display = ('id', 'code', 'area', 'status', 'total', 'capacity')
     ordering = ('id',)
 
 @admin.register(Command)
@@ -26,7 +44,7 @@ class CommandsAdmin(admin.ModelAdmin):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'command', 'product', 'product_image', 'product_name', 'product_price', 'quantity', 'total', 'status', 'checkin_time', 'expected_duration', 'expected_time', 'checkout_time', 'waiting_time','implement_time', 'closed_time', 'duration_time', 'barcode', 'observations')
+    list_display = ('id', 'command', 'product', 'image', 'name', 'price', 'quantity', 'total', 'status', 'checkin_time', 'expected_duration', 'expected_time', 'checkout_time', 'waiting_time','implement_time', 'closed_time', 'duration_time', 'barcode', 'observations')
     ordering = ('id',)
 
 

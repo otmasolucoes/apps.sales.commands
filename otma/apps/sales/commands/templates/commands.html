@@ -11,7 +11,7 @@
 
     <script src="{% static 'bower_components/vue/dist/vue.js' %}"></script>
     <script src="{% static 'base_controller.js' %}"></script>
-    <script src="{% static 'commands_controller.js' %}"></script>
+    <script src="{% static 'com mands_controller.js' %}"></script>
 
     <style>
       /*
@@ -62,11 +62,11 @@
       }
 
       #table-panel li.opened {
-        background: #6b8e23;
+        background: #429742;
       }
 
       #table-panel li.waiting {
-        background: #e38e00;
+        background: #c60000;
       }
 
       #consumed_products td {
@@ -80,8 +80,8 @@
 
       ul#product-menu li {
         text-align: left;
-        background: rgb(178,34,34);
-        background: linear-gradient(0deg, rgba(178,34,34,1) 0%, rgba(178,34,34,1) 92%, rgba(134,28,28,1) 100%);
+        /*background: rgb(178,34,34,0.85);*/
+        /*background: linear-gradient(0deg, rgba(178,34,34,1) 0%, rgba(178,34,34,1) 92%, rgba(134,28,28,1) 100%);*/
         color: #ffffff;
       }
 
@@ -92,7 +92,17 @@
       }
 
       ul#product-menu li:hover {
-        background: #8e1b1b;
+        /*background: #8e1b1b;*/
+        /*filter: grayscale(20%);*/
+        /*background: hsla(180,0%,50%,0.5);*/
+        /*background-color: rgba(var(--rgb), 0.8);*/
+
+        /*background-image:linear-gradient(hsla(255,100%,100%,.8) 100%,transparent 100%)*/
+        background: rgb(178,34,34,1.0);
+      }
+
+      ul#product-menu li:hover {
+        filter:brightness(120%);
       }
 
       .auto-grid-small {
@@ -148,32 +158,38 @@
         vertical-align:middle;
       }
 
+      .selected {
+        background:#237dd7;
+        color: white !important;
+      }
+
+      .order_decoration {
+        font-family:arial;
+        padding:10px;
+        margin-top:-65px;
+        height:65px;
+        /*background-color: rgba(28, 28, 28, 0.90);*/
+        color:white;
+      }
+
     </style>
   </head>
 
   <body>
     <div style='padding:0px;'>
       <div id="app" @mousemove="" @keyup="">
-        <div style='background:#b22222;color: white;'>
-          {% verbatim %}
-          <div style="border-bottom: 2px solid #b36363;">
+        <div :style='controls.styles.themes.active.header'>
+
+          <div :style='controls.styles.themes.active.header_division'>
             <table border='0' style="width:100%;">
               <tr>
-
-
-                <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">Madero</td>
-
-                <td style="width:40px;" title="Retornar a pagina anterior">
-                  <span v-if="selected.table!=null" @click="selected.table=null" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                <td style="width:40px;" title="Retornar a pagina anterior"><!-- v-if='controls.screen.fullscreen_mode'-->
+                  <span @click="back_menu()" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;"><!-- @click="selected.table=null" v-if="selected.table!=null"  -->
                     <i class="fas fa-arrow-left"></i>
                   </span>
                 </td>
 
-                <td v-if="selected.table!=null" style="width:40px;" title="Adicionar comanda">
-                  <span @click="open_command(selected.table, selected.table_index)" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
-                    <i class="fas fa-plus"></i>
-                  </span>
-                </td>
+                <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">{{ company_name }}</td>
 
                 <td style="width:40px;" title="Minhas Notificações">
                   <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
@@ -207,6 +223,23 @@
                   </div>
                 </td>
 
+                <td style="width:40px;">
+                  <div class="dropdown">
+                    <span class="" id="dropdownMenuButton" title="Preferências" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                      <i class="fas fa-tools"></i>
+                    </span>
+
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton" style="font-size:12px;">
+                      {% verbatim %}
+                      <template v-for="theme in controls.styles.themes.options">
+                        <a class="dropdown-item" href="#" @click="controls.styles.themes.active=theme" style="padding-right:10px;">
+                          {{ theme.name }} <i v-if="controls.styles.themes.active.name==theme.name" class="float-right fas fa-check" style="position:relative;top:3px"></i>
+                        </a>
+                      </template>
+                      {% endverbatim %}
+                    </div>
+                  </div>
+                </td>
 
                 <td style="width:40px;">
                   <div class="dropdown">
@@ -215,26 +248,21 @@
                     </span>
 
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                      <a class="dropdown-item" href="#">Coisas</a>
+                      <a class="dropdown-item" href="#">Nada ainda</a>
                       <div class="dropdown-divider"></div>
-                      <a class="dropdown-item" href="#">Another action</a>
-                      <a class="dropdown-item" href="#">Sair</a>
+                      <a class="dropdown-item" href="/logout">Sair</a>
                     </div>
                   </div>
                 </td>
               </tr>
             </table>
           </div>
-
-          {% endverbatim %}
         </div>
 
         {% verbatim %}
         <div style="padding:15px;">
           <template v-if="selected.new_product">
-            <app_commands :controls="controls" :selected="selected" :groups="groups" :complements="complements" :init_complements="init_complements" :new_products="selected.new_products">
-
-            </app_commands>
+            <app_commands :controls="controls" :forms="forms" :selected="selected" :groups="groups" :complements="complements" :init_complements="init_complements" :new_products="selected.new_products"></app_commands>
           </template>
 
           <div v-else-if='selected.table==null' id="table-panel">
@@ -255,46 +283,32 @@
           </div>
 
           <div class="" v-else style="height: calc(100vh - 150px);">
-            <!-- ESSE TRECHO DE CÓDIGO SERVE PARA CRIARMOS UMA LISTA SEPARADA DE ITENS, PRA CONFIRMAR
-                 TODOS DE UMA SÓ VEZ, POR ENQUANTO NÃO VAMOS USA-LA MAS VAMOS DEIXAR AQUI PRA AVALIAR
-                 ISSO COM CALMA.
+            <div>
+              <h6 style="height:30px;background:white;padding-left:5px;padding-right:5px;">
+                <div class="float-left" style="position:relative;top:0px;">
+                  <div class="dropdown">
 
-            <div v-if="selected.new_products.length > 0" style="background:white;width:100%;padding:10px;border:1px solid #ddd;margin-bottom:15px;">
-              <div style="height:36px;">
-                <h6 class="float-left" style="position:relative;top:3px;"><i class="far fa-file-alt"></i> Novo pedido</h6>
-                <div class="float-right">
-                  <button class="btn btn-sm btn-success" style="font-size:10px;" @click="confirm_new_itens()">Confirmar</button>
+                      <button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
+                        <i class="fas fa-bars"></i>
+                      </button>
+                      <span style="position:relative;top:2px">Mesa {{ selected.table.code }}</span>
+
+
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                      <a class="dropdown-item" href="#" style="font-size:12px;padding-left:15px;padding-right:5px;" @click="open_command(selected.table, selected.table_index)"><i class="fas fa-plus"></i> Adicionar comanda</a>
+                      <div class="dropdown-divider"></div>
+                      <a class="dropdown-item" @click="view_order()" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-search"></i> Visualizar pedido</a>
+                      <a class="dropdown-item" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-print"></i> Reimprimir pedido</a>
+                      <a class="dropdown-item" href="#" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-times"></i> Cancelar pedido</a>
+                    </div>
+                  </div>
                 </div>
-              </div>
 
-
-              {{ selected.new_products }}
-
-              <table class="table table-sm" border="0" style='width:100%;'>
-                <tr v-for='(order,index) in selected.new_products'>
-                  <td style="line-height:10px;padding:10px;">
-                    <span style='font-size:14px;'>{{ order.product_name }}</span><br>
-                    <span style='font-size:12px;color:#888;position:relative;top:2px;'>
-                      {{ order.quantity }} x {{ order.product_price}}
-                    </span>
-                  </td>
-
-                  <td style='width:40px;padding:0px;vertical-align:middle;'>
-                    <span class="fa-stack fa-1x" @click='decrease_new_item(index)' style='cursor:pointer;font-size:12px;'>
-                      <i class="fas fa-square-full fa-stack-2x"></i>
-                      <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
-                    </span>
-                  </td>
-
-                  <td style='width:40px;padding:0px;vertical-align:middle;'>
-                    <span class="fa-stack fa-1x" @click='increase_new_item(index)' style='cursor:pointer;font-size:12px;'>
-                      <i class="fas fa-square-full fa-stack-2x"></i>
-                      <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
-                    </span>
-                  </td>
-                </tr>
-              </table>
-            </div>-->
+                <div class="float-right">
+                  <span style="position:relative;left:-10px;top:7px;color:#777;font-family:Arial;">R$ {{ selected.table.total | format_money }}</span>
+                </div>
+              </h6>
+            </div>
 
             <template v-if="selected.table.commands.length==0">
               Nenhuma comanda aberta nessa mesa
@@ -304,17 +318,47 @@
               <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #ddd;">
                 <div style="height:50px;padding-bottom:40px;border-bottom:1px solid #ddd;">
                   <h6 class="float-left" style="position:relative;top:3px;">
-                    <i class="fas fa-tasks"></i> Comanda {{ command.code }}<br>
+                    Comanda {{ command.code }}<br>
                     <span style="font-size:12px;color:#666;">
-                      <template v-if="controls.screen.width>600">Entrada:</template>{{ command.checkin_time | format_datetime }}
+                      Cliente não identificado
+                      <!--<template v-if="command.client">{{ command.client }}</template>
+                      <template v-else>
+                        <input v-if="forms.command.change_client_name" class="form-control" v-model="command.client" style="border-top:0px;border-left:0px;border-right:0px;"/><!- @submit="confirm_client_name_field()"  ->
+                        <a v-else style="cursor:pointer;">Identificar cliente</a><-- data-toggle="modal" href="#update_command_client_modal" >
+                      </template>-->
+
+                      <!--<template v-if="controls.screen.width>600">Entrada:</template>{{ command.checkin_time | format_datetime }}-->
                     </span>
                   </h6>
 
                   <div class="float-right" style="position:relative;top:0px;padding-right:0px;">
-                    <template v-if="controls.screen.width>600"><button type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button></template>
+                    <button type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
+                      <i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span>
+                    </button>
+
+                    <button :disabled="!(selected.order && selected.command_index==command_index)" @click="view_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
+                      <i class="fas fa-print"></i><br><span style="font-size:10px;">Imprimir</span>
+                    </button>
+
+                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="repeat_order(command, command_index, selected.order)" data-toggle="modal" data-target="#exampleModal" style="line-height:1;height:38px;">
+                      <i class="fas fa-redo-alt"></i><br><span style="font-size:10px;">Repetir</span>
+                    </button>
+
+                    <!--<button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
+                      <i class="fas fa-print"></i><br><span style="font-size:10px;">Imprimir</span>
+                    </button>
+
+                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
+                      <i class="fas fa-times"></i><br><span style="font-size:10px;">Cancelar</span>
+                    </button>-->
+
+                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
+                      <i class="fas fa-sign-out-alt"></i><br><span style="font-size:10px;">Encerrar</span>
+                    </button>
+
                     <!--<button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:110px;height:38px;"><span style="font-size:13px;font-weight:bold;">R$ {{ command.total }}</span><br><span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span></button>-->
 
-                    <div class="btn-group">
+                    <!--<div class="btn-group">
                       <button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:115px;height:38px;" @click="close_command(command)">
                         <span style="font-weight:bold;font-size:15px;">R$ {{ command.total }}</span><br>
                         <span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span>
@@ -347,24 +391,18 @@
                         </template>
                       </div>
                       </template>
-                    </div>
+                    </div>-->
                   </div>
                 </div>
 
                 <br>
 
                 <template v-if="command.orders && command.orders.length>0">
-                  <template v-if="controls.screen.width<=600">
-                  <div style="padding-bottom:10px;">
-                    <button type="button" class="form-control btn btn-sm btn-light" @click="open_menu(selected.table.commands[0], command_index)" style="line-height:1;height:38px;"><i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span></button>
-                  </div>
-                  </template>
-
-                  <table border="0" id='consumed_products' class='table table-sm table-stripped table-hover' style='margin-bottom:0px;'>
+                  <table border="0" id='consumed_products' class='table table-sm table-stripped' style='font-family:arial;margin-bottom:0px;'>
                     <template v-if='controls.screen.width>=1024'>
                       <thead>
                         <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
-                          <td style="text-align:left;border-top:none;">Produto</td>
+                          <td style="text-align:left;border-top:none;">Produtos</td>
                           <td style="text-align:center;border-top:none;"></td>
                           <td style="text-align:center;border-top:none;"></td>
                           <td style="text-align:center;border-top:none;">Quant</td>
@@ -374,22 +412,21 @@
                       </thead>
 
                       <tbody>
-                        <template v-for='(order,order_index) in command.orders'>
-                        <tr style="cursor:pointer;" @click="show_options(order)"><!-- data-toggle="modal" data-target="#command_item_options" -->
+                        <template v-for='(order, order_index) in command.orders'>
+                        <tr :class="{'selected':order.show_options}" style="cursor:pointer;" @click="show_options(command_index, order, order_index)"><!-- data-toggle="modal" data-target="#command_item_options" -->
                           <td style="width:100px;">
-                            <img :src="'/media/'+order.product_image" style='width:90px;height:60px;object-fit:cover;' />
+                            <img :src="'/media/'+order.image" style='width:90px;height:60px;object-fit:cover;' />
                           </td>
 
                           <td style="line-height:1.1;">
-                            <span style='font-size:18px;'>{{ order.product_name }} - {{ order.show_options }}</span><br>
-                            <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time }} -
-                            <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time }}</template>
-                            <template v-else>Entrega: {{ order.checkout_time | format_time }}</template></span>
+                            <span style='font-size:18px;'>{{ order.name }}</span><br>
+                            <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time_short }} -
+                            <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time_short }}</template>
+                            <template v-else>Entrega: {{ order.checkout_time | format_time_short }}</template></span>
                             <br>
                             <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
                           </td>
 
-                          <template v-if="order.show_options==false">
                           <td style='width:40px;vertical-align:middle;text-align:center;'>
                             <template v-if="order.status=='WAITING'">
                               AGUARDANDO
@@ -417,63 +454,139 @@
                           </td>
 
                           <td style='width:110px;text-align:center;vertical-align:middle;'>
-                            <span style='font-size:18px;'>{{ order.quantity }}</span>
+                            <span style='font-size:18px;'>{{ order.quantity | format_money }}</span>
                           </td>
 
                           <td style="vertical-align:middle;text-align:center;width:110px;">
-                            <span style='font-size:18px;'>R$ {{ order.product_price }}</span>
+                            <span style='font-size:18px;'>R$ {{ order.price | format_money }}</span>
                           </td>
 
                           <td style='width:110px;text-align:center;vertical-align:middle;'>
-                            <span style='font-size:18px;'>R$ {{ order.total }}</span>
+                            <span style='font-size:18px;'>R$ {{ order.total | format_money }}</span>
                           </td>
-                          </template>
-
-                          <template v-else>
-                          <td colspan="4" style="vertical-align:middle;">
-                            <div class="float-right">
-                            <button class="btn btn-sm btn-secondary" @click="print_order(order)"><i class="fas fa-print"></i><br>Imprimir</button>
-                            <button class="btn btn-sm btn-secondary" @click="view_order(order)"><i class="fas fa-search"></i><br>Visualizar</button>
-                            <button class="btn btn-sm btn-secondary"><i class="fas fa-redo-alt"></i><br>Repetir</button>
-                            <button class="btn btn-sm btn-danger" :disabled="(order.status=='READY') || (order.status=='CLOSED') || (order.status=='CANCELED')"><i class="fas fa-times"></i><br>Cancelar</button>
-                            </div>
-                          </td>
-                          <!--<td style='width:40px;vertical-align:middle;'>
-                            <span class="fa-stack fa-1x" style='cursor:pointer;'>
-                              <i class="fas fa-square-full fa-stack-2x"></i>
-                              <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
-                            </span>
-                          </td>
-
-                          <td style='width:40px;vertical-align:middle;'>
-                            <a @click="select_item(command, order)" data-toggle="modal" data-target="#exampleModal">
-                            <span class="fa-stack fa-1x" style='cursor:pointer;'>
-                              <i class="fas fa-square-full fa-stack-2x"></i>
-                              <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
-                            </span>
-                            </a>
-                          </td>-->
                           </template>
                         </tr>
-                        </template>
+
+                        <tr>
+                          <td colspan="4"></td>
+                          <td colspan="2" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
+                        </tr>
+
+                        <!--<tr>
+                          <td colspan="4">
+                            <div class="btn-group">
+                              <button type="button" class="btn btn-sm btn-secondary" style="line-height:1;height:38px;">
+                                <span style="font-weight:bold;font-size:15px;">Não identificado</span><br>
+                                <span style="font-size:10px;"><i class="fa fa-user"></i> Cliente</span>
+                              </button>
+                            </div>
+
+                            <div class="dropdown">
+                              <button class="btn btn-secondary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span style="font-weight:bold;font-size:15px;">R$ {{ command.total }}</span><br>
+                                <span style="font-size:10px;"><i class="fas fa-hand-holding-usd"></i> Por pessoa</span>
+                              </button>
+
+                              <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                                <a class="dropdown-item" href="#">Action</a>
+                                <a class="dropdown-item" href="#">Another action</a>
+                                <a class="dropdown-item" href="#">Something else here</a>
+                              </div>
+                            </div>
+
+                            <div class="btn-group">
+                              <template v-if="command.total>0">
+                              <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="width:100px;">
+                                <span style="font-weight:bold;font-size:15px;">R$ {{ command.total }}</span><br>
+                                <span style="font-size:10px;"><i class="fas fa-hand-holding-usd"></i> Por pessoa</span>
+                              </button>
+                              <div class="dropdown-menu" style="font-size:11px;">
+                                <a class="dropdown-item" href="#">R$ {{ command.total/2 | round }} para 2 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/3 | round }} para 3 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/4 | round }} para 4 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/5 | round }} para 5 pessoas</a>
+
+                                <template v-if="command.total >= 300">
+                                <a class="dropdown-item" href="#">R$ {{ command.total/6 | round }} para 6 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/7 | round }} para 7 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/8 | round }} para 8 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/9 | round }} para 9 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/10 | round }} para 10 pessoas</a>
+                                </template>
+
+                                <template v-if="command.total >= 500">
+                                <a class="dropdown-item" href="#">R$ {{ command.total/11 | round }} para 11 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/12 | round }} para 12 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/13 | round }} para 13 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/14 | round }} para 14 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/15 | round }} para 15 pessoas</a>
+                                </template>
+                              </div>
+                              </template>
+                            </div>
+                          </td>
+
+
+                          <td colspan="2">
+                            <div class="btn-group">
+                              <button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:115px;height:38px;" @click="close_command(command)">
+                                <span style="font-weight:bold;font-size:15px;">R$ {{ command.total }}</span><br>
+                                <span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span>
+                              </button>
+
+                              <template v-if="command.total>0">
+                              <button type="button" class="btn btn-sm btn-secondary dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="sr-only">Toggle Dropdown</span>
+                              </button>
+                              <div class="dropdown-menu" style="font-size:11px;">
+                                <a class="dropdown-item" href="#">R$ {{ command.total/2 | round }} para 2 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/3 | round }} para 3 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/4 | round }} para 4 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/5 | round }} para 5 pessoas</a>
+
+                                <template v-if="command.total >= 300">
+                                <a class="dropdown-item" href="#">R$ {{ command.total/6 | round }} para 6 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/7 | round }} para 7 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/8 | round }} para 8 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/9 | round }} para 9 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/10 | round }} para 10 pessoas</a>
+                                </template>
+
+                                <template v-if="command.total >= 500">
+                                <a class="dropdown-item" href="#">R$ {{ command.total/11 | round }} para 11 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/12 | round }} para 12 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/13 | round }} para 13 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/14 | round }} para 14 pessoas</a>
+                                <a class="dropdown-item" href="#">R$ {{ command.total/15 | round }} para 15 pessoas</a>
+                                </template>
+                              </div>
+                              </template>
+                            </div>
+                          </td>
+                        </tr>-->
                       </tbody>
                     </template>
 
                     <template v-else>
+                      <thead>
+                        <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
+                          <td style="text-align:left;border-top:none;">Pedidos</td>
+                        </tr>
+                      </thead>
+
                       <tbody>
                         <template v-for='(order,index) in command.orders'>
-                          <tr>
-                            <!--<td style="width:90px;padding-left:0px;"><img :src="'/media/'+order.product_image" style="object-fit:cover;width:100%;height:50px;"></td>-->
-                            <td @click="show_options(order)" style="padding-top:4px;padding-bottom:10px;line-height:1;">
-                              <span style="font-size:14px;">{{ order.quantity }} x {{ order.product_name }}</span><br>
-                              <!--<span style='font-size:12px;color:#888;position:relative;top:2px;'>
-                                {{ order.quantity }} x {{ order.product_price }}
-                              </span>-->
-                              <span style='font-size:12px;color:#888;position:relative;top:2px;'>
-                                <span style="padding-right:8px;"><i class="fas fa-arrow-up" style=""></i> {{ order.checkin_time | format_time }}</span>
+                          <tr :class="{'selected':order.show_options}" @click="show_options(command_index, order, index)" style="cursor:pointer;">
+                            <td style="padding-top:4px;padding-bottom:10px;line-height:1;">
+                              <span style="font-size:14px;">{{ order.quantity }} x {{ order.name }}</span><br>
 
-                                <span style="padding-right:8px;"><template v-if="order.checkout==null"><i class="fas fa-arrow-down"></i> {{ order.expected_time | format_time }}</template>
-                                <template v-else><i class="fas fa-arrow-down" style="color:green;"> {{ order.checkout | format_time }}</i></template></span>
+                              <span style='font-size:12px;position:relative;top:2px;'>
+                                <span style="padding-right:8px;"><i class="fas fa-arrow-up" style=""></i> {{ order.checkin_time | format_time_short }}</span>
+
+                                <span style="padding-right:8px;">
+                                  <template v-if="order.checkout==null"><i class="fas fa-clock"></i> {{ order.expected_time | format_time_short }}</template>
+
+                                <template v-else><i class="fas fa-arrow-down" style="color:green;">{{ order.checkout | format_time_short }}</i></template></span>
 
                                 <span style="">
                                   <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
@@ -484,66 +597,10 @@
                             </td>
 
                             <td style="text-align:right;">
-                              <template v-if="order.show_options">
-                                <span class="fa-stack fa-1x" style='cursor:pointer;font-size:12px;' title="Cancelar pedido">
-                                  <i class="fas fa-square-full fa-stack-2x"></i>
-                                  <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
-                                </span>
-
-                                <span class="fa-stack fa-1x" @click='select_item(order)' style='cursor:pointer;font-size:12px;' title="Repetir o pedido">
-                                  <i class="fas fa-square-full fa-stack-2x"></i>
-                                  <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
-                                </span>
-                              </template>
-
-                              <template v-else style=''>
-                                <div @click="show_options(order)">{{ order.total }}</div>
-                              </template>
+                              <div @click="show_options(order)">{{ order.total }}</div>
                             </td>
                           </tr>
                         </template>
-
-                        <!--<template v-for='(product,index) in product_in_command'>
-                          <tr style="cursor:pointer;" @click="show_options(product)"><!- product_in_command data-toggle="modal" data-target="#command_item_options"  ->
-                            <td style="line-height:10px;">
-                              <span style='font-size:14px;font-weight:bold;'>{{ product.name }}</span><br>
-                              <span style='font-size:12px;color:#888;position:relative;top:2px;'>
-                                {{ product.quant }} x {{ product.price}}
-                              </span>
-                            </td>
-
-                            <td style='width:40px;padding:0px;vertical-align:middle;'>
-                              <template v-if="product.show_options">
-                              <span class="fa-stack fa-1x" style='cursor:pointer;font-size:12px;' title="Cancelar pedido">
-                                <i class="fas fa-square-full fa-stack-2x"></i>
-                                <i class="fas fa-exclamation-triangle fa-stack-1x fa-inverse"></i>
-                              </span>
-                              </template>
-                            </td>
-
-                            <td style='width:40px;padding:0px;vertical-align:middle;font-size:12px;'>
-                              <template v-if="product.show_options">
-                                <span class="fa-stack fa-1x" @click='select_item(product)' style='cursor:pointer;font-size:12px;' title="Repetir o pedido">
-                                  <i class="fas fa-square-full fa-stack-2x"></i>
-                                  <i class="fas fa-redo fa-stack-1x fa-inverse"></i>
-                                </span>
-                              </template>
-
-                              <template v-else style=''>146,00</template>
-                            </td>
-                          </tr>
-                        </template>
-                        -->
-
-                        <!--<tr>
-                          <td style="line-height:10px;vertical-align:middle;">
-                            <span style='font-size:14px;font-weight:bold;'>Total</span>
-                          </td>
-
-                          <td style=padding:0px;'width:40px;text-align:center;vertical-align:middle;'>
-                            <span style='font-size:12px;font-weight:bold;'>R$ 292,00</span>
-                          </td>
-                        </tr>-->
                       </tbody>
                     </template>
                   </table>
@@ -565,181 +622,52 @@
           <div class="modal-dialog modal-lg" role="document">
             <div v-if='selected.product ' class="modal-content">
               <div class="modal-header" style='padding:0px;'>
-                <img :src="'/media/'+selected.product.image" style='width:100%;height:150px;object-fit:cover;' />
+                <img :src="'/media/'+(forms.order.object.image||forms.order.object.image)" style='width:100%;height:150px;object-fit:cover;' />
               </div>
 
-              <span style='position:relative;top:-44px;left:-10px;padding:10px;'>
-                <span style='padding:10px;color:white;font-size:18px;font-weight:bold;background:#888;border-top-right-radius:5px;'>
-                {{ selected.product.name }}
-                </span>
-              </span>
-
-              <div class="modal-body" style='margin-top:-30px;'>
-                <table border='0' id='product_description' class='table table-sm' style=''>
+              <div class="order_decoration" :style="controls.styles.themes.active.order_decoration">
+                <table border="0" style="width:100%;">
                   <tr>
                     <td>
-                      <span style='font-size:14px;'>{{ selected.product.name }}</span><br>
-                      <span style='font-size:10px;color:#888;'>{{ selected.product.description }}</span>
+                      <b>{{ forms.order.object.name | title }}</b><br>
                     </td>
 
-                    <td>
-                      <input class='form-control-sm' v-model='forms.order.object.quantity' type='number' value="1" />
-                    </td>
-
-                    <td>
-                      {{ selected.product.price }}
+                    <td style="width:80px;text-align:center;background-color:(50,50,50,0.4));">
+                      <i class="fas fa-user-clock"></i> <br>
+                      <template v-if="forms.order.object.expected_duration">{{ forms.order.object.expected_duration|format_text_duration }}</template>
+                      <template v-else><span style="font-size:10px;">Não calculado</span></template>
                     </td>
                   </tr>
                 </table>
+              </div>
 
-                <!--<table border='0' id='product_description' class='table table-sm table-stripped table-hover' style=''>
-                  <tr>
-                    <td>
-                      <span style='font-size:14px;'>{{ selected.product.name }}</span><br>
-                      <span style='font-size:10px;color:#888;'>{{ selected.product.description }}</span>
-                    </td>
+              <div class="modal-body" style='padding-left:30px;padding-right:30px;padding-bottom:28px;padding-top:25px;'>
+                <div data-toggle="collapse" href="#product_details_panel" style='cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;'>
+                  <i class="fas fa-chevron-down" style='font-size:10px;position:relative;top:-1px;'></i>
+                  Produto
+                  <span style="float:right;padding-right:18px;font-family:arial;">R$ {{ forms.order.object.price }}</span>
+                </div>
 
-                    <td style='width:40px;'>
-                      <span class="fa-stack fa-1x" @click='decrease_complement(extra)' style='cursor:pointer;'>
-                        <i class="fas fa-square-full fa-stack-2x"></i>
-                        <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
-                      </span>
-                    </td>
-
-                    <td style='width:40px;'>
-                      <span class="fa-stack fa-1x" @click='increase_complement(extra)' style='cursor:pointer;'>
-                        <i class="fas fa-square-full fa-stack-2x"></i>
-                        <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      <span style='font-size:14px;'>{{ selected.product.name }} P</span><br>
-                      <span style='font-size:10px;color:#888;'>{{ selected.product.description }}</span>
-                    </td>
-
-                    <td style='width:40px;'>
-                      <span class="fa-stack fa-1x" @click='decrease_complement(extra)' style='cursor:pointer;'>
-                        <i class="fas fa-square-full fa-stack-2x"></i>
-                        <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
-                      </span>
-                    </td>
-
-                    <td style='width:40px;'>
-                      <span class="fa-stack fa-1x" @click='increase_complement(extra)' style='cursor:pointer;'>
-                        <i class="fas fa-square-full fa-stack-2x"></i>
-                        <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      <span style='font-size:14px;'>{{ selected.product.name }} M</span><br>
-                      <span style='font-size:10px;color:#888;'>{{ selected.product.description }}</span>
-                    </td>
-
-                    <td style='width:40px;'>
-                      <span class="fa-stack fa-1x" @click='decrease_complement(extra)' style='cursor:pointer;'>
-                        <i class="fas fa-square-full fa-stack-2x"></i>
-                        <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
-                      </span>
-                    </td>
-
-                    <td style='width:40px;'>
-                      <span class="fa-stack fa-1x" @click='increase_complement(extra)' style='cursor:pointer;'>
-                        <i class="fas fa-square-full fa-stack-2x"></i>
-                        <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
-                      </span>
-                    </td>
-                  </tr>
-
-                  <tr>
-                    <td>
-                      <span style='font-size:14px;'>{{ selected.product.name }} G</span><br>
-                      <span style='font-size:10px;color:#888;'>{{ selected.product.description }}</span>
-                    </td>
-
-                    <td style='width:40px;'>
-                      <span class="fa-stack fa-1x" @click='decrease_complement(extra)' style='cursor:pointer;'>
-                        <i class="fas fa-square-full fa-stack-2x"></i>
-                        <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
-                      </span>
-                    </td>
-
-                    <td style='width:40px;'>
-                      <span class="fa-stack fa-1x" @click='increase_complement(extra)' style='cursor:pointer;'>
-                        <i class="fas fa-square-full fa-stack-2x"></i>
-                        <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
-                      </span>
-                    </td>
-                  </tr>
-                </table>-->
-                <br>
-               <!-- <table border='1' id='product_options' class='table table-sm table-stripped table-hover' style=''>
-                  <tbody>
+                <div class="collapse" id="product_details_panel">
+                  <table id='product_description' class='table table-sm' style=''>
                     <tr>
                       <td>
-                        <span style='font-size:14px;'>Tamanho</span>
-                        <span style='font-size:10px;color:#888;'> - R$ {{ selected.product.price }}</span>
-                      </td>
-
-                      <td style='width:60px;text-align:center;'></td>
-                      <td style='width:50px;text-align:center;'>
-                        <template v-if='selected.product.quant > 0'>{{ selected.product.price }}</template>
-                      </td>
-                      <td style='width:60px;text-align:center;'>
-                        <template v-if='selected.product.quant > 0'>{{ selected.product.price }}</template>
-                      </td>
-
-                      <td style='width:40px;'>
-                        <span class="fa-stack fa-1x"  style='cursor:pointer;'>
-                          <i class="fas fa-square-full fa-stack-2x"></i>
-                          <i class="fa-stack-1x fa-inverse" style='font-style:normal;'>P</i>
-                        </span>
-                      </td>
-
-                      <td style='width:40px;'>
-                        <span class="fa-stack fa-1x"  style='cursor:pointer;'>
-                          <i class="fas fa-square-full fa-stack-2x"></i>
-                          <i class="fa-stack-1x fa-inverse" style='font-style:normal;'>M</i>
-                        </span>
-                      </td>
-
-                      <td style='width:40px;'>
-                        <span class="fa-stack fa-1x"  style='cursor:pointer;'>
-                          <i class="fas fa-square-full fa-stack-2x"></i>
-                          <i class="fa-stack-1x fa-inverse" style='font-style:normal;'>G</i>
-                        </span>
-                      </td>
-
-                      <td style='width:40px;'>
-                        <span class="fa-stack fa-1x"  style='cursor:pointer;'>
-                          <i class="fas fa-square-full fa-stack-2x"></i>
-                          <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
-                        </span>
-                      </td>
-
-                      <td style='width:40px;'>
-                        <span class="fa-stack fa-1x"  style='cursor:pointer;'>
-                          <i class="fas fa-square-full fa-stack-2x"></i>
-                          <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
-                        </span>
+                        <template v-if="forms.order.object.product__description">
+                          <span style='font-size:14px;'>{{ forms.order.object.product__description | title }}</span><br>
+                        </template>
+                        <template v-else>Produto sem descrição</template>
                       </td>
                     </tr>
-                  </tbody>
-                </table>
-                <br>
-                -->
+                  </table>
+                </div>
 
-                <div style='cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;' data-toggle="collapse" href="#product_complements_panel">
-                  Complementos <i class="fas fa-chevron-down" style='font-size:11px;position:relative;top:-1px;left:5px;'></i>
+                <div style='padding-top:10px;cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;' data-toggle="collapse" href="#product_complements_panel">
+                  <i class="fas fa-chevron-down" style='font-size:10px;position:relative;top:-1px;'></i> Complementos
+                  <span style="float:right;padding-right:18px;font-family:arial;">R$ 12,00</span>
                 </div>
 
                 <div class="collapse" id="product_complements_panel">
-                  <table id='product_complements' class='table table-sm table-stripped table-hover' style=''>
+                  <table id='product_complements' border="0" class='table table-sm table-stripped table-hover' style=''>
                     <tbody>
                       <template v-if='controls.screen.width>=1024'>
                       <template v-for='complement in complements'>
@@ -753,14 +681,20 @@
                         <td style='width:50px;text-align:center;'>
                           <template v-if='complement.quant > 0'>{{ complement.quant }}</template>
                         </td>
+
                         <td style='width:60px;text-align:center;'>
                           <template v-if='complement.quant > 0'>{{ complement.price*complement.quant }}</template>
                         </td>
+
                         <td style='width:40px;'>
                           <span class="fa-stack fa-1x" @click='decrease_complement(complement)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
                           </span>
+                        </td>
+
+                        <td style='width:20px;padding-top:5px;text-align:center;'>
+                          0
                         </td>
 
                         <td style='width:40px;'>
@@ -777,7 +711,7 @@
                       <template v-for='complement in complements'>
                       <tr>
                         <td><span style='font-size:14px;'>{{ complement.name }}</span><br>
-                          <span style='font-size:10px;margin-left:1px;'>R$ {{ complement.price }}</span>
+                          <span style='font-size:10px;margin-left:1px;font-family:arial;'>R$ {{ complement.price }}</span>
                         </td>
 
                         <td style='width:50px;text-align:center;'>
@@ -793,6 +727,10 @@
                           </span>
                         </td>
 
+                        <td style='width:20px;padding-top:5px;text-align:center;'>
+                          0
+                        </td>
+
                         <td style='width:40px;'>
                           <span class="fa-stack fa-1x" @click='increase_complement(complement)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
@@ -806,21 +744,84 @@
                   </table>
                 </div>
 
+                <div data-toggle="collapse" href="#product_observations_panel" style='padding-top:10px;cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;'>
+                  <i class="fas fa-chevron-down" style='font-size:10px;position:relative;top:-1px;'></i> Observações
+                </div>
+
+                <div class="collapse" id="product_observations_panel" style="padding-top:10px;">
+                  <textarea class='form-control' v-model='forms.order.object.observations' placeholder="Observações do pedido.."></textarea>
+                </div>
+
+                <div style='padding-top:10px;cursor:pointer;padding-bottom:5px;padding-left:15px;'>
+                  <b>Total
+                  <span style="float:right;padding-right:18px;font-family:arial;">
+                    R$ {{ ( forms.order.object.quantity * forms.order.object.price) | format_money }}
+                  </span>
+                  </b>
+                </div>
+
                 <br>
 
-                <div class='row'>
-                  <div class='col-12'>
-                    <div style='cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;'>
-                      Observações
+                <div>
+                  <div class="float-left">
+                    <div class="float-left">
+                      <span style="font-size:10px;padding-left:4px;">Quantidade:</span><br>
+                      <select class='form-control form-control-sm' v-model="forms.order.object.quantity">
+                        <option value="1.00">1 unidade</option>
+                        <option value="2.00">2 unidades</option>
+                        <option value="3.00">3 unidades</option>
+                        <option value="4.00">4 unidades</option>
+                        <option value="5.00">5 unidades</option>
+                      </select>
                     </div>
-                    <textarea class='form-control' v-model='forms.order.object.observations'></textarea>
+                  </div>
+
+                  <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"> X </button>-->
+                  <button type="button" class="btn btn-success" @click='save_order()' style="width:120px;line-height:1;margin-top:19px;float:right;font-family:arial;">
+                    Confirmar <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+
+
+              <div class="modal-footer">
+                <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancelar</button>->
+                <button type="button" class="btn btn-sm btn-success" @click='save_order()' style="font-family:arial;">Confirmar</button>
+                -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="update_command_client_modal" class="modal" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h6 class="modal-title">Identificar comanda</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+
+              <div class="modal-body" style=''>
+                <input class="form-control form-control-sm" v-model="forms.command.change_client_name" placeholder="Informe nome do cliente"/>
+                <div class="row">
+                  <div class="col-12">
                   </div>
                 </div>
               </div>
 
               <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">-</button>
+                1
+                <button type="button" class="btn btn-sm btn-secondary" @click=''>+</button>
+
                 <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-sm btn-success" @click='save_order()'>Adicionar</button>
+                <button type="button" class="btn btn-sm btn-success" @click=''>
+                  R$ 45,00<br>
+                  Confirmar
+                </button>
               </div>
             </div>
           </div>
@@ -843,10 +844,57 @@
         data: function() {
           return {
             controls:{
+              styles: {
+                themes:{
+                  active: {
+                    'name':'Elegancia',
+                    'header':{'background':'#b22222', 'color':'#ffffff'},
+                    'header_division':{'border-bottom':'2px solid #b36363'},
+                    'order_decoration':{'background-color':'rgba(28, 28, 28, 0.9)'},
+                    'product_list':{'background':'#b22222'}
+                  },
+
+                  options:[
+                    {
+                      'name':'Connect',
+                      'header':{'background':'#b22222', 'color':'#ffffff'},
+                      'header_division':{'border-bottom':'2px solid #b222222'},
+                      'order_decoration':{'background-color':'rgba(125, 76, 25, 0.9)'},
+                      'product_list':{'background':'rgb(255, 131, 0)'}
+                    },
+
+                    {
+                      'name':'Elegancia',
+                      'header':{'background':'#b22222', 'color':'#ffffff'},
+                      'header_division':{'border-bottom':'2px solid #b36363'},
+                      'order_decoration':{'background-color':'rgba(28, 28, 28, 0.9)'},
+                      'product_list':{'background':'#b22222'}
+                    },
+
+                    {
+                      'name':'Energia',
+                      'header':{'background':'#009000', 'color':'#ffffff'},
+                      'header_division':{'border-bottom':'2px solid #2e6b23'},
+                      'order_decoration':{'background-color':'rgba(13, 77, 13, 0.9)'},
+                      'product_list':{'background':'#009000'}
+                    },
+
+                    {
+                      'name':'Paz',
+                      'header':{'background':'#191f40', 'color':'#ffffff'},
+                      'header_division':{'border-bottom':'2px solid #1d2c60'},
+                      'order_decoration':{'background-color':'rgba(25, 31, 64, 0.9)'},
+                      'product_list':{'background':'#191f40'}
+                    },
+                  ]
+                }
+              },
+
               clock: null,
               screen: {
                 width: window.innerWidth,
                 height: window.screen.height,
+                fullscreen_mode: false,
               },
               urls: {
                 groups: '/api/sales/commands/groups/load/',
@@ -854,6 +902,10 @@
             },
 
             forms: {
+              command:{
+                change_client_name:false,
+              },
+
               search:{
                 value: null,
                 field: 'name',
@@ -865,8 +917,8 @@
                 object:{
                   command: null,        // = models.ForeignKey(Command, on_delete=models.DO_NOTHING)
                   product: null,        // = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
-                  product_name: null,   //= models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=False, error_messages=settings.ERRORS_MESSAGES)
-                  product_price: null,  //= models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+                  name: null,   //= models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=False, error_messages=settings.ERRORS_MESSAGES)
+                  price: null,  //= models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
                   quantity: null,       //= models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
                   total: null,          //= models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
@@ -892,6 +944,7 @@
               table_index: null,
 
               command: null,
+              command_index: null,
               item: null,
 
               group:null,
@@ -899,6 +952,8 @@
 
               new_product: false,
               new_products: [],
+
+              order: null,
             },
 
             tables:[
@@ -991,6 +1046,27 @@
         filters: {
           round: function(value){
             return value.toFixed(2);
+          },
+
+          title(value){
+            if(value){
+              value = value.toLowerCase().split(' ');
+            }
+            else{
+              value = "";
+            }
+
+            let final = [];
+            for(let word of value){
+              if(word.length > 2){
+                final.push(word.charAt(0).toUpperCase()+ word.slice(1));
+              }
+              else{
+                final.push(word);
+              }
+            }
+
+            return final.join(' ');
           }
         },
 
@@ -1004,7 +1080,7 @@
           },
 
           view_order: function(order){
-            window.open("/api/sales/commands/order/"+order.id+"/", "_blank");
+            window.open("/api/sales/commands/order/"+this.selected.order.id+"/", "_blank");
           },
 
           print_order: function(order){
@@ -1034,13 +1110,36 @@
             this.selected.new_products = [];
           },
 
-          show_options: function(item){
-            if(item.show_options == true){
-              item.show_options = false;
+          show_options: function(command_index , order, order_index){
+            if(this.selected.order){
+              if(this.selected.order.id==order.id){
+                this.selected.table.commands[command_index].orders[order_index].show_options = false;
+                this.selected.command_index = null;
+                this.selected.order_index = null;
+                this.selected.order = null;
+              }
+              else{
+                this.selected.table.commands[command_index].orders[this.selected.order_index].show_options = false;
+                this.selected.table.commands[command_index].orders[order_index].show_options = true;
+                this.selected.command_index = command_index;
+                this.selected.order_index = order_index;
+                this.selected.order = order;
+              }
             }
             else{
-              item.show_options = true;
+              this.selected.table.commands[command_index].orders[order_index].show_options = true;
+              this.selected.command_index = command_index;
+              this.selected.order_index = order_index;
+              this.selected.order = order;
             }
+          },
+
+          open_client_name_field: function(){
+            this.forms.command.change_client_name = true;
+          },
+
+          confirm_client_name_field: function(){
+            this.forms.command.change_client_name = false;
           },
 
           save_order: function(command, command_index){
@@ -1048,9 +1147,9 @@
             let data_paramters = {};
             data_paramters['command_id'] = this.selected.command.id;
             data_paramters['product_id'] = this.selected.product.id;
-            data_paramters['product_name'] = this.selected.product.name;
-            data_paramters['product_image'] = this.selected.product.image;
-            data_paramters['product_price'] = this.selected.product.price;
+            data_paramters['name'] = this.selected.product.name;
+            data_paramters['image'] = this.selected.product.image;
+            data_paramters['price'] = this.selected.product.price;
             data_paramters['quantity'] = this.forms.order.object.quantity;
             data_paramters['total'] = this.selected.product.price*this.forms.order.object.quantity;
 
@@ -1066,7 +1165,11 @@
               scope.print_order(response.object);
               response.object.show_options = false;
               scope.selected.command.orders.unshift(response.object);
-              scope.selected.command.total = parseFloat(scope.selected.command.total) + parseFloat(response.object.total);
+              //alert("TOTAL DA COMANDA ANTES:"+scope.selected.command.total+" - VALOR A ADICIONAR:"+response.object.total+ " - TOTAL:"+(parseFloat(scope.selected.command.total) + parseFloat(response.object.total)))
+              //scope.selected.command.total = parseFloat(scope.selected.command.total) + parseFloat(response.object.total);  //parseFloat(scope.selected.command.total) + parseFloat(response.object.total);
+              //alert("TOTAL DA MESA:"+scope.selected.table.total +" - RESPONSE:"+parseFloat(response.object.total))
+              scope.selected.table.total = parseFloat(scope.selected.table.total) + parseFloat(response.object.total);
+              //alert("somei: "+scope.selected.table.total);
               scope.selected.new_product = null;
               $('#exampleModal').modal('hide');
             };
@@ -1080,13 +1183,13 @@
 
           select_item: function(command, item){
             this.selected.command = command;
-            this.selected.product = {'id':parseInt(item.product), 'code':'0', 'name':item.product_name, 'image':item.product_image, 'price':item.product_price, 'quantity':1, 'description':'', 'have_promotion':true, 'is_confirmed':false, 'show_options':false};;
+            this.selected.product = {'id':parseInt(item.product), 'code':'0', 'name':item.name, 'image':item.image, 'price':item.price, 'quantity':1, 'description':'', 'have_promotion':true, 'is_confirmed':false, 'show_options':false};;
 
             /*this.forms.order.object = {
               command: command.id,
               product: item.id,
-              product_name: item.product_name,
-              product_price: item.price,
+              name: item.name,
+              price: item.price,
               quantity: 1,
               total: item.price,
 
@@ -1153,17 +1256,70 @@
           verify_screen: function () {
             this.controls.screen.width = window.innerWidth;
             this.controls.screen.height = window.innerHeight;
+
+            let is_mobile = false;
+            (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
+
+            if(!is_mobile){
+              if((screen.availHeight || screen.height-30) <= window.innerHeight) {
+                this.controls.screen.fullscreen_mode = true;
+              } else {
+                this.controls.screen.fullscreen_mode = false;
+              }
+            }
           },
 
           init_complements: function(){
 
           },
 
+          back_menu: function(){
+            if(this.selected.product){
+              $('#exampleModal').modal('hide');
+              this.selected.product = null;
+              history.pushState(null, document.title, location.href);
+            }
+
+            else if(this.selected.group){
+              this.selected.group = null;
+              history.pushState(null, document.title, location.href);
+            }
+
+            else if(this.selected.command){
+              this.selected.command = null;
+              this.selected.command_index = null;
+              this.selected.new_product = false;
+              history.pushState(null, document.title, location.href);
+            }
+
+            else if(this.selected.table){
+              this.selected.table = null;
+              history.pushState(null, document.title, location.href);
+            }
+            else{
+              if(confirm("Deseja mesmo sair do sistema?")){
+                window.location = "/logout";
+              }
+            }
+            history.pushState(null, document.title, location.href);
+          },
+
           open_menu: function(command, index){
             this.selected.command = command;
-            this.selected.command_index = index;
             this.selected.new_product = true;
+            this.selected.command_index = index;
           },
+
+          repeat_order: function(command, command_index, order){
+            let cloned_order = JSON.parse(JSON.stringify(order));
+            this.forms.order.object = cloned_order;
+            this.selected.product = order;
+            //this.selected.command = command;
+            //this.selected.new_product = true;
+            //this.selected.command_index = command_index;
+          },
+
+
 
           load_tables: function () {
             let scope = this;
@@ -1322,10 +1478,14 @@
 
         }
       });
+    </script>
 
-      window.addEventListener('resize', function(e) {
-        app.verify_screen();
+    <script>
+      history.pushState(null, document.title, location.href);
+      window.addEventListener('popstate', function (event){
+        app.back_menu();
       });
+
     </script>
 
     <script>

@@ -75,6 +75,7 @@ class CommandController(BaseController):
             count = 0
             for item in commands['object']:
                 orders = OrderController().orders_by_command(request, item['id'], is_response=is_response)
+                print("VEJA O PEDIDO MELHOR:", orders)
                 commands['object'][count]['orders'] = orders['object']
                 count = count + 1
 
@@ -159,6 +160,7 @@ class TableController(BaseController):
         table = Table.objects.filter(pk=int(request.POST['table_id']))
         if table.count() > 0:
             table = table[0]
+            table.total = 0
             table.status = "ACTIVE"
             response = self.execute(table, table.save, extra_fields=['commands'])
         else:
@@ -189,7 +191,7 @@ class MenuGroupController(BaseController):
         return super().filter(request, self.model, queryset=Group.objects.all(), extra_fields=self.extra_fields, is_response=True)
 
     def load_groups(self, request):
-        response_group = super().filter(request, self.model, queryset=Group.objects.all(), extra_fields=self.extra_fields, is_response=False)
+        response_group = super().filter(request, self.model, queryset=Group.objects.all().order_by("code"), extra_fields=self.extra_fields, is_response=False)
         count_groups = 0
         for object in response_group['object']:
             response_products = MenuProductController().load_products(request, group=object['id'], is_response=False)
@@ -201,7 +203,7 @@ class MenuGroupController(BaseController):
 
 class OrderController(BaseController):
     model = Order
-    extra_fields = ['show_options']
+    extra_fields = ['product__description', 'product__have_promotion', 'show_options']
     extra_names = {}
 
     def get_prevision_duration(self):
@@ -214,17 +216,19 @@ class OrderController(BaseController):
         duration = timedelta(hours=hours, minutes=minutes, seconds=seconds)
         return duration
 
-
     def save(self, request):
         self.start_process(request)
         order = Order()
         order.command_id = int(request.POST['command_id'])
         order.product_id = int(request.POST['product_id'])
-        order.product_name = request.POST['product_name']
-        order.product_image = request.POST['product_image']
-        order.product_price = request.POST['product_price']
-        order.quantity = request.POST['quantity']
-        order.total = float(request.POST['product_price'])*float(request.POST['quantity'])
+        order.name = request.POST['name']
+        order.image = request.POST['image']
+        order.price = float(request.POST['price'])
+        order.quantity = float(request.POST['quantity'])
+
+        complements_total = 0
+        print("OLHA O TOTAL DO PEDIDO:",(order.price+complements_total)*order.quantity)
+        order.total = (order.price+complements_total)*order.quantity
         order.save()
 
         order.expected_duration = self.get_prevision_duration()
@@ -236,9 +240,14 @@ class OrderController(BaseController):
         #status = models.CharField(_('Status'), max_length=20, default='WAITING', choices=STATUS_OF_ORDER, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
         order.observations = request.POST['observations']
         response = self.execute(order, order.save)
+
+        print("OLHA O TOTAL DA COMANDA: CODE",order.command.code, " - ID:",order.command.id,order.command.total," PEDIDO:",order.total," NOVO TOTAL:",order.command.total + order.total)
         order.command.total = order.command.total + order.total
         order.command.save()
-        #self.print(request, order.id)
+
+        print("OLHA O TOTAL DA MESA: ",order.command.table.total)
+        order.command.table.total = order.command.table.total + order.total
+        order.command.table.save()
         return self.response(response)
 
     def load_orders(self, request):
@@ -297,19 +306,20 @@ class OrderController(BaseController):
 
         complements = Complement.objects.filter(order=order)
 
-        main_content_height_space = 55
+        main_content_height_space = 47
         complements_height_space = 8 * complements.count()
 
         observation_height_space = 0
         if order.observations is not None:
             observation_height_space = math.ceil(len(order.observations) / 40) * 8
+            print("VAI TER QUANTOS PX DE ALTURA:",math.ceil(len(order.observations) / 40),math.ceil(len(order.observations) / 40)*7)
 
-        barcode_height_space = 48
+        barcode_height_space = 40
         total_height = main_content_height_space + complements_height_space + observation_height_space + barcode_height_space
 
         response = {
-            'id': order.id, 'command': order.command_id, 'product': order.product_id, 'product_name': order.product_name,
-            'product_image': order.product_image, 'product_price': order.product_price, 'quantity': order.quantity,
+            'id': order.id, 'table':order.command.table.id, 'command': order.command_id, 'product': order.product_id, 'name': order.name,
+            'image': order.image, 'price': order.price, 'quantity': order.quantity,
             'total': order.total, 'status': order.status, 'barcode': order.barcode,
             'checkin_time': order.checkin_time, 'checkin_time_hours': order.checkin_time,
             'checkout_time': format_datetime(order.checkout_time), 'waiting_time': order.waiting_time,
@@ -329,13 +339,12 @@ class OrderController(BaseController):
         if order.count() > 0:
             response_order = self.prepare_order(order[0])
             respone_content = HttpResponse(content_type='application/pdf')
-            result = generate_pdf('order_pdf.html', file_object=respone_content, context={'order': response_order})
+            result = generate_pdf('order_pdf.html', file_object=respone_content, context={'order': response_order, 'company_name':'Gigabyte', 'attendant_name':'Diegao'})
             return result
         return self.response({"result":False,"object":None,"message":"Object not found"})
 
     def print(self, request, id=None):
         self.start_process(request)
-        from conf import profile
         import requests
 
         order_id = id or request.POST["order_id"]
@@ -346,18 +355,7 @@ class OrderController(BaseController):
             response = requests.get(route, params={"order_id":int(order_id)})
             with open(filename, 'wb') as file:
                 file.write(response.content)
-
-            #printer_controller = PrinterController()
-            #printers = printer_controller.scan()
-            #printer_controller.print(printers[0],filename)
-            printer = PrinterController()
-            print('O PDF FOI GERADO PREPARANDO PARA IMPRIMIR...', pdf_path)
-            printer.print(profile.PRINTER_CONFIG, pdf_path, title="test_python")
-            print('IMPRIMIDO COM SUCESSO!!!')
-
-            print("SERA QUE IMPRIMIU?")
-
-            return self.response({"result": True, "object": None, "message": "Order was printed"})
+                return self.response({"result": True, "object": None, "message": "Order was printed"})
         return self.response({"result": False, "object": None, "message": "Object not found"})
 
 

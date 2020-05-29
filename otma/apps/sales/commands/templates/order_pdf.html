@@ -54,20 +54,25 @@
 			}
 
 			#company-name {
-				font-size:14px;
+				font-size:16px;
 				font-weight: bold;
 			}
 
 			#company-attendent {
-				font-size:12px;
+				font-size:14px;
 			}
 
 			#order-date {
-				font-size:12px;
+				font-size:14px;
+			}
+
+			.table-number{
+				font-size:20px;
 			}
 
 			.order-label {
-				font-size:12px;
+				font-size:10px;
+				padding-bottom:0px;
 			}
 
 			#order-checkin {
@@ -77,6 +82,8 @@
 			#order-product {
 				font-size:16px;
 				padding:10px;
+				padding-top:15px;
+				padding-bottom:0px;
 				font-weight: bold;
 			}
 
@@ -104,64 +111,66 @@
 			<div id="page-header">
 				<table border='0' style='width: 100%;padding-bottom:5px;margin-bottom:5px;'>
 					<tr>
-						<td style='padding:0px;margin:0px;width:70px;'>
-							<img src="/static/apps/sales/commands/images/mcdonalds-logo.jpg" style='width: 70px;height:50px;'>
+						<td style='padding:3px;margin:0px;width:55px;text-align:center;'>
+							<img src="/media/company_logo.png" style='width:50px;'>
+							<!--<img src="/static/apps/sales/commands/images/mcdonalds-logo.jpg" style='width: 70px;height:50px;'>-->
 						</td>
 
-						<td style="padding:0px;margin:0px;padding-left:4px;line-height:1.3;">
-							<span id='company-name'>Capixabão Burguer</span><br>
-							<span id='order-date'>{{ order.checkin_time | date:"d/m/Y H:m:s" }}</span><br>
-							<span id='company-attendent'>Diego Pasti</span>
+						<td style="padding:0px;margin:0px;padding-left:4px;line-height:1.5;">
+							<span id='company-name'>{{ company_name }}</span><br>
+							<span id='order-date'>{{ order.checkin_time | date:"d/m/Y" }}</span><br>
+							<span id='company-attendent'>{{ attendant_name }}</span>
 						</td>
 					</tr>
 				</table>
 
 				<table style='margin-top:8px;border-bottom: 1px solid #ccc;border-top: 1px solid #ccc;width: 100%;padding-top:5px;padding-bottom: 5px;'>
 					<tr>
-						<td style='padding-top:8px;width: 70px;text-align: center;'>
-							<span class='order-label'>MESA</span><br>
-							<span id='table-number'>12</span>
+						<td style='padding-top:6px;padding-bottom:6px;width: 70px;text-align: center;'>
+							<div class='order-label'>MESA</div>
+							<div style="font-size:20px;padding:0px;">{{ order.table }}</div>
 						</td>
 
-						<td style='padding-top:8px;width: 100px;text-align: center;border-left:1px solid #ccc;border-right:1px solid #ccc;'>
-							<span class='order-label'>PEDIDO</span><br>
-							<span id='table-number'>{{ order.id }}</span>
+						<td style='padding-top:6px;padding-bottom:6px;width: 100px;text-align: center;border-left:1px solid #ccc;border-right:1px solid #ccc;'>
+							<div class='order-label'>PEDIDO</div>
+							<div style="font-size:20px;padding:0px;">{{ order.id }}</div>
 						</td>
 
-						<td style='padding-top:8px;text-align: center;'>
-							<span id='order-checkin'>{{ order.checkin_time | date:"H:m" }}</span>
+						<td style='padding-top:6px;padding-bottom:6px;text-align: center;'>
+							<div class='order-label'>ENTRADA</div>
+							<div style="font-size:20px;padding:0px;">{{ order.checkin_time | date:"H:i" }}</div>
 						</td>
 					</tr>
 				</table>
 			</div>
 
-			<div id="page-body" style='line-height: 1.3;padding-top:5px;padding-bottom:5px;'>
+			<div id="page-body" style='line-height: 1.3;padding-top:10px;padding-bottom:0px;'>
 				<div id='order-product'>
-					{{ order.quantity }} x {{ order.product_name }}
+					{{ order.quantity }} x {{ order.name }}
 				</div>
 
+				{% if order.complements %}
 				<div style="font-weight:bold;font-size:14px;padding:15px;padding-top:5px;padding-bottom:5px;border-bottom:1px solid #ccc;">
 				{% for complement in complements %}
-					{{ complement. }}
 					+ 2 x Bacon<br>
-				+ 1 x Calabresa<br>
+					+ 1 x Calabresa<br>
 				{% endfor %}
 				</div>
+				{% endif %}
 
-
-				<div style="border-bottom:1px solid #ccc;padding-top:10px;line-height:1.5">Observações:<br>
+				{% if order.observations %}
+				<div style="padding-top:10px;line-height:1.5">Observações:<br>
 					<span style="margin-top:20px;font-weight:bold;font-size:14px;padding:15px;">
-					1234567890 1234567890 1234567890 1234567890 1234567890 1234567890 1234567890
+					{{ order.observations }}
 					<br>
 					</span>
 				</div>
-
+				{% endif %}
 			</div>
 
-			<div id='order-barcode' style='text-align: center;padding:10px;'>
+			<div id='order-barcode' style='border-top:1px solid #ccc;text-align: center;margin-top:10px;padding:10px;'>
 				<img src='/media/barcodes/{{ order.barcode }}' style='width: 185px;position:relative;left:-5px;'><br>
 			</div>
-
 		</div>
 	</body>
 </html>

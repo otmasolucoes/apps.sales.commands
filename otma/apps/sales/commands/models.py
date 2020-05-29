@@ -60,6 +60,7 @@ class Table(models.Model):
     code = models.CharField(_('Número da mesa'), max_length=10, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
     area = models.CharField(_('Identificação da area'), max_length=10, null=False, blank=False, error_messages=settings.ERRORS_MESSAGES)
     status = models.CharField(_('Status da mesas'), max_length=20, default='CLOSED', choices=STATUS_OF_TABLE, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
+    total = models.DecimalField(max_digits=9, decimal_places=2, null=False, default=0)
     capacity = models.IntegerField(null=True, blank=True, default=4)
 
     def __str__(self):
@@ -138,9 +139,9 @@ class Order(models.Model):
 
     command = models.ForeignKey(Command, on_delete=models.DO_NOTHING)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
-    product_name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=False, error_messages=settings.ERRORS_MESSAGES)
-    product_image = models.CharField(_('Imagem do produto'), max_length=256, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
-    product_price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+    name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=False, error_messages=settings.ERRORS_MESSAGES)
+    image = models.CharField(_('Imagem do produto'), max_length=256, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
+    price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
     total = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
 
@@ -181,10 +182,10 @@ class Order(models.Model):
         return filename
 
     def save(self, *args, **kwargs):
-        self.product_price = self.product.price
-        self.product_name = self.product.name
-        self.product_image = self.product.image
-        self.total = Decimal(self.quantity) * Decimal(self.product_price)
+        self.price = self.product.price
+        self.name = self.product.name
+        self.image = self.product.image
+        self.total = Decimal(self.quantity) * Decimal(self.price)
         self.command.total = self.command.total + self.total
         super(Order, self).save(*args, **kwargs)
         if self.barcode is None:
@@ -201,7 +202,7 @@ class Complement(models.Model):
     order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
 
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
-    product_name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
-    product_price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+    name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=True, error_messages=settings.ERRORS_MESSAGES)
+    price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
 

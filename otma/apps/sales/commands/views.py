@@ -15,7 +15,8 @@ def format_datetime(value):
         return None
 
 def commands_page(request):
-    return render(request, "commands.html", {'base_page': 'new_base_page.html'})
+    from conf.profile import COMPANY_NAME
+    return render(request, "commands.html", {'base_page': 'new_base_page.html', 'company_name':COMPANY_NAME})
 
 def command_view_page(request, code):
     command = Command.objects.filter(code=int(code))
