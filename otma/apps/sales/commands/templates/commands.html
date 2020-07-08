@@ -353,7 +353,7 @@
                       <i class="fas fa-times"></i><br><span style="font-size:10px;">Cancelar</span>
                     </button>-->
 
-                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
+                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="close_command(command, command_index)" style="line-height:1;height:38px;">
                       <i class="fas fa-sign-out-alt"></i><br><span style="font-size:10px;">Encerrar</span>
                     </button>
 
@@ -1407,23 +1407,19 @@
             let scope = this;
             let data_paramters = {'command_id':command.id}
 
-            if(table.status=='CLOSED'){
-              if (confirm("Deseja mesmo Encerrar a command "+command.code)) {
-                //scope.open_table(table, index);
-                //this.open_command(table, index);
-                alert("ihh cara.. vc quer encerrar mesmo");
-
+            if(command.status==='OPEN'){
+              if (confirm("Deseja mesmo Encerrar a command " + command.code)) {
                 let success_function = function(response) {
-                  scope.tables[index].commands.push(response.object);
-                  scope.selected.table = table;
-                  scope.selected.table_index = index;
+                  scope.tables[command.table].commands.push(response.object);
+                  scope.selected.table = command.table;
+                  scope.selected.table_index = command.table;
                 };
 
                 let failure_function = function(response) {
 
                 };
 
-                //this.request('/api/sales/commands/close/', "post", data_paramters, null, success_function, failure_function);
+                this.request('/api/sales/commands/' + command.id +'/close/', "post", data_paramters, null, success_function, failure_function);
               }
             }
           },
