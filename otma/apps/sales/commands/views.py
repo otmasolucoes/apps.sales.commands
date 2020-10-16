@@ -23,6 +23,35 @@ def commands_page_signup(request):
     return render(request, "signup.html", {'base_page': 'commands.html'})
 
 
+def delivery_page(request):
+    return render(request, "delivery.html", {})
+
+def get_location(request):
+    import googlemaps
+    from datetime import datetime
+    latitude = request.GET['latitude']
+    longitude = request.GET['longitude']
+
+    gmaps = googlemaps.Client(key='AIzaSyA5pZBwmGJJ8f8POml7158nP2yxgvFtoXA')
+
+    # Geocoding an address
+    geocode_result = gmaps.geocode('Rua Demostenes Nunes Vieira, 60, Alto Lage, Cariacica, Espírito Santo, Brasil')
+    print("VEJA AS COORDENADAS:",geocode_result)
+
+    # Look up an address with reverse geocoding
+    reverse_geocode_result = gmaps.reverse_geocode((latitude, longitude))
+    print("VEJA O ENDEREÇO:", reverse_geocode_result)
+
+    # Request directions via public transit
+    now = datetime.now()
+
+    brasilia = {"lat": -20.3513491,"lng": -40.2844928}
+    alto_lage = {"lat": -20.3337617, "lng": -40.3732481}
+
+    directions_result = gmaps.directions(alto_lage, brasilia, mode="transit", departure_time=now)
+    print("VEJA O DIRECTIONS:",directions_result)
+    return HttpResponse()
+
 def commands_page(request):
     from conf.profile import COMPANY_NAME
     return render(request, "commands.html", {'base_page': 'new_base_page.html', 'company_name':COMPANY_NAME})

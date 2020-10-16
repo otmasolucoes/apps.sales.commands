@@ -11,7 +11,7 @@
 
     <script src="{% static 'bower_components/vue/dist/vue.js' %}"></script>
     <script src="{% static 'base_controller.js' %}"></script>
-    <script src="{% static 'com mands_controller.js' %}"></script>
+    <script src="{% static 'commands_controller.js' %}"></script>
 
     <style>
       /*
@@ -197,6 +197,8 @@
                   </span>
                 </td>
 
+                <i class="fas fa-shopping-cart"></i>
+
                 <td v-if="selected.table==null" style="width:40px;">
                   <div class="dropdown">
                     <span class="" id="dropdownMenuButton" title="Filtrar mesas" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
@@ -261,7 +263,6 @@
 
         {% verbatim %}
         <div style="padding:15px;">
-          OLHA AÊ QUEM É O GARÇOM: {{user.username }}
           <template v-if="selected.new_product">
             <app_commands :controls="controls" :forms="forms" :selected="selected" :groups="groups" :complements="complements" :init_complements="init_complements" :new_products="selected.new_products"></app_commands>
           </template>
@@ -337,7 +338,7 @@
                       <i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span>
                     </button>
 
-                    <button :disabled="!(selected.order && selected.command_index==command_index)" @click="view_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
+                    <button v-if="controls.screen.width>=1024" :disabled="!(selected.order && selected.command_index==command_index)" @click="view_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
                       <i class="fas fa-print"></i><br><span style="font-size:10px;">Imprimir</span>
                     </button>
 

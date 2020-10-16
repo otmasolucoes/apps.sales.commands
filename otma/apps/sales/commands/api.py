@@ -140,7 +140,6 @@ class CommandController(BaseController):
                 total_result += float(order["quantity"]) * float(item["price"])
         return "{0:.2f}".format(total_result)
 
-
 class TableController(BaseController):
     model = Table
     extra_fields = []
@@ -178,7 +177,6 @@ class TableController(BaseController):
             response = self.error({'table': 'Falha na operação, mesa não cadastrada!'})
         return self.response(response)
 
-
 class MenuGroupController(BaseController):
     model = Group
     extra_fields = []
@@ -199,7 +197,6 @@ class MenuGroupController(BaseController):
             count_groups += 1
         print(response_group)
         return self.response(response_group)
-
 
 class OrderController(BaseController):
     model = Order
@@ -358,7 +355,6 @@ class OrderController(BaseController):
                 return self.response({"result": True, "object": None, "message": "Order was printed"})
         return self.response({"result": False, "object": None, "message": "Object not found"})
 
-
 class MenuProductController(BaseController):
     model = Product
     extra_fields = []
@@ -398,7 +394,6 @@ class MenuProductController(BaseController):
             return self.response(response)
         else:
             return response
-
 
 class VerifierRequest:
     request = None
@@ -461,7 +456,6 @@ class VerifierRequest:
             itens_per_page = int(itens_per_page)
             self.queryset = self.queryset[itens_per_page * (package - 1):itens_per_page * package]
         return self.queryset, package, size_package
-
 
 class DatabaseController(BaseController):
 

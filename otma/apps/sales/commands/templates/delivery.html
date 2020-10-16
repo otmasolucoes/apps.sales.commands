@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="pt-br" xmlns:script="http://www.w3.org/1999/html">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Melinux - Faça seu pedido e receba em casa</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'bower_components/font-awesome/css/all.min.css' %}">
+
+    <script src="{% static 'bower_components/vue/dist/vue.js' %}"></script>
+    <script src="{% static 'base_controller.js' %} "></script>
+    <script src="{% static 'commands_controller.js' %}"></script>
+
+    <style>
+      /*
+        AUTO GRID
+        Set the minimum item size with `--auto-grid-min-size` and you'll
+        get a fully responsive grid with no media queries.
+      */
+
+      .auto-grid-large {
+        --auto-grid-min-size: 14rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+      }
+
+      .auto-grid-small {
+        --auto-grid-min-size: 6rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+      }
+
+      #table-panel .auto-grid-large {
+        --auto-grid-min-size: 8rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+      }
+
+      #table-panel .auto-grid-small {
+        --auto-grid-min-size: 4rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+      }
+
+      /* Presentational styles */
+      body {
+        background-image: url("/static/apps/sales/commands/images/background-sm.png");
+        line-height: 1.4;
+        font-family: Tahoma, Geneva, sans-serif;
+      }
+
+      #table-panel li {
+        text-align: left;
+        background: #ccc;
+        color: #ffffff;
+      }
+
+      #table-panel li.opened {
+        background: #429742;
+      }
+
+      #table-panel li.waiting {
+        background: #c60000;
+      }
+
+      #consumed_products td {
+        padding:10px;
+      }
+
+
+      #product-menu{
+        list-style-type: none;
+      }
+
+      #product-menu li {
+        text-align: left;
+        /*background: rgb(178,34,34,0.85);*/
+        /*background: linear-gradient(0deg, rgba(178,34,34,1) 0%, rgba(178,34,34,1) 92%, rgba(134,28,28,1) 100%);*/
+        /*color: red;*/
+        border:1px solid #ccc;
+        background:white;
+        padding:5px;
+        cursor:pointer;
+        padding-bottom:10px;
+        font-weight: bold;
+      }
+
+      ul#product-menu li span {
+        position: relative;
+        left:4px;
+        top: 4px;
+      }
+
+      ul#product-menu li:hover {
+        filter:brightness(92%);
+      }
+
+      .auto-grid-small {
+        font-size: 9px;
+      }
+
+      .auto-grid-large {
+        font-size: 1.0rem;
+      }
+
+      .menu-item-image{
+        object-fit:cover;
+        width:100%;
+        height:155px;
+      }
+
+      .auto-grid-small .menu-item-image{
+        height:70px;
+      }
+
+      .menu-item-price{
+        text-align: right;
+        color: #666;
+        height: 20px;
+        float: right;
+      }
+
+      .menu-item-price div {
+        float:right;
+        padding-left: 10px;
+        padding-right: 6px;
+        padding-bottom: 4px;
+        border-bottom-left-radius: 5px;
+        font-family:arial;
+        background:white;
+        font-weight:bold;
+
+      }
+
+      .auto-grid-large .menu-item-price{
+        padding-left:20px;
+        padding-top: 0px;
+        margin-top:-155px;
+        font-size:14px;
+      }
+
+      .auto-grid-small .menu-item-price{
+        padding-left:15px;
+        margin-top:-103px;
+        padding-top:3px;
+        font-size:11px;
+      }
+
+      #product_complements, #product_description {
+        font-size:12px;
+      }
+
+      #product_complements thead tr td{
+        font-size:10px;
+        border-top: none;
+      }
+
+      #product_complements td, #product_description td{
+        vertical-align:middle;
+      }
+
+      .selected {
+        background:#237dd7;
+        color: white !important;
+      }
+
+      .order_decoration {
+        font-family:arial;
+        padding:10px;
+        margin-top:-65px;
+        height:65px;
+        /*background-color: rgba(28, 28, 28, 0.90);*/
+        color:white;
+      }
+
+      .footer-panel {
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        color: #ffffff;
+        background: #202020;
+        border-top: 2px solid #646464;
+      }
+    </style>
+
+    <style>
+      @font-face {
+        font-family: lobster_regular;
+        src: url(/static/fonts/lobster/lobster_regular.ttf);
+      }
+
+      @font-face {
+        font-family: caveat_regular;
+        src: url(/static/fonts/caveat/caveat-regular.ttf);
+      }
+
+      @font-face {
+        font-family: courgette_regular;
+        src: url(/static/fonts/courgette/courgette-regular.ttf);
+      }
+
+      @font-face {
+        font-family: dancing_script_regular;
+        src: url(/static/fonts/dancing_script/static/dancing_script_regular.ttf);
+      }
+
+      @font-face {
+        font-family: open_sans_condensed_regular;
+        src: url(/static/fonts/open_sans_condensed/open_sans_condensed_light.ttf);
+      }
+
+      .font-lobster {
+        font-family: lobster_regular;
+      }
+
+      .font-caveat {
+        font-family: caveat_regular;
+      }
+
+      .font-courgette {
+        font-family: courgette_regular;
+      }
+
+      .font-dancing-script {
+        font-family: dancing_script_regular;
+      }
+
+      .font_open_sans_condensed_regular {
+        font-family: dancing_script_regular;
+      }
+
+
+
+      .carousel-caption{
+        background: rgba(28,28,28, 0.9);
+        margin-left:5px;
+        margin-right:5px;
+        cursor: pointer;
+        padding:10px;
+      }
+
+      .carousel-caption h3 {
+        font-family: app_title_font;
+        font-size: 25px;
+      }
+
+      .small_screen p{
+        font-size:14px;
+      }
+
+      .small_screen h3{
+        font-size:20px;
+      }
+
+      #footer-menu td{
+        padding:10px;
+      }
+
+      .menu-active {
+        background: rgba(28,28,28,0.3);
+      }
+
+      .empty-avatar {
+        vertical-align: middle;
+        width: 50px;
+        height: 50px;
+        border-radius: 5%;
+        filter: grayscale(80%);
+      }
+
+      .location_address{
+        text-align:left;
+      }
+
+      .location_address::after{
+        float:right;
+        position:relative;
+        top:6px;
+        right:2px;
+      }
+    </style>
+
+    <style>
+      .auto-grid {
+        --auto-grid-min-size: 8rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
+        grid-gap: 1rem;
+        list-style-type:none;
+        padding: 5px 0px;
+      }
+
+      .auto-grid li {
+        border: 1px solid #e1e1e1;
+        border-radius: 0px;
+        padding-left: 8px;
+        padding-top: 6px;
+        text-align: left;
+        font-size: 12px;
+        cursor:pointer;
+        height:32px;
+        color: #555;
+      }
+
+      .autogrid_item .active {
+        background: #28a428  !important;
+        color: #ffffff !important;
+      }
+
+      .row {
+        margin-top:10px;
+      }
+
+      .small-gutters {
+        margin-right: 0;
+        margin-left: 0;
+      }
+
+      .small-gutters > .col, .small-gutters > [class*="col-"] {
+        padding-right: 5px;
+        padding-left: 5px;
+        padding-top: 10px;
+      }
+
+      .small-gutters > [class*="col-"] > .form-control{
+        font-size:12px;
+      }
+
+
+      .form-control {
+        border-radius: 0px !important;
+      }
+    </style>
+
+    <style>
+      .collapsed-panel:before {
+        font-family: "Font Awesome 5 Free";
+        content: "\f078";
+        font-weight: 900;
+        font-size: 9px;
+        color: #666;
+      }
+
+      .collapsed-panel.collapsed:before {
+        content: "\f077";
+      }
+    </style>
+  </head>
+
+  <body>
+    <div style='padding:0px;'>
+      <div id="app" :class="{'mobile':controls.screen.width<=500}" @mousemove="" @keyup="">
+        {% verbatim %}
+        <div style="height: 40px; background: rgba(28, 28, 28, 0.8) none repeat scroll 0% 0%; color: white;z-index: 9999999999;position:fidex;top: 0px;width: 100%;">
+          <table border="0" style="width:100%;color:white;height:100%;">
+            <tr>
+              <td><span class="font-lobster" style="margin-left:15px;font-size:20px;">Connect Carnes</span></td>
+
+              <td style="text-align:center;width:50px;background: rgba(80, 80, 80, 0.8)" title="Minhas Notificações">
+                <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                  <i class="fas fa-comment-dots"></i>
+                </span>
+              </td>
+
+              <td style="text-align:center;width:50px;background: rgba(90, 90, 90, 0.8)" title="Minhas Notificações">
+                <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                  <i class="fas fa-bell"></i>
+                </span>
+              </td>
+
+              <td style="text-align:center;width:50px;background: rgba(100, 100, 100, 0.8)">
+                <div class="dropdown">
+                  <span class="" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-user"></i>
+                  </span>
+
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="#">Nada ainda</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="/logout">Sair</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <template  v-if="controls.page.current=='menu'" >
+        <div id="carousel-example-2" class="carousel slide carousel-fade" data-ride="carousel">
+          <ol class="carousel-indicators">
+            <li data-target="#carousel-example-2" data-slide-to="0" class="active"></li>
+            <li data-target="#carousel-example-2" data-slide-to="1"></li>
+            <li data-target="#carousel-example-2" data-slide-to="2"></li>
+            <li data-target="#carousel-example-2" data-slide-to="3"></li>
+            <li data-target="#carousel-example-2" data-slide-to="4"></li>
+            <li data-target="#carousel-example-2" data-slide-to="5"></li>
+            <li data-target="#carousel-example-2" data-slide-to="6"></li>
+          </ol>
+
+          <div class="carousel-inner" role="listbox">
+            <div class="carousel-item active">
+              <!--Mask color-->
+              <div class="view">
+                <img v-if="controls.screen.width > 1024" class="d-block w-100" src="\media\promotions\1.jpg" style="object-fit:cover;height:400px;" alt="Second slide">
+                <img v-else class="d-block w-100" src="\media\promotions\1.jpg" style="object-fit:cover;height:300px;" alt="Second slide">
+                <div class="mask rgba-black-strong"></div>
+              </div>
+              <!--<div class="carousel-caption">
+                <h3 class="h3-responsive">Strong mask</h3>
+                <p>Secondary text</p>
+              </div>-->
+            </div>
+
+            <div class="carousel-item">
+              <!--Mask color-->
+              <div class="view">
+                <img v-if="controls.screen.width > 1024" class="d-block w-100" src="\media\promotions\batata.png" style="object-fit:cover;height:400px;" alt="Second slide">
+                <img v-else class="d-block w-100" src="\media\promotions\batata.png" style="object-fit:cover;height:300px;" alt="Second slide">
+                <div class="mask rgba-black-strong"></div>
+              </div>
+
+              <div class="carousel-caption" :class="{'small_screen':controls.screen.width<1024}">
+                <h3 class="h3-responsive">Promoções e cupons de descontos imperdiveis?</h3>
+                <p>Siga nossas redes sociais, promoções e descontos semanalmente..<b> <span>Saiba mais</span></b></p>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <!--Mask color-->
+              <div class="view">
+                <img v-if="controls.screen.width > 1024" class="d-block w-100" src="\media\promotions\abertapizza_site.jpg" style="object-fit:cover;height:400px;" alt="Second slide">
+                <img v-else class="d-block w-100" src="\media\promotions\abertapizza_site.jpg" style="object-fit:cover;height:300px;" alt="Second slide">
+                <div class="mask rgba-black-strong"></div>
+              </div>
+
+              <!--<div class="carousel-caption">
+                <h3 class="h3-responsive" style="font">Promoções e cupons de descontos imperdiveis?</h3>
+                <p>Siga nossas redes sociais, promoções e descontos semanalmente..<b> <span>Saiba mais</span></b></p>
+              </div>-->
+            </div>
+
+            <div class="carousel-item">
+              <!--Mask color-->
+              <div class="view">
+                <img v-if="controls.screen.width > 1024" class="d-block w-100" src="\media\promotions\4.jpg" style="object-fit:cover;height:400px;" alt="Third slide">
+                <img v-else class="d-block w-100" src="\media\promotions\4.jpg" style="object-fit:cover;height:300px;" alt="Third slide">
+                <div class="mask rgba-black-slight"></div>
+              </div>
+              <div class="carousel-caption" :class="{'small_screen':controls.screen.width<1024}">
+                <h3 class="h3-responsive" style="font">Pensando em comer algo diferente?</h3>
+                <p>Você escolhe os itens e os nossos chefs preparam especialmente para você, <b><span>clique aqui para encomendar seu pedido</span></b></p>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <!--Mask color-->
+              <div class="view">
+                <img v-if="controls.screen.width > 1024" class="d-block w-100" src="\media\promotions\5.jpg" style="object-fit:cover;height:400px;" alt="Third slide">
+                <img v-else class="d-block w-100" src="\media\promotions\5.jpg" style="object-fit:cover;height:300px;" alt="Third slide">
+                <div class="mask rgba-black-slight"></div>
+              </div>
+              <div class="carousel-caption" :class="{'small_screen':controls.screen.width<1024}">
+                <h3 class="h3-responsive" style="font">Carnes de primeira qualidade, no seu ponto, do seu jeito</h3>
+                <p>Conheça a linha de carnes, aperitivos e vinhos pra sua casa.<b><span> Veja nosso catalogo de produtos</span></b></p>
+              </div>
+            </div>
+
+            <div class="carousel-item">
+              <!--Mask color-->
+              <div class="view">
+                <img v-if="controls.screen.width > 1024" class="d-block w-100" src="\media\promotions\8.jpg" style="object-fit:cover;height:400px;" alt="Third slide">
+                <img v-else class="d-block w-100" src="\media\promotions\8.jpg" style="object-fit:cover;height:300px;" alt="Third slide">
+                <div class="mask rgba-black-slight"></div>
+              </div>
+              <div class="carousel-caption" :class="{'small_screen':controls.screen.width<1024}">
+                <h3 class="h3-responsive" style="font">Precisando reunir a turma e não sabe onde?</h3>
+                <p>Reserver um horário, dispomos de opções seletas de carnes e porções pra você e seus convidados<b><span> Clique aqui para reservar</span></b></p>
+                  <!--<button type="button" class="btn btn-dark">Quero Reservar!</button>
+                  <button type="button" class="btn btn-success">Quero Reservar!</button>
+                  <button type="button" class="btn btn-primary">Quero Reservar!</button>
+                  <button type="button" class="btn btn-light">Quero Reservar!</button>
+                  <button type="button" class="btn btn-secondary">Quero Reservar!</button>-->
+              </div>
+            </div>
+
+            <!--<template vif="groups" vfor="(promotion, promotion_index) in groups">
+            <div class="carousel-item">
+              <!-Mask color->
+              <div class="view">
+                <img class="d-block w-100" :src="'/media/'+promotion.image" alt="Second slide" style="height:580px;object-fit:cover;">
+                <div class="mask rgba-black-strong"></div>
+              </div>
+              <div class="carousel-caption">
+                <h3 class="h3-responsive">{{ promotion.name }}</h3>
+                <p>Secondary text</p>
+              </div>
+            </div>
+            </template>-->
+
+          </div>
+
+          <a class="carousel-control-prev" href="#carousel-example-2" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="sr-only">Previous</span>
+          </a>
+          <a class="carousel-control-next" href="#carousel-example-2" role="button" data-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="sr-only">Next</span>
+          </a>
+        </div>
+        <!--<div style="height: 60px; background: rgba(28, 28, 28, 0.8) none repeat scroll 0% 0%; color: white;z-index: 9999999999;position: absolute;float: right;top: 0px;width: 100%;">
+          <table border="0" style="width:100%;color:white;height:100%;">
+            <tr>
+              <td><span class="font-lobster" style="margin-left:15px;font-size:25px;">Connect Carnes</span></td>
+
+              <td style="text-align:center;width:50px;background: rgba(80, 80, 80, 0.8)" title="Minhas Notificações">
+                <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                  <i class="fas fa-comment-dots"></i>
+                </span>
+              </td>
+
+              <td style="text-align:center;width:50px;background: rgba(90, 90, 90, 0.8)" title="Minhas Notificações">
+                <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                  <i class="fas fa-bell"></i>
+                </span>
+              </td>
+
+              <td style="text-align:center;width:50px;background: rgba(100, 100, 100, 0.8)">
+                <div class="dropdown">
+                  <span class="" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-user"></i>
+                  </span>
+
+                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                    <a class="dropdown-item" href="#">Nada ainda</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="/logout">Sair</a>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </table>
+        </div>-->
+
+        <div style="background:rgba(15,15,15,0.9);height:15px;width:100%;"></div>
+
+        <div id="accordion">
+          <template v-for="(group, group_index) in groups">
+          <div class="card">
+            <div class="card-header" style="border-bottom: 0px;">
+              <h5 class="mb-0 font-lobster" data-toggle="collapse" :data-target="'#'+group.name+'_panel'" aria-expanded="true" aria-controls="collapseOne">
+                {{ group.name | title }}
+              </h5>
+            </div>
+
+            <div :id="group.name+'_panel'" class="collapse" :class="{'show':group_index == 0}" aria-labelledby="headingOne" data-parent="#accordion">
+              <div class="card-body">
+                <ul id='product-menu' :class="{'auto-grid-small':controls.screen.width<1024, 'auto-grid-large':controls.screen.width>=1024}" style='background:rgb(251, 251, 251);padding:0px;'>
+                  <template v-for='(product, product_index) in group.products'>
+                    <li style='' @click="select_product(product)">
+                      <img class='menu-item-image' style='float:left;min-height:100px;' :src='"/media/"+product.image' />
+
+                      <div class='menu-item-price'>
+                        <div>R$ {{ product.price | format_money }}</div>
+                      </div>
+                      <span style="color:#444;">{{ product.name }}</span>
+                    </li>
+                  </template>
+                </ul>
+              </div>
+            </div>
+          </div>
+          </template>
+        </div>
+
+        <br>
+        </template>
+
+        <!--<div>
+          <h6 style="height:30px;background:white;padding-left:5px;padding-right:5px;">
+            <div class="float-left" style="position:relative;top:0px;">
+              <div class="dropdown">
+                <button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
+                  <i class="fas fa-bars"></i>
+                </button>
+                <span style="position:relative;top:2px">Meu carrinho novo</span>
+
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                  <!-<a class="dropdown-item" href="#" style="font-size:12px;padding-left:15px;padding-right:5px;" @click="open_command(selected.table, selected.table_index)"><i class="fas fa-plus"></i> Adicionar comanda</a>->
+                  <div class="dropdown-divider"></div>
+                  <a class="dropdown-item" @click="view_order()" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-search"></i> Visualizar pedido</a>
+                  <a class="dropdown-item" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-print"></i> Reimprimir pedido</a>
+                  <a class="dropdown-item" href="#" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-times"></i> Cancelar pedido</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="float-right">
+              <span style="position:relative;left:-10px;top:7px;color:#777;font-family:Arial;">R$ {{ command.total | format_money }}</span>
+            </div>
+          </h6>
+        </div>-->
+
+        <div v-if="controls.page.current=='order'" style="padding: 15px;">
+          <div class="card">
+            <div class="card-body" style="min-height: calc(100vh - 125px);">
+              <div style="height:50px;padding-bottom:40px;border-bottom:1px solid #ddd;">
+                <h6 class="float-left" style="position:relative;top:3px;">
+                  Meu carrinho<br>
+                  <span style="font-size:12px;color:#666;">
+                    Cliente não identificado
+                  </span>
+                </h6>
+
+                <div class="float-right" style="position:relative;top:0px;padding-right:0px;">
+                  <button type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
+                    <i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span>
+                  </button>
+
+                  <button v-if="controls.screen.width>=1024" :disabled="!(selected.order && selected.command_index==command_index)" @click="view_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
+                    <i class="fas fa-print"></i><br><span style="font-size:10px;">Imprimir</span>
+                  </button>
+
+                  <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="repeat_order(command, command_index, selected.order)" data-toggle="modal" data-target="#exampleModal" style="line-height:1;height:38px;">
+                    <i class="fas fa-redo-alt"></i><br><span style="font-size:10px;">Repetir</span>
+                  </button>
+
+                  <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
+                    <i class="fas fa-sign-out-alt"></i><br><span style="font-size:10px;">Encerrar</span>
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <template v-if="command.products.length==0">
+                  <div style="padding-top:40px;padding-bottom:40px;text-align:center;">
+                  <span><i class="fas fa-info-circle" style="font-size:40px;color:#888;"></i><br><br>
+                    Nenhum produto adicionado,<br>clique em cardápio para montar seu pedido
+                  </span>
+                  </div>
+                </template>
+
+                <template v-else>
+                  <template v-if="command.products && command.products.length>0">
+                    <table border="0" id='consumed_products' class='table table-sm table-stripped' style='font-family:arial;margin-bottom:0px;'>
+                      <template v-if='controls.screen.width>=1024'>
+                        <thead>
+                          <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
+                            <td style="text-align:left;border-top:none;">Produtos</td>
+                            <td style="text-align:center;border-top:none;"></td>
+                            <td style="text-align:center;border-top:none;"></td>
+                            <td style="text-align:center;border-top:none;">Quant</td>
+                            <td style="text-align:center;border-top:none;">Preço</td>
+                            <td style="text-align:center;border-top:none;">Total</td>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          <template v-for='(order, order_index) in command.products'>
+                          <tr :class="{'selected':order.show_options}" style="cursor:pointer;" @click="show_options(command_index, order, order_index)"><!-- data-toggle="modal" data-target="#command_item_options" -->
+                            <td style="width:100px;">
+                              <img :src="'/media/'+order.image" style='width:90px;height:60px;object-fit:cover;' />
+                            </td>
+
+                            <td style="line-height:1.1;">
+                              <span style='font-size:18px;'>{{ order.name }}</span><br>
+                              <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time_short }} -
+                              <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time_short }}</template>
+                              <template v-else>Entrega: {{ order.checkout_time | format_time_short }}</template></span>
+                              <br>
+                              <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
+                            </td>
+
+                            <td style='width:40px;vertical-align:middle;text-align:center;'>
+                              <template v-if="order.status=='WAITING'">
+                                AGUARDANDO
+                              </template>
+
+                              <template v-else-if="order.status=='IN_PROGRESS'">
+                                ANDAMENTO
+                              </template>
+
+                              <template v-else-if="order.status=='READY'">
+                                PRONTO
+                              </template>
+
+                              <template v-else-if="order.status=='CANCELED'">
+                                CANCELADO
+                              </template>
+
+                              <template v-else>
+                                ENTREGUE
+                              </template>
+
+                              <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
+                                <span style="color:red;font-size:12px;"><b>ATRASADO</b></span>
+                              </template>
+                            </td>
+
+                            <td style='width:110px;text-align:center;vertical-align:middle;'>
+                              <span style='font-size:18px;'>{{ order.quantity | format_money }}</span>
+                            </td>
+
+                            <td style="vertical-align:middle;text-align:center;width:110px;">
+                              <span style='font-size:18px;'>R$ {{ order.price | format_money }}</span>
+                            </td>
+
+                            <td style='width:110px;text-align:center;vertical-align:middle;'>
+                              <span style='font-size:18px;'>R$ {{ order.total | format_money }}</span>
+                            </td>
+                            </template>
+                          </tr>
+
+                          <tr>
+                            <td colspan="4"></td>
+                            <td colspan="2" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
+                          </tr>
+                        </tbody>
+                      </template>
+
+                      <template v-else>
+                        <thead>
+                          <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
+                            <td style="text-align:left;border-top:none;">Pedidos</td>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          <template v-for='(order,index) in command.products'>
+                            <tr :class="{'selected':order.show_options}" @click="show_options(command_index, order, index)" style="cursor:pointer;">
+                              <td style="padding-top:4px;padding-bottom:10px;line-height:1;">
+                                <span style="font-size:14px;">{{ order.quantity }} x {{ order.name }}</span><br>
+
+                                <span style='font-size:12px;position:relative;top:2px;'>
+                                  <span style="padding-right:8px;"><i class="fas fa-arrow-up" style=""></i> {{ order.checkin_time | format_time_short }}</span>
+
+                                  <span style="padding-right:8px;">
+                                    <template v-if="order.checkout==null"><i class="fas fa-clock"></i> {{ order.expected_time | format_time_short }}</template>
+
+                                  <template v-else><i class="fas fa-arrow-down" style="color:green;">{{ order.checkout | format_time_short }}</i></template></span>
+
+                                  <span style="">
+                                    <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
+                                      <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
+                                    </template>
+                                  </span>
+                                </span>
+                              </td>
+
+                              <td style="text-align:right;">
+                                <div @click="show_options(order)">{{ order.total }}</div>
+                              </td>
+                            </tr>
+                          </template>
+                        </tbody>
+                      </template>
+                    </table>
+                  </template>
+
+                  <template v-else>
+                    <div style="text-align:center;padding:10px;">
+                      Nenhum pedido feito.. <!--<br><span @click="open_menu(selected.table.commands[command_index], command_index)" style="cursor:pointer;font-weight:bold;">clique aqui para adicionar um novo pedido..</span>-->
+                      <br>
+                    </div>
+                  </template>
+                </template>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="controls.page.current=='confirm'" style="padding: 15px;">
+
+
+
+
+          <div class="card" style="margim-bottom:10px;">
+            <div class="card-body" style="padding:0px;">
+              <table style="width:100%;">
+                <tr style="cursor: pointer;" data-toggle="modal" data-target="#select_address_modal">
+                  <td style="font-size:11px;min-height:80px;padding: 3px 12px 6px;">
+                    <sub style="margin-left:0px;font-size:9px;">Endereço de Entrega</sub><br>
+                    {{ forms.address.street_name }}, {{ forms.address.address_number }}
+                    {{ forms.address.neighborhood_name }},
+                    {{ forms.address.city_name }},
+                    {{ forms.address.state_initials }}
+                    <template v-if="forms.address.complement">
+                      <br>{{ forms.address.complement }}
+                    </template>
+                  </td>
+
+                  <td style="background:#f2f2f2;text-align:center;font-size:10px;color:#777;width:50px;"><i class="fas fa-pencil-alt"></i><br>Editar</td>
+                </tr>
+              </table>
+              <!--<ul class="nav nav-tabs justify-content-center">
+                <li><a data-toggle="tab" href="#delivery_address_panel">Endereço de Entrega</a></li>
+                <li><a data-toggle="tab" href="onstore_panel">Retirar no local</a></li>
+              </ul>
+
+              <div class="tab-content">
+                <div id="delivery_address_panel" class="tab-pane fade in active">
+                  <table style="width:100%;">
+                    <tr>
+                      <td style="padding:0px;">
+                        Minha Casa<br>
+                        <span style="display:inline-block;padding-right:40px;font-size:12px;">
+                          {{ forms.address.street_name | titlecase }}, {{ forms.address.address_number }}
+                          {{ forms.address.neighborhood_name | titlecase }},
+                          {{ forms.address.city_name | titlecase }},
+                          {{ forms.address.state_initials | uppercase }}
+                          <template v-if="forms.address.observations">
+                            <br>{{ forms.address.observations | uppercase }}
+                          </template>
+                        </span>
+                      </td>
+
+                      <td data-toggle="modal" data-target="#select_address_modal" style="padding:0px;width: 40px;text-align:center;">
+                        <button class='btn btn-sm btn-success' style="font-size:10px;line-height:1;" data-toggle="modal" data-target="#select_address_modal"><i class="fas fa-pencil-alt"></i><br>Editar</button>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div id="onstore_panel" class="tab-pane fade">
+                  <h3></h3>
+                  <p></p>
+                </div>
+
+                <div id="menu2" class="tab-pane fade">
+                  <h3>Menu 2</h3>
+                  <p>Some content in menu 2.</p>
+                </div>
+              </div>-->
+            </div>
+          </div>
+          <br>
+
+          <div class="card" style="margim-bottom:10px;margin-top:-10px;">
+            <div class="card-body" style="min-height: calc(100vh - 140px);">
+              <div style="">
+                <!--<table style="width:100%;">
+                  <tr>
+                    <td style="padding:0px;">
+                      Endereço de Entrega<br>
+                      <span style="display:inline-block;padding-right:40px;font-size:12px;">
+                        {{ forms.address.street_name | titlecase }}, {{ forms.address.address_number }},<br>
+                        {{ forms.address.neighborhood_name | titlecase }},
+                        {{ forms.address.city_name | titlecase }},
+                        {{ forms.address.state_initials | uppercase }}
+                        <template v-if="forms.address.observations">
+                          <br>{{ forms.address.observations | uppercase }}
+                        </template>
+                      </span>
+                    </td>
+
+                    <td data-toggle="modal" data-target="#select_address_modal" style="padding:0px;width: 40px;text-align:center;">
+                      <button class='btn btn-sm btn-success' style="font-size:10px;line-height:1;"><i class="fas fa-pencil-alt"></i><br>Editar</button>
+                    </td>
+                  </tr>
+                </table>-->
+
+
+
+                <!--<template v-if="controls.screen.width>=1024">
+                <div class="">
+                  <table style="padding-top:0px;margin-top:0px;">
+                    <tr>
+                      <td style="width:60px;">
+                        <img class="empty-avatar" src="https://www.w3schools.com/howto/img_avatar.png" alt="Client image">
+                      </td>
+
+                      <td style="line-height:1;">Diego Pasti<br>
+                        <span style="font-size:12px;color:#666;">
+                          Endereço de entrega: Rua Demosthenes Nunes Vieira, 60, Alto Lage, Cariacica - ES<br>
+                          Observações de entrega: Não tocar a campanhinha, basta dar um toque no numero (27) 99999-9999. Obrigado!
+                        </span>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+                </template>
+
+                <template v-else>
+                <table style="width:100%;padding-top:0px;margin-top:0px;">
+                  <tr>
+                    <td style="width:60px;">
+                      <img class="empty-avatar" src="https://www.w3schools.com/howto/img_avatar.png" alt="Client image">
+                    </td>
+
+                    <td style="padding-left:5px;line-height:1;width:100%;">
+                      Diego Pasti<br>
+                      <span style="font-size:12px;color:#666;">
+                        <template v-if="forms.address.street_name">
+                        {{ forms.address.street_name | titlecase }}, {{ forms.address.address_number }}
+                        {{ forms.address.neighborhood_name | titlecase }},
+                        {{ forms.address.city_name | titlecase }},
+                        {{ forms.address.state_initials | uppercase }},
+                        </template>
+
+                        <template v-else>
+                        <table border="1" style="width:100%;">
+                            <tr style="cursor:pointer;">
+                              <td style="padding-right:10px;cursor:pointer;">
+                                Rua Marechal Hermes, 51, Maruípe, Vitória - ES
+                                Complemento: Segundo andar
+                              </td>
+
+                              <td>
+                                <span class="badge badge-light" style="cursor:pointer;padding: 8px 8px;">
+                                  <i class="fas fa-pencil-alt"></i><br><span style="font-size:10px;">Editar</span>
+                                </span>
+                              </td>
+                            </tr>
+                          </table>
+                        </template>
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+                </template>-->
+
+                <div class="row" v-if="command.products && command.products.length>0">
+                  <div class="col-xl-6 col-lg-6 col-12">
+                    <h6 style="font-size: 12px;font-weight: bold;">Meu pedido</h6>
+                    <div style="padding:10px 5px;font-family:arial;font-size:12px;">
+                      <div v-for="(product, product_index) in command.products">
+                        <span class="product_title">
+                          <table style="width:100%;border-bottom: 1px dotted #ddd;">
+                            <tr>
+                              <td>{{ product.name }}</td>
+                              <td style="width:100px;text-align:right;">R$ {{ product.price | format_money }}</td>
+                            </tr>
+                          </table>
+                        </span>
+
+                        <span class="product_complements" style="margin-top:">
+                          <div style="padding-top:3px;padding-left:2px;border-bottom:1px dotted #ddd;">+ 2 QUEIJO <span class="float-right">R$ 4,00</span></div>
+                          <div style="padding-top:3px;padding-left:2px;border-bottom:1px dotted #ddd;">+ 1 BACON <span class="float-right">R$ 3,00</span></div>
+                        </span>
+
+                        <div>
+                          <template v-if="product.observations">
+                            <div style="padding-top:3px;padding-left:10px;border-bottom:1px dotted #ddd;">OBS.: {{ product.observations | uppercase }}</div>
+                          </template>
+                          <div class="float-right"><b>R$ {{ (parseFloat(product.price)+7) | format_money }}</b></div>
+                        </div>
+                        <br>
+                        <br>
+
+                        <!--<template v-for="item_quantity in parseInt(product.quantity)">
+                        <span class="product_title">
+                          <table style="width:100%;border-bottom: 1px dotted #ddd;">
+                            <tr>
+                              <td>{{ product.name }}</td>
+                              <td style="width:100px;text-align:right;">R$ {{ product.price | format_money }}</td>
+                            </tr>
+                          </table>
+                        </span>
+
+                        <span class="product_complements" style="margin-top:">
+                          <div style="padding-top:3px;padding-left:2px;border-bottom:1px dotted #ddd;">+ 2 QUEIJO <span class="float-right">R$ 4,00</span></div>
+                          <div style="padding-top:3px;padding-left:2px;border-bottom:1px dotted #ddd;">+ 1 BACON <span class="float-right">R$ 3,00</span></div>
+                          </span>
+                        </span>
+
+                        <div>
+                          <template v-if="product.observations">
+                            <div style="padding-top:3px;padding-left:10px;border-bottom:1px dotted #ddd;">OBS.: {{ product.observations | uppercase }}</div>
+                          </template>
+                          <div class="float-right"><b>R$ {{ (parseFloat(product.price)+7) | format_money }}</b></div>
+                        </div>
+                        <br>
+                        <br>
+                        </template>-->
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="col-xl-6 col-lg-6 col-12">
+                    <!--<div>
+                      <hr v-if="controls.screen.width<=991">
+                      <h6>Endereço de Entrega
+                        <span style="color: #777;cursor:pointer;float:right;margin-right:5px;font-size:80%;position:relative;top:2px;" @click="get_position()">
+                          <i class="fas fa-map-marked-alt"></i> Usar localização
+                        </span>
+                      </h6>
+
+                      <div style="font-size:12px;padding-top:5px;">
+                        <div style="border:1px solid #ccc;">
+                          <!-<div id="map_container" style="width:100%;min-height:200px;"></div>->
+                          <div style="background:rgb(251, 251, 251);padding:8px;border-top:1px solid #ddd;">
+                            <table style="width:100%">
+                              <tr style="cursor:pointer;">
+                                <td style="padding-right:15px;">
+                                  <span style="font-weight:bold;font-size:13px;">{{ forms.address.street_name | titlecase }}, {{ forms.address.address_number }},
+                                  {{ forms.address.neighborhood_name | titlecase }},
+                                  {{ forms.address.city_name | titlecase }},
+                                  {{ forms.address.state_initials | uppercase }}</span><br>
+                                  <span>Segundo Andar</span>
+                                </td>
+
+                                <td data-toggle="modal" data-target="#select_address_modal" style="width: 40px;text-align:center;"><i class="fas fa-pencil-alt"></i><br>Editar</td>
+                              </tr>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <br>
+                    <br>-->
+
+                    <h6 style="font-size: 12px;font-weight: bold;">Cupons e descontos</h6>
+                    <div style="">
+                      <ul class="auto-grid">
+                        <li class="autogrid_item" :class="{'selected':controls.payment.method=='credit_card'}" @click="controls.payment.method='credit_card'" style="line-height:0.5;"></i>Desconto 10%<br><sub>Primeira compra</sub></li>
+                        <li class="autogrid_item" :class="{'selected':controls.payment.method=='debit_card'}" @click="controls.payment.method='debit_card'" style="line-height:0.5;">Entrega grátis<br><sub>Válido até 30/07/2020</sub></li>
+                        <li class="autogrid_item" :class="{'selected':controls.payment.method=='picpay'}" @click="controls.payment.method='picpay'" style="line-height:0.5;">Desconto 5%<br><sub>Válido até 15/09/2020</sub></li>
+                      </ul>
+                    </div>
+                    <br>
+
+                    <h6 class='' style="padding-bottom:4px;font-size: 12px;font-weight: bold;"><!-- @click="open_payment_panel()"  data-toggle="collapse" data-target="#collapseExample" -->
+                      Formas de Pagamento
+                    </h6>
+
+                    <div id="collapseExample">
+                      <div style="">
+                        <ul class="auto-grid">
+                          <li class="autogrid_item" :class="{'selected':controls.payment.method=='credit_card'}" @click="controls.payment.method='credit_card'"><i class="far fa-credit-card"></i> Cartão de Crédito</li>
+                          <li class="autogrid_item" :class="{'selected':controls.payment.method=='debit_card'}" @click="controls.payment.method='debit_card'"><i class="far fa-credit-card"></i> Cartão de Débito</li>
+                          <li class="autogrid_item" :class="{'selected':controls.payment.method=='picpay'}" @click="controls.payment.method='picpay'"><i class="far fa-credit-card"></i> Picpay</li>
+                          <li class="autogrid_item" :class="{'selected':controls.payment.method=='money'}" @click="controls.payment.method='money'"><i class="fas fa-money-bill"></i> Dinheiro</li>
+                          <li v-if="controls.payment.method=='money'" class="autogrid_item"  style="padding:0px;border:0px;">
+                            <div class="input-group mb-3">
+                              <div class="input-group-prepend">
+                                <span class="input-group-text" style="font-size: 9px;padding:4px;line-height:1;">Troco<br>para</span>
+                              </div>
+                              <input type="text"  class="form-control form-control-sm" />
+                            </div>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <br>
+
+                    <table style="width:100%;font-size:12px;">
+                      <tr style="background:rgb(246,246,246);">
+                        <td>Subtotal</td><td style="float:right;font-family: arial;">R$ {{ command.total | format_money }}</td>
+                      </tr>
+
+                      <tr>
+                        <td>Descontos</td><td style="float:right;font-family: arial;">R$ 0,00</td>
+                      </tr>
+
+                      <tr style="background:rgb(246,246,246);">
+                        <td>Taxa de entrega</td><td style="float:right;font-family: arial;">R$ 3,00</td>
+                      </tr>
+
+                      <tr style="font-weight: bold;">
+                        <td>Total do Pedido</td><td style="float:right;font-family: arial;">R$ {{ command.total + 3 | format_money }}</td>
+                      </tr>
+                    </table>
+                    <hr>
+                    <br>
+
+                    <!--<h6>Total do Pedido <span class="float-right" style="font-family: arial;">R$ {{ command.total | format_money }}</span></h6>
+                    <hr>
+
+                    <h6>Total do Pedido<span class="float-right" style="font-family: arial;">R$ {{ (command.total+3) | format_money }}</span></h6>
+                    <hr>
+
+                    <h6>Total do Pedido<span class="float-right" style="font-family: arial;">R$ {{ (command.total+3) | format_money }}</span></h6>
+                    <hr>-->
+
+                    <textarea class="form-control" placeholder="Observações sobre a entrega.." style="font-size:12px;"></textarea>
+                    <br>
+                    <div class="float-right">
+                      <button class="btn btn-sm btn-success" @click="get_position()" style="font-size:12px;width:140px;">Enviar pedido</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row" v-else>
+                  <div class="col-12" style="padding-top:40px;padding-bottom:40px;text-align:center;">
+                    <span><i class="fas fa-info-circle" style="font-size:40px;color:#888;"></i><br><br>
+                      Seu carrinho está vazio<br>clique em cardápio para montar seu pedido
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <br>
+        </div>
+        <br>
+
+        <br>
+
+        <div class="footer-panel" style="">
+          <table id='footer-menu' style="width:100%;text-align:center;cursor:pointer;">
+            <template v-if="controls.screen.width>=1024">
+            <tr>
+              <td :class="{'menu-active': controls.page.current=='menu'}" @click="select_panel('menu')"><i class="fas fa-th-list"></i><br><span class="font-lobster"> Cardápio</span></td>
+              <td :class="{'menu-active': controls.page.current=='history'}" @click="select_panel('history')"><i class="fas fa-history"></i><br><span class="font-lobster">Histórico</span></td>
+              <td :class="{'menu-active': controls.page.current=='order'}" @click="select_panel('order')"><i class="fas fa-shopping-cart"></i><br><span class="font-lobster">Carrinho</span></td>
+              <td :class="{'menu-active': controls.page.current=='close'}" @click="select_panel('confirm')"><i class="fas fa-sign-out-alt"></i><br><span class="font-lobster">Finalizar</span></td>
+            </tr>
+            </template>
+
+            <template v-else>
+            <tr style="font-size:11px;">
+              <td :class="{'menu-active': controls.page.current=='menu'}" @click="select_panel('menu')"><i class="fas fa-th-list"></i><br><span class="font-lobster"> Cardápio</span></td>
+              <td :class="{'menu-active': controls.page.current=='history'}" @click="select_panel('history')"><i class="fas fa-history"></i><br><span class="font-lobster">Histórico</span></td>
+              <td :class="{'menu-active': controls.page.current=='order'}" @click="select_panel('order')"><i class="fas fa-shopping-cart"></i><br><span class="font-lobster">Carrinho</span></td>
+              <td :class="{'menu-active': controls.page.current=='close'}" @click="select_panel('confirm')"><span style="font-weight:bold;">R$ 55,90</span><br><span class="font-lobster"><i class="fas fa-sign-out-alt"></i> Finalizar</span></td>
+            </tr>
+            </template>
+          </table>
+        </div>
+
+        <div id="exampleModal" class="modal" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-lg" role="document">
+            <div v-if='selected.product ' class="modal-content">
+              <div class="modal-header" style='padding:0px;'>
+                <img :src="'/media/'+(forms.order.object.image||forms.order.object.image)" style='width:100%;height:150px;object-fit:cover;' />
+              </div>
+
+              <div class="order_decoration" :style="controls.styles.themes.active.order_decoration">
+                <table border="0" style="width:100%;">
+                  <tr>
+                    <td>
+                      <b>{{ forms.order.object.name | title }}</b><br>
+                    </td>
+
+                    <td style="width:80px;text-align:center;background-color:(50,50,50,0.4));">
+                      <i class="fas fa-user-clock"></i> <br>
+                      <template v-if="forms.order.object.expected_duration">{{ forms.order.object.expected_duration|format_text_duration }}</template>
+                      <template v-else><span style="font-size:10px;">Não calculado</span></template>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+
+              <div class="modal-body" style='padding-left:30px;padding-right:30px;padding-bottom:28px;padding-top:25px;'>
+                <div data-toggle="collapse" href="#product_details_panel" style='cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;'>
+                  <i class="fas fa-chevron-down" style='font-size:10px;position:relative;top:-1px;'></i>
+                  Produto
+                  <span style="float:right;padding-right:18px;font-family:arial;">R$ {{ forms.order.object.price }}</span>
+                </div>
+
+                <div class="collapse" id="product_details_panel">
+                  <table id='product_description' class='table table-sm' style=''>
+                    <tr>
+                      <td>
+                        <template v-if="forms.order.object.product__description">
+                          <span style='font-size:14px;'>{{ forms.order.object.product__description | title }}</span><br>
+                        </template>
+                        <template v-else>Produto sem descrição</template>
+                      </td>
+                    </tr>
+                  </table>
+                </div>
+
+                <div style='padding-top:10px;cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;' data-toggle="collapse" href="#product_complements_panel">
+                  <i class="fas fa-chevron-down" style='font-size:10px;position:relative;top:-1px;'></i> Complementos
+                  <span style="float:right;padding-right:18px;font-family:arial;">R$ 12,00</span>
+                </div>
+
+                <div class="collapse" id="product_complements_panel">
+                  <table id='product_complements' border="0" class='table table-sm table-stripped table-hover' style=''>
+                    <tbody>
+                      <template v-if='controls.screen.width>=1024'>
+                      <template v-for='complement in complements'>
+                      <tr>
+                        <td>
+                          <span style='font-size:14px;'>{{ complement.name }}</span><br>
+                          <span style='font-size:10px;color:#888;'>R$ {{ complement.price }}</span>
+                        </td>
+
+                        <td style='width:60px;text-align:center;'></td>
+                        <td style='width:50px;text-align:center;'>
+                          <template v-if='complement.quant > 0'>{{ complement.quant }}</template>
+                        </td>
+
+                        <td style='width:60px;text-align:center;'>
+                          <template v-if='complement.quant > 0'>{{ complement.price*complement.quant }}</template>
+                        </td>
+
+                        <td style='width:40px;'>
+                          <span class="fa-stack fa-1x" @click='decrease_complement(complement)' style='cursor:pointer;'>
+                            <i class="fas fa-square-full fa-stack-2x"></i>
+                            <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
+                          </span>
+                        </td>
+
+                        <td style='width:20px;padding-top:5px;text-align:center;'>
+                          0
+                        </td>
+
+                        <td style='width:40px;'>
+                          <span class="fa-stack fa-1x" @click='increase_complement(complement)' style='cursor:pointer;'>
+                            <i class="fas fa-square-full fa-stack-2x"></i>
+                            <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
+                          </span>
+                        </td>
+                      </tr>
+                      </template>
+                      </template>
+
+                      <template v-else>
+                      <template v-for='complement in complements'>
+                      <tr>
+                        <td><span style='font-size:14px;'>{{ complement.name }}</span><br>
+                          <span style='font-size:10px;margin-left:1px;font-family:arial;'>R$ {{ complement.price }}</span>
+                        </td>
+
+                        <td style='width:50px;text-align:center;'>
+                          <template v-if='complement.quant > 0'>{{ complement.quant }}</template>
+                        </td>
+                        <td style='width:50px;text-align:center;'>
+                          <template v-if='complement.quant > 0'>{{ complement.price*complement.quant }}</template>
+                        </td>
+                        <td style='width:40px;'>
+                          <span class="fa-stack fa-1x" @click='decrease_complement(complement)' style='cursor:pointer;'>
+                            <i class="fas fa-square-full fa-stack-2x"></i>
+                            <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
+                          </span>
+                        </td>
+
+                        <td style='width:20px;padding-top:5px;text-align:center;'>
+                          0
+                        </td>
+
+                        <td style='width:40px;'>
+                          <span class="fa-stack fa-1x" @click='increase_complement(complement)' style='cursor:pointer;'>
+                            <i class="fas fa-square-full fa-stack-2x"></i>
+                            <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
+                          </span>
+                        </td>
+                      </tr>
+                      </template>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div data-toggle="collapse" href="#product_observations_panel" style='padding-top:10px;cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;'>
+                  <i class="fas fa-chevron-down" style='font-size:10px;position:relative;top:-1px;'></i> Observações
+                </div>
+
+                <div class="collapse" id="product_observations_panel" style="padding-top:10px;">
+                  <textarea class='form-control' v-model='forms.order.object.observations' placeholder="Observações do pedido.."></textarea>
+                </div>
+
+                <div style='padding-top:10px;cursor:pointer;padding-bottom:5px;padding-left:15px;'>
+                  <b>Total
+                  <span style="float:right;padding-right:18px;font-family:arial;">
+                    R$ {{ ( forms.order.object.quantity * forms.order.object.price) | format_money }}
+                  </span>
+                  </b>
+                </div>
+
+                <br>
+
+                <div>
+                  <div class="float-left">
+                    <div class="float-left">
+                      <span style="font-size:10px;padding-left:4px;">Quantidade:</span><br>
+                      <select class='form-control form-control-sm' v-model="forms.order.object.quantity">
+                        <option value="1.00">1 unidade</option>
+                        <option value="2.00">2 unidades</option>
+                        <option value="3.00">3 unidades</option>
+                        <option value="4.00">4 unidades</option>
+                        <option value="5.00">5 unidades</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"> X </button>-->
+                  <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancelar</button>-->
+
+                  <button type="button" class="btn btn-success" @click='include_order()' style="width:120px;line-height:1;margin-top:19px;float:right;font-family:arial;">
+                    Adicionar <i class="fas fa-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+
+
+
+              <div class="modal-footer">
+                <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancelar</button>->
+                <button type="button" class="btn btn-sm btn-success" @click='save_order()' style="font-family:arial;">Confirmar</button>
+                -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="select_address_modal" tabindex="-1" role="dialog" aria-labelledby="select_address_modal_label" aria-hidden="true">
+          <div class="modal-dialog" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Informe o endereço</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+
+              <div class="modal-body">
+                <span @click="get_position()" style="color: #777;cursor:pointer;float:right;margin-right:5px;font-size:80%;position:relative;top:2px;">
+                  <i class="fas fa-map-marker-alt"></i> Usar localização
+                </span>
+
+                <div class="row small-gutters" style="clear:both;">
+                  <div class="col-lx-10 col-lg-10 col-md-10 col-sm-10 col-10">
+                    <input class="form-control" v-model='forms.address.street_name' placeholder="Rua"/>
+                  </div>
+
+                  <div class="col-lx-2 col-lg-2 col-md-2 col-sm-2 col-2">
+                    <input class="form-control" v-model='forms.address.address_number' placeholder="Número"/>
+                  </div>
+
+                  <div class="col-lx-10 col-lg-10 col-md-10 col-sm-10 col-12">
+                    <input class="form-control" v-model='forms.address.neighborhood_name' placeholder="Bairro"/>
+                  </div>
+
+                  <div class="col-lx-2 col-lg-2 col-md-2 col-sm-2 col-12">
+                    <input class="form-control" v-model='forms.address.postal_code' placeholder="Cep"/>
+                  </div>
+
+                  <div class="col-lx-5 col-lg-5 col-md-5 col-sm-5 col-12">
+                    <input class="form-control" v-model='forms.address.city_name' placeholder="Cidade"/>
+                  </div>
+
+                  <div class="col-lx-5 col-lg-5 col-md-5 col-sm-5 col-12">
+                    <input class="form-control" v-model='forms.address.state_name' placeholder="Estado"/>
+                  </div>
+
+                  <div class="col-lx-2 col-lg-2 col-md-2 col-sm-2 col-12">
+                    <input class="form-control" v-model='forms.address.country_name' placeholder="País"/>
+                  </div>
+
+                  <div class="col-lx-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                    <input class="form-control" v-model='forms.address.complement' placeholder="Complemento"/>
+                  </div>
+
+                  <div class="col-lx-12 col-lg-12 col-md-12 col-sm-12 col-12">
+                    <div style="border: 1px solid #ccc;">
+                      <div id="map_container" style="width:100%;min-height:200px;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary">Save changes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="update_command_client_modal" class="modal" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h6 class="modal-title">Identificar comanda</h6>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
+
+              <div class="modal-body" style=''>
+                <input class="form-control form-control-sm" v-model="forms.command.change_client_name" placeholder="Informe nome do cliente"/>
+                <div class="row">
+                  <div class="col-12">
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">-</button>
+                1
+                <button type="button" class="btn btn-sm btn-secondary" @click=''>+</button>
+
+                <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-success" @click=''>
+                  R$ 45,00<br>
+                  Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endverbatim %}
+      </div>
+    </div>
+
+    {% csrf_token %}
+    <script src="{% static 'vali/js/jquery-3.2.1.min.js' %}"></script>
+    <script src="{% static 'vali/js/popper.min.js' %}"></script>
+    <script src="{% static 'vali/js/bootstrap.min.js' %}"></script>
+    <script src="{% static 'bower_components/moment/min/moment.min.js' %}"></script>
+    <script async defer src="{% static 'apps/core/authentication/action.js' %}"></script>
+    <script src="{% static 'apps/sales/delivery/delivery_controller.js' %}"></script>
+    <script defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA5pZBwmGJJ8f8POml7158nP2yxgvFtoXA">
+    </script><!-- &callback=initMap -->
+
+
+    <script>
+      history.pushState(null, document.title, location.href);
+      window.addEventListener('popstate', function (event){
+        app.back_menu();
+      });
+
+    </script>
+
+    <script>
+      function success_notify(){
+
+      }
+
+      window.addEventListener('load', function () {
+        app.get_user();
+        //app.get_position();
+        //app.load_tables();
+        app.load_groups();
+
+        //register_action();
+      }, false);
+
+      window.addEventListener('resize', function(e) {
+        app.verify_screen();
+      });
+
+      var clock = setInterval(function(){app.update_clock()},1000);
+    </script>
+  </body>
+</html>
