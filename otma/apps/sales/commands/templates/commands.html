@@ -42,7 +42,7 @@
       }
 
       #table-panel .auto-grid-small {
-        --auto-grid-min-size: 4rem;
+        --auto-grid-min-size: 5rem;
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(var(--auto-grid-min-size), 1fr));
         grid-gap: 1rem;
@@ -62,11 +62,11 @@
       }
 
       #table-panel li.opened {
-        background: #429742;
+        background: #6d996d;
       }
 
       #table-panel li.waiting {
-        background: #c60000;
+        background: #a44a4a;
       }
 
       #consumed_products td {
@@ -106,7 +106,7 @@
       }
 
       .auto-grid-small {
-        font-size: 9px;
+
       }
 
       .auto-grid-large {
@@ -163,6 +163,15 @@
         color: white !important;
       }
 
+      #footer-menu{
+        color: #ccc;
+      }
+
+      .menu-active{
+        color: #fff;
+        /*background-color: rgba(60, 60, 60, 0.90);*/
+      }
+
       .order_decoration {
         font-family:arial;
         padding:10px;
@@ -172,7 +181,12 @@
         color:white;
       }
 
+      .no-border-first:first-child {
+        border-top: 2px solid #fff;
+      }
     </style>
+
+
   </head>
 
   <body>
@@ -183,11 +197,11 @@
           <div :style='controls.styles.themes.active.header_division'>
             <table border='0' style="width:100%;">
               <tr>
-                <td style="width:40px;" title="Retornar a pagina anterior"><!-- v-if='controls.screen.fullscreen_mode'-->
-                  <span @click="back_menu()" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;"><!-- @click="selected.table=null" v-if="selected.table!=null"  -->
+                <!--<td style="width:40px;" title="Retornar a pagina anterior"><!- v-if='controls.screen.fullscreen_mode'->
+                  <span @click="back_menu()" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;"><!- @click="selected.table=null" v-if="selected.table!=null"  ->
                     <i class="fas fa-arrow-left"></i>
                   </span>
-                </td>
+                </td>-->
 
                 <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">{{ company_name }}</td>
 
@@ -197,8 +211,7 @@
                   </span>
                 </td>
 
-                <i class="fas fa-shopping-cart"></i>
-
+                <!-- OPÇÃO PARA PODER FILTRAR MESASS PELO STATUS OU AREA
                 <td v-if="selected.table==null" style="width:40px;">
                   <div class="dropdown">
                     <span class="" id="dropdownMenuButton" title="Filtrar mesas" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
@@ -223,7 +236,9 @@
                       </a>
                     </div>
                   </div>
-                </td>
+                </td>-->
+
+                <!-- POSSIVEL MENU PRA ESCOLHER TEMAS.. ISSO PODE APARECER DEPOIS EM UMA JANELA DE CONFIGURAÇÕES
 
                 <td style="width:40px;">
                   <div class="dropdown">
@@ -241,7 +256,7 @@
                       {% endverbatim %}
                     </div>
                   </div>
-                </td>
+                </td>-->
 
                 <td style="width:40px;">
                   <div class="dropdown">
@@ -252,7 +267,8 @@
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                       <a class="dropdown-item" href="#">Nada ainda</a>
                       <div class="dropdown-divider"></div>
-                      <a class="dropdown-item" href="/logout">Sair</a>
+                      <a class="dropdown-item" @click="back_menu()">Sair</a>
+                      <a class="dropdown-item" href="/logout">Logout</a>
                     </div>
                   </div>
                 </td>
@@ -270,11 +286,11 @@
           <div v-else-if='selected.table==null' id="table-panel">
             <ul id='tables-list' :class="{'auto-grid-small':controls.screen.width<1024, 'auto-grid-large':controls.screen.width>=1024}" style='margin-left:-40px;'>
               <template v-for='(table, table_index) in tables'>
-                <li v-if="table.area==selected.table_group || table.status==selected.table_group || selected.table_group=='GERAL'" @click="select_table(table, table_index)" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:5px;cursor:pointer;padding-bottom:10px;padding-top:10px;line-height:15px;'>
+                <li v-if="table.area==selected.table_group || table.status==selected.table_group || selected.table_group=='GERAL'" @click="select_table(table, table_index)" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:15px;cursor:pointer;padding-bottom:15px;padding-top:15px;line-height:15px;'>
                   <div style="text-align:center;">
-                    <i v-if="table.status=='WAITING'" class="fas fa-user-clock fa-3x"></i>
-                    <i v-else-if="table.status=='ACTIVE'" class="fas fa-users fa-3x"></i>
-                    <i v-else class="fas fa-users fa-3x"></i>
+                    <i v-if="table.status=='WAITING'" class="fas fa-user-clock fa-2x"></i>
+                    <i v-else-if="table.status=='ACTIVE'" class="fas fa-users fa-2x"></i>
+                    <i v-else class="fas fa-users fa-2x"></i>
                     <br>
                     <span style="position:relative;top:4px;">Mesa {{ table.code }}</span><br>
                     <span style="font-size:10px;">{{ table.area }}</span>
@@ -354,7 +370,7 @@
                       <i class="fas fa-times"></i><br><span style="font-size:10px;">Cancelar</span>
                     </button>-->
 
-                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="close_command(command, command_index)" style="line-height:1;height:38px;">
+                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
                       <i class="fas fa-sign-out-alt"></i><br><span style="font-size:10px;">Encerrar</span>
                     </button>
 
@@ -570,39 +586,38 @@
                     </template>
 
                     <template v-else>
-                      <thead>
-                        <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
-                          <td style="text-align:left;border-top:none;">Pedidos</td>
-                        </tr>
-                      </thead>
-
                       <tbody>
                         <template v-for='(order,index) in command.orders'>
-                          <tr :class="{'selected':order.show_options}" @click="show_options(command_index, order, index)" style="cursor:pointer;">
-                            <td style="padding-top:4px;padding-bottom:10px;line-height:1;">
-                              <span style="font-size:14px;">{{ order.quantity }} x {{ order.name }}</span><br>
+                        <tr class="no-border-first" :class="{'selected':order.show_options}" @click="show_options(command_index, order, index)" style="cursor:pointer;">
+                          <td style="padding-top:4px;padding-bottom:10px;line-height:1;">
+                            <span style="font-size:14px;">{{ order.quantity }} x {{ order.name }}</span><br>
 
-                              <span style='font-size:12px;position:relative;top:2px;'>
-                                <span style="padding-right:8px;"><i class="fas fa-arrow-up" style=""></i> {{ order.checkin_time | format_time_short }}</span>
+                            <span style='font-size:12px;position:relative;top:2px;'>
+                              <span style="padding-right:8px;"><i class="fas fa-arrow-up" style=""></i> {{ order.checkin_time | format_time_short }}</span>
 
-                                <span style="padding-right:8px;">
-                                  <template v-if="order.checkout==null"><i class="fas fa-clock"></i> {{ order.expected_time | format_time_short }}</template>
+                              <span style="padding-right:8px;">
+                                <template v-if="order.checkout==null"><i class="fas fa-clock"></i> {{ order.expected_time | format_time_short }}</template>
 
-                                <template v-else><i class="fas fa-arrow-down" style="color:green;">{{ order.checkout | format_time_short }}</i></template></span>
+                              <template v-else><i class="fas fa-arrow-down" style="color:green;">{{ order.checkout | format_time_short }}</i></template></span>
 
-                                <span style="">
-                                  <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
-                                    <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
-                                  </template>
-                                </span>
+                              <span style="">
+                                <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
+                                  <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
+                                </template>
                               </span>
-                            </td>
+                            </span>
+                          </td>
 
-                            <td style="text-align:right;">
-                              <div @click="show_options(order)">{{ order.total }}</div>
-                            </td>
-                          </tr>
+                          <td style="text-align:right;">
+                            <div @click="show_options(order)">{{ order.total }}</div>
+                          </td>
+                        </tr>
                         </template>
+
+                        <tr>
+                          <td colspan="2">Total <span class="float-right">R$ {{ command.total }}</span></td>
+                        </tr>
+
                       </tbody>
                     </template>
                   </table>
@@ -618,6 +633,37 @@
               <br>
             </template>
           </div>
+
+          <br><br>
+        </div>
+
+        <div class="footer-panel" style="position:fixed;bottom:0;padding:6px;width: 100%;color:#ffffff;background:#202020;border-top: 2px solid #646464;">
+          <table id='footer-menu' style="width:100%;text-align:center;cursor:pointer;">
+            <tr>
+              <td :class="{'menu-active': !this.selected.table, 'menu-inactive': this.selected.table}" @click="back_menu()"><i class="fas fa-th-list"></i><br><span class="font-lobster" style="font-size:14px;"> Mesas</span></td>
+              <td><i class="fas fa-history"></i><br><span class="font-lobster" style="font-size:14px;">Histórico</span></td>
+              <td><i class="fas fa-shopping-cart"></i><br><span class="font-lobster" style="font-size:14px;">Carrinho</span></td>
+              <td><i class="fas fa-sign-out-alt"></i><br><span class="font-lobster" style="font-size:14px;">Finalizar</span></td>
+            </tr>
+
+            <!--<template v-if="controls.screen.width>=1024">
+            <tr>
+              <td :class="{'menu-active': controls.page.current=='menu'}" @click="select_panel('menu')"><i class="fas fa-th-list"></i><br><span class="font-lobster"> Cardápio</span></td>
+              <td :class="{'menu-active': controls.page.current=='history'}" @click="select_panel('history')"><i class="fas fa-history"></i><br><span class="font-lobster">Histórico</span></td>
+              <td :class="{'menu-active': controls.page.current=='order'}" @click="select_panel('order')"><i class="fas fa-shopping-cart"></i><br><span class="font-lobster">Carrinho</span></td>
+              <td :class="{'menu-active': controls.page.current=='close'}" @click="select_panel('confirm')"><i class="fas fa-sign-out-alt"></i><br><span class="font-lobster">Finalizar</span></td>
+            </tr>
+            </template>
+
+            <template v-else>
+            <tr style="font-size:11px;">
+              <td :class="{'menu-active': controls.page.current=='menu'}" @click="select_panel('menu')"><i class="fas fa-th-list"></i><br><span class="font-lobster"> Cardápio</span></td>
+              <td :class="{'menu-active': controls.page.current=='history'}" @click="select_panel('history')"><i class="fas fa-history"></i><br><span class="font-lobster">Histórico</span></td>
+              <td :class="{'menu-active': controls.page.current=='order'}" @click="select_panel('order')"><i class="fas fa-shopping-cart"></i><br><span class="font-lobster">Carrinho</span></td>
+              <td :class="{'menu-active': controls.page.current=='close'}" @click="select_panel('confirm')"><span style="font-weight:bold;">R$ 55,90</span><br><span class="font-lobster"><i class="fas fa-sign-out-alt"></i> Finalizar</span></td>
+            </tr>
+            </template>-->
+          </table>
         </div>
 
         <div id="exampleModal" class="modal" tabindex="-1" role="dialog">
@@ -850,9 +896,9 @@
                 themes:{
                   active: {
                     'name':'Elegancia',
-                    'header':{'background':'#b22222', 'color':'#ffffff'},
-                    'header_division':{'border-bottom':'2px solid #b36363'},
-                    'order_decoration':{'background-color':'rgba(28, 28, 28, 0.9)'},
+                    'header':{'background-color':'rgba(28, 28, 28, 0.8)', 'color':'#ffffff'},
+                    'header_division':{'border-bottom':'2px solid #646464'},
+                    'order_decoration':{'background-color':'rgba(28, 28, 28, 0.8)'},
                     'product_list':{'background':'#b22222'}
                   },
 
@@ -1408,19 +1454,23 @@
             let scope = this;
             let data_paramters = {'command_id':command.id}
 
-            if(command.status==='OPEN'){
-              if (confirm("Deseja mesmo Encerrar a command " + command.code)) {
+            if(table.status=='CLOSED'){
+              if (confirm("Deseja mesmo Encerrar a command "+command.code)) {
+                //scope.open_table(table, index);
+                //this.open_command(table, index);
+                alert("ihh cara.. vc quer encerrar mesmo");
+
                 let success_function = function(response) {
-                  scope.tables[command.table].commands.push(response.object);
-                  scope.selected.table = command.table;
-                  scope.selected.table_index = command.table;
+                  scope.tables[index].commands.push(response.object);
+                  scope.selected.table = table;
+                  scope.selected.table_index = index;
                 };
 
                 let failure_function = function(response) {
 
                 };
 
-                this.request('/api/sales/commands/' + command.id +'/close/', "post", data_paramters, null, success_function, failure_function);
+                //this.request('/api/sales/commands/close/', "post", data_paramters, null, success_function, failure_function);
               }
             }
           },
@@ -1450,7 +1500,7 @@
               scope.errors = response.message;
               scope.user = response.object;
               scope.user.password = '';
-              alert('OLHA AÊ: ' + JSON.stringify(response));
+              //alert('OLHA AÊ: ' + JSON.stringify(response));
               //scope.session.is_blocked = response.object.session.is_blocked;
               //localStorage.setItem("is_blocked", response.object.session.is_blocked);
               //scope.controls.page.loaded = true;
