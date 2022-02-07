@@ -159,7 +159,8 @@
       }
 
       .selected {
-        background:#237dd7;
+        /*background:#237dd7;*/
+        background: #bababa;
         color: white !important;
       }
 
@@ -184,6 +185,8 @@
       .no-border-first:first-child {
         border-top: 2px solid #fff;
       }
+
+      html { scroll-behavior: smooth; }
     </style>
 
 
@@ -279,11 +282,11 @@
 
         {% verbatim %}
         <div style="padding:15px;">
-          <template v-if="selected.new_product">
+          <template v-if="selected.new_product" href="#products">
             <app_commands :controls="controls" :forms="forms" :selected="selected" :groups="groups" :complements="complements" :init_complements="init_complements" :new_products="selected.new_products"></app_commands>
           </template>
 
-          <div v-else-if='selected.table==null' id="table-panel">
+          <div v-else-if='selected.table==null' id="table-panel" href="#tables">
             <ul id='tables-list' :class="{'auto-grid-small':controls.screen.width<1024, 'auto-grid-large':controls.screen.width>=1024}" style='margin-left:-40px;'>
               <template v-for='(table, table_index) in tables'>
                 <li v-if="table.area==selected.table_group || table.status==selected.table_group || selected.table_group=='GERAL'" @click="select_table(table, table_index)" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:15px;cursor:pointer;padding-bottom:15px;padding-top:15px;line-height:15px;'>
@@ -302,60 +305,60 @@
 
           <div class="" v-else style="height: calc(100vh - 150px);">
             <div>
-              <h6 style="height:30px;background:white;padding-left:5px;padding-right:5px;">
-                <div class="float-left" style="position:relative;top:0px;">
-                  <div class="dropdown">
-
-                      <button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
-                        <i class="fas fa-bars"></i>
-                      </button>
-                      <span style="position:relative;top:2px">Mesa {{ selected.table.code }}</span>
-
-
-                    <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                      <a class="dropdown-item" href="#" style="font-size:12px;padding-left:15px;padding-right:5px;" @click="open_command(selected.table, selected.table_index)"><i class="fas fa-plus"></i> Adicionar comanda</a>
-                      <div class="dropdown-divider"></div>
-                      <a class="dropdown-item" @click="view_order()" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-search"></i> Visualizar pedido</a>
-                      <a class="dropdown-item" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-print"></i> Reimprimir pedido</a>
-                      <a class="dropdown-item" href="#" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-times"></i> Cancelar pedido</a>
+              <h6 style="background:white;padding-right:5px;">
+                <div class="row">
+                  <div class="col-6 col-md-6 float-left" style="position:relative;top:0px;">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
+                          <i class="fas fa-bars"></i>
+                        </button>
+                        <span style="position:relative;top:2px;font-size: 20px">Mesa {{ selected.table.code }}</span>
+                      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                        <a class="dropdown-item" href="#" style="font-size:12px;padding-left:15px;padding-right:5px;" @click="open_command(selected.table, selected.table_index)"><i class="fas fa-plus"></i> Adicionar comanda</a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" @click="view_order()" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-search"></i> Visualizar pedido</a>
+                        <a class="dropdown-item" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-print"></i> Reimprimir pedido</a>
+                        <a class="dropdown-item" href="#" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-times"></i> Cancelar pedido</a>
+                      </div>
                     </div>
                   </div>
-                </div>
-
-                <div class="float-right">
-                  <span style="position:relative;left:-10px;top:7px;color:#777;font-family:Arial;">R$ {{ selected.table.total | format_money }}</span>
+                  <div class="col-6 col-md-6" style="text-align: right">
+                    <span style="position:relative;left:-10px;top:7px;color:#777;font-family:Arial;font-size: 20px">R$ {{ selected.table.total | format_money }}</span>
+                  </div>
                 </div>
               </h6>
             </div>
 
             <template v-if="selected.table.commands.length==0">
-              Nenhuma comanda aberta nessa mesa
+              <div style="text-align: center; padding-top: 200px">
+                <span style="font-size: 38px;">Nenhuma comanda aberta nessa mesa</span>
+              </div>
             </template>
 
-            <template v-else v-for="(command,command_index) in selected.table.commands">
+            <template v-else v-for="(command, command_index) in selected.table.commands">
+              <div style="padding-top: 10px;"></div>
+
               <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #ddd;">
-                <div style="height:50px;padding-bottom:40px;border-bottom:1px solid #ddd;">
-                  <h6 class="float-left" style="position:relative;top:3px;">
+                <div style="height:50px;padding-bottom:70px;border-bottom:1px solid #ddd;">
+                  <div class="top: 15px; width: 10%;">
                     Comanda {{ command.code }}<br>
-                    <span style="font-size:12px;color:#666;">
+                    <!--<span style="font-size:12px;color:#666;">
                       Cliente não identificado
-                      <!--<template v-if="command.client">{{ command.client }}</template>
+                      <template v-if="command.client">{{ command.client }}</template>
                       <template v-else>
                         <input v-if="forms.command.change_client_name" class="form-control" v-model="command.client" style="border-top:0px;border-left:0px;border-right:0px;"/><!- @submit="confirm_client_name_field()"  ->
                         <a v-else style="cursor:pointer;">Identificar cliente</a><-- data-toggle="modal" href="#update_command_client_modal" >
-                      </template>-->
-
-                      <!--<template v-if="controls.screen.width>600">Entrada:</template>{{ command.checkin_time | format_datetime }}-->
-                    </span>
-                  </h6>
-
-                  <div class="float-right" style="position:relative;top:0px;padding-right:0px;">
-                    <button type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
-                      <i class="fas fa-plus"></i><br><span style="font-size:10px;">Adicionar</span>
+                      </template>
+                      <template v-if="controls.screen.width>600">Entrada:</template>{{ command.checkin_time | format_datetime }}
+                    </span>-->
+                  </div>
+                  <div class="float-right" style="text-align: right;position: relative;top: 0px;padding-right: 0px;">
+                    <button type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height: 1;height: 38px;">
+                      <i class="fas fa-plus"></i><br><span style="font-size: 10px;">Adicionar</span>
                     </button>
 
                     <button v-if="controls.screen.width>=1024" :disabled="!(selected.order && selected.command_index==command_index)" @click="view_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
-                      <i class="fas fa-print"></i><br><span style="font-size:10px;">Imprimir</span>
+                      <i class="fas fa-print"></i><br><span style="font-size: 10px;">Imprimir</span>
                     </button>
 
                     <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="repeat_order(command, command_index, selected.order)" data-toggle="modal" data-target="#exampleModal" style="line-height:1;height:38px;">
@@ -370,7 +373,7 @@
                       <i class="fas fa-times"></i><br><span style="font-size:10px;">Cancelar</span>
                     </button>-->
 
-                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
+                    <button type="button" class="btn btn-sm btn-light" @click="close_command(command, command_index)" style="line-height:1;height:38px;">
                       <i class="fas fa-sign-out-alt"></i><br><span style="font-size:10px;">Encerrar</span>
                     </button>
 
@@ -415,7 +418,7 @@
 
                 <br>
 
-                <template v-if="command.orders && command.orders.length>0">
+                <template v-if="command.orders && command.orders.length > 0">
                   <table border="0" id='consumed_products' class='table table-sm table-stripped' style='font-family:arial;margin-bottom:0px;'>
                     <template v-if='controls.screen.width>=1024'>
                       <thead>
@@ -486,7 +489,7 @@
                         </tr>
 
                         <tr>
-                          <td colspan="4"></td>
+                          <td colspan="4">Total</td>
                           <td colspan="2" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
                         </tr>
 
@@ -628,6 +631,9 @@
                     Nenhum pedido feito.. <br><span @click="open_menu(selected.table.commands[command_index], command_index)" style="cursor:pointer;font-weight:bold;">clique aqui para adicionar um novo pedido..</span>
                     <br>
                   </div>
+                  <div style="padding-top: 40px;">
+                    <br>
+                  </div>
                 </template>
               </div>
               <br>
@@ -640,10 +646,10 @@
         <div class="footer-panel" style="position:fixed;bottom:0;padding:6px;width: 100%;color:#ffffff;background:#202020;border-top: 2px solid #646464;">
           <table id='footer-menu' style="width:100%;text-align:center;cursor:pointer;">
             <tr>
-              <td :class="{'menu-active': !this.selected.table, 'menu-inactive': this.selected.table}" @click="back_menu()"><i class="fas fa-th-list"></i><br><span class="font-lobster" style="font-size:14px;"> Mesas</span></td>
-              <td><i class="fas fa-history"></i><br><span class="font-lobster" style="font-size:14px;">Histórico</span></td>
-              <td><i class="fas fa-shopping-cart"></i><br><span class="font-lobster" style="font-size:14px;">Carrinho</span></td>
-              <td><i class="fas fa-sign-out-alt"></i><br><span class="font-lobster" style="font-size:14px;">Finalizar</span></td>
+              <td style="float: left;padding-left: 10px" :class="{'menu-active': !this.selected.table, 'menu-inactive': this.selected.table}" @click="view_tables()"><i class="fas fa-th-list"></i><br><span class="font-lobster" style="font-size:14px;"> Mesas</span></td>
+              <!--<td><i class="fas fa-history"></i><br><span class="font-lobster" style="font-size:14px;">Histórico</span></td>
+              <td><i class="fas fa-shopping-cart"></i><br><span class="font-lobster" style="font-size:14px;">Carrinho</span></td>-->
+              <td style="float: right;padding-right: 10px"><i class="fas fa-sign-out-alt"></i><br><span class="font-lobster" style="font-size:14px;">Finalizar</span></td>
             </tr>
 
             <!--<template v-if="controls.screen.width>=1024">
@@ -680,7 +686,7 @@
                       <b>{{ forms.order.object.name | title }}</b><br>
                     </td>
 
-                    <td style="width:80px;text-align:center;background-color:(50,50,50,0.4));">
+                    <td style="width:80px;text-align:center;background-color:50,50,50,0.4;">
                       <i class="fas fa-user-clock"></i> <br>
                       <template v-if="forms.order.object.expected_duration">{{ forms.order.object.expected_duration|format_text_duration }}</template>
                       <template v-else><span style="font-size:10px;">Não calculado</span></template>
@@ -711,42 +717,40 @@
 
                 <div style='padding-top:10px;cursor:pointer;border-bottom:0.5px solid #ddd;padding-bottom:5px;' data-toggle="collapse" href="#product_complements_panel">
                   <i class="fas fa-chevron-down" style='font-size:10px;position:relative;top:-1px;'></i> Complementos
-                  <span style="float:right;padding-right:18px;font-family:arial;">R$ 12,00</span>
+                  <span style="float:right;padding-right:18px;font-family:arial;">R$ {{ selected.complements.total | format_money}}</span>
                 </div>
 
                 <div class="collapse" id="product_complements_panel">
                   <table id='product_complements' border="0" class='table table-sm table-stripped table-hover' style=''>
                     <tbody>
                       <template v-if='controls.screen.width>=1024'>
-                      <template v-for='complement in complements'>
+                      <template v-for='(complement, index) in complements'>
                       <tr>
                         <td>
                           <span style='font-size:14px;'>{{ complement.name }}</span><br>
-                          <span style='font-size:10px;color:#888;'>R$ {{ complement.price }}</span>
+                          <span style='font-size:10px;color:#888;'>R$ {{ complement.price | format_money }}</span>
                         </td>
 
                         <td style='width:60px;text-align:center;'></td>
-                        <td style='width:50px;text-align:center;'>
+                        <!--<td style='width:50px;text-align:center;'>
                           <template v-if='complement.quant > 0'>{{ complement.quant }}</template>
-                        </td>
+                        </td>-->
 
                         <td style='width:60px;text-align:center;'>
-                          <template v-if='complement.quant > 0'>{{ complement.price*complement.quant }}</template>
+                          <template v-if='complement.quant > 0'>{{ (complement.price * complement.quant) | format_money }}</template>
                         </td>
 
                         <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='decrease_complement(complement)' style='cursor:pointer;'>
+                          <span class="fa-stack fa-1x" @click='decrease_new_complement(complement, index)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
                           </span>
                         </td>
 
-                        <td style='width:20px;padding-top:5px;text-align:center;'>
-                          0
-                        </td>
+                        <td style='width:20px;padding-top:5px;text-align:center;'> {{ complement.quant }}</td>
 
                         <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='increase_complement(complement)' style='cursor:pointer;'>
+                          <span class="fa-stack fa-1x" @click='increase_new_complement(complement, index)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
                           </span>
@@ -756,20 +760,20 @@
                       </template>
 
                       <template v-else>
-                      <template v-for='complement in complements'>
+                      <template v-for='(complement, index) in complements'>
                       <tr>
                         <td><span style='font-size:14px;'>{{ complement.name }}</span><br>
-                          <span style='font-size:10px;margin-left:1px;font-family:arial;'>R$ {{ complement.price }}</span>
+                          <span style='font-size:10px;margin-left:1px;font-family:arial;'>R$ {{ complement.price | format_money}}</span>
                         </td>
 
                         <td style='width:50px;text-align:center;'>
                           <template v-if='complement.quant > 0'>{{ complement.quant }}</template>
                         </td>
                         <td style='width:50px;text-align:center;'>
-                          <template v-if='complement.quant > 0'>{{ complement.price*complement.quant }}</template>
+                          <template v-if='complement.quant > 0'>{{ (complement.price * complement.quant) | format_money }}</template>
                         </td>
                         <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='decrease_complement(complement)' style='cursor:pointer;'>
+                          <span class="fa-stack fa-1x" @click='decrease_new_complement(complement, index)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
                           </span>
@@ -780,7 +784,7 @@
                         </td>
 
                         <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='increase_complement(complement)' style='cursor:pointer;'>
+                          <span class="fa-stack fa-1x" @click='increase_new_complement(complement, index)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
                           </span>
@@ -803,7 +807,7 @@
                 <div style='padding-top:10px;cursor:pointer;padding-bottom:5px;padding-left:15px;'>
                   <b>Total
                   <span style="float:right;padding-right:18px;font-family:arial;">
-                    R$ {{ ( forms.order.object.quantity * forms.order.object.price) | format_money }}
+                    R$ {{ ( forms.order.object.quantity * forms.order.object.price ) + selected.complements.total | format_money }}
                   </span>
                   </b>
                 </div>
@@ -962,19 +966,18 @@
 
               order:{
                 object:{
-                  command: null,        // = models.ForeignKey(Command, on_delete=models.DO_NOTHING)
-                  product: null,        // = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
-                  name: null,   //= models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=False, error_messages=settings.ERRORS_MESSAGES)
-                  price: null,  //= models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
-                  quantity: null,       //= models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
-                  total: null,          //= models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
-
-                  checkin_time: null,   //= models.DateTimeField(_('Entrada de pedido'), null=True, auto_now_add=True)
-                  checkout_time: null,  //= models.DateTimeField(_('Saída de pedido'), null=True, blank=True)
-                  waiting_time: null,   //= models.DurationField(null=True, blank=True)
-                  implement_time: null, //= models.DurationField(null=True, blank=True)
-                  duration_time: null,  //= models.DurationField(null=True, blank=True)
-                  status: null,         //= models.CharField(_('Status'), max_length=20, default='WAITING', choices=STATUS_OF_ORDER, null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
+                  command: null,
+                  product: null,
+                  name: null,
+                  price: null,
+                  quantity: null,
+                  total: null,
+                  checkin_time: null,
+                  checkout_time: null,
+                  waiting_time: null,
+                  implement_time: null,
+                  duration_time: null,
+                  status: null,
                   observations: null,
                 },
 
@@ -989,18 +992,17 @@
               table_group: 'GERAL',
               table: null,
               table_index: null,
-
               command: null,
               command_index: null,
               item: null,
-
               group:null,
               product:null,
-
               new_product: false,
               new_products: [],
-
               order: null,
+              complements: {
+                total: 0.00,
+              }
             },
 
             tables:[
@@ -1135,6 +1137,7 @@
 
           print_order: function(order){
             let data_paramters = {"order_id":order.id}
+            let scope = this;
             success_function = function(){
               alert("Pedido gerado com sucesso!");
             }
@@ -1192,7 +1195,7 @@
             this.forms.command.change_client_name = false;
           },
 
-          save_order: function(command, command_index){
+          save_order: function(){
             let scope = this;
             let data_paramters = {};
             data_paramters['command_id'] = this.selected.command.id;
@@ -1201,8 +1204,8 @@
             data_paramters['image'] = this.selected.product.image;
             data_paramters['price'] = this.selected.product.price;
             data_paramters['quantity'] = this.forms.order.object.quantity;
-            data_paramters['total'] = this.selected.product.price*this.forms.order.object.quantity;
-
+            data_paramters['total'] = this.selected.product.price * this.forms.order.object.quantity;
+            data_paramters['complements_total'] = this.selected.complements.total;
             data_paramters['checkin_time'] = null;
             data_paramters['checkout_time'] = null;
             data_paramters['waiting_time'] = null;
@@ -1214,13 +1217,19 @@
             let success_function = function(response) {
               scope.print_order(response.object);
               response.object.show_options = false;
+              if (!scope.selected.command.orders) {
+                scope.selected.command.orders = [];
+              }
               scope.selected.command.orders.unshift(response.object);
-              //alert("TOTAL DA COMANDA ANTES:"+scope.selected.command.total+" - VALOR A ADICIONAR:"+response.object.total+ " - TOTAL:"+(parseFloat(scope.selected.command.total) + parseFloat(response.object.total)))
-              //scope.selected.command.total = parseFloat(scope.selected.command.total) + parseFloat(response.object.total);  //parseFloat(scope.selected.command.total) + parseFloat(response.object.total);
-              //alert("TOTAL DA MESA:"+scope.selected.table.total +" - RESPONSE:"+parseFloat(response.object.total))
-              scope.selected.table.total = parseFloat(scope.selected.table.total) + parseFloat(response.object.total);
-              //alert("somei: "+scope.selected.table.total);
+              console.log(JSON.stringify(response.object));
+              scope.selected.command.total += parseFloat(response.object.total);
+              scope.selected.table.total += parseFloat(response.object.total);
               scope.selected.new_product = null;
+              scope.selected.new_products.splice(0, scope.selected.new_products.length);
+              scope.selected.complements.total = 0.00;
+              for (index in scope.complements) {
+                scope.complements[index].quant = 0;
+              }
               $('#exampleModal').modal('hide');
             };
 
@@ -1233,73 +1242,46 @@
 
           select_item: function(command, item){
             this.selected.command = command;
-            this.selected.product = {'id':parseInt(item.product), 'code':'0', 'name':item.name, 'image':item.image, 'price':item.price, 'quantity':1, 'description':'', 'have_promotion':true, 'is_confirmed':false, 'show_options':false};;
-
-            /*this.forms.order.object = {
-              command: command.id,
-              product: item.id,
-              name: item.name,
-              price: item.price,
-              quantity: 1,
-              total: item.price,
-
-              checkin_time: null,
-              checkout_time: null,
-              waiting_time: null,
-              implement_time: null,
-              duration_time: null,
-              is_confirmed: false,
-              show_options: false,
-              status: "WAITING",
-              observations:"",
-            }*/
-
-
-            //$("#exampleModal").modal();
-            //$('#exampleModal').modal('show');
-
-            /*if(item.is_confirmed){
-              let new_item = JSON.parse(JSON.stringify(item));
-              new_item.quant = 1;
-              new_item.is_confirmed = false;
-              new_item.show_options = false;
-              this.selected.new_products.push(new_item);
-            }*/
+            this.selected.product = {'id':parseInt(item.product), 'code':'0', 'name':item.name, 'image':item.image, 'price':item.price, 'quantity':1, 'description':'', 'have_promotion':true, 'is_confirmed':false, 'show_options':false};
           },
 
           unselect_item: function(item){
             this.selected.item = null;
           },
 
-          increase_item: function(index){
-            this.selected.table.products[index].quant = this.selected.table.products[index].quant + 1
-            //item.quant = item.quant + 1;
-            //this.selected.item.quant = this.selected.item.quant + 1;
+          increase_complement: function(complement, index){
+            this.selected.table.products[index].quant += 1
           },
 
-          decrease_item: function(index){
+          decrease_complement: function(complement, index){
             if(this.selected.table.products[index].quant >1){
-              this.selected.table.products[index].quant = this.selected.table.products[index].quant - 1
+              this.selected.table.products[index].quant -= 1
             }
             else{
-              this.selected.table.products[index].quant = 0
+              this.complements[index].quant = 0
               //this.selected.table.products.shift()
-              this.selected.table.products.splice(index,1);
+              this.selected.table.products.splice(index, 1);
             }
           },
 
-          increase_new_item: function(index){
-            this.selected.new_products[index].quant = this.selected.new_products[index].quant + 1
+          increase_new_complement: function(complement, index){
+            this.complements[index].quant += 1
+            this.selected.new_products.unshift(this.complements[index]);
+            this.selected.complements.total += this.complements[index].price;
+            //this.selected.complements.items.unshift(this.complements[index]);
           },
 
-          decrease_new_item: function(index){
-            if(this.selected.new_products[index].quant >1){
-              this.selected.new_products[index].quant = this.selected.new_products[index].quant - 1
+          decrease_new_complement: function(complement, index){
+            if(this.complements[index].quant > 0){
+              this.complements[index].quant -= 1
+              this.selected.new_products.unshift(this.complements[index]);
+              this.selected.complements.total -= this.complements[index].price;
+              //this.selected.complements.items = this.selected.complements.items.filter(value => value !== this.complements[index]);
             }
             else{
-              this.selected.new_products[index].quant = 0
+              this.complements[index].quant = 0
               //this.selected.table.products.shift()
-              this.selected.new_products.splice(index,1);
+              this.selected.new_products.splice(index, 1);
             }
           },
 
@@ -1321,6 +1303,10 @@
 
           init_complements: function(){
 
+          },
+
+          view_tables: function () {
+            history.go(0);
           },
 
           back_menu: function(){
@@ -1347,9 +1333,7 @@
               history.pushState(null, document.title, location.href);
             }
             else{
-              if(confirm("Deseja mesmo sair do sistema?")){
-                window.location = "/logout";
-              }
+              this.view_tables();
             }
             history.pushState(null, document.title, location.href);
           },
@@ -1364,12 +1348,7 @@
             let cloned_order = JSON.parse(JSON.stringify(order));
             this.forms.order.object = cloned_order;
             this.selected.product = order;
-            //this.selected.command = command;
-            //this.selected.new_product = true;
-            //this.selected.command_index = command_index;
           },
-
-
 
           load_tables: function () {
             let scope = this;
@@ -1384,13 +1363,15 @@
             this.request('/api/sales/commands/tables/load/', "get", null, null, success_function, failure_function);
           },
 
-          open_table: function (table, index) {
+          open_table: function (table, index, is_fake_new) {
             let scope = this;
             let data_paramters = {'table_id':table.id}
 
             let success_function = function(response) {
-              Vue.set(scope.tables,index,response.object);
-              scope.open_command(table, index);
+              Vue.set(scope.tables, index, response.object);
+              if (!is_fake_new) {
+                scope.open_command(table, index);
+              }
             };
 
             let failure_function = function(response) {};
@@ -1400,7 +1381,7 @@
 
           close_table: function (table, index) {
             let scope = this;
-            let data_paramters = {'table_id':table.id}
+            let data_paramters = {}
 
             let success_function = function(response) {
               scope.tables[index] = response.object;
@@ -1410,18 +1391,16 @@
 
             };
 
-            this.request('/api/sales/commands/table/close/', "post", data_paramters, null, success_function, failure_function);
+            this.request(`/api/sales/commands/table/close/${table.id}/`, "post", data_paramters, null, success_function, failure_function);
           },
 
           select_table: function(table, index){
             let scope = this;
             if(table.status=='CLOSED'){
-              if (confirm("Abrir nova comanda na mesa "+table.code)) {
+              if (confirm(`Abrir nova comanda na mesa ${table.code}`)) {
                 scope.open_table(table, index);
               }
-            }
-
-            else{
+            } else{
               this.selected.table = table;
               this.selected.table_index = index;
             }
@@ -1452,25 +1431,31 @@
 
           close_command: function(command, index){
             let scope = this;
-            let data_paramters = {'command_id':command.id}
-
-            if(table.status=='CLOSED'){
+            let data_paramters = {};
+            let table = scope.selected.table;
+            let table_index = scope.selected.table_index;
+            data_paramters["is_last_command"] = false;
+            if (scope.selected.table.commands.length == 1) {
+              data_paramters["is_last_command"] = true;
+            }
+            if(scope.selected.table.commands[index].status=='OPEN'){
               if (confirm("Deseja mesmo Encerrar a command "+command.code)) {
-                //scope.open_table(table, index);
-                //this.open_command(table, index);
-                alert("ihh cara.. vc quer encerrar mesmo");
-
                 let success_function = function(response) {
-                  scope.tables[index].commands.push(response.object);
-                  scope.selected.table = table;
-                  scope.selected.table_index = index;
+                  scope.selected.table.commands.splice(index, 1);
+                  if (scope.selected.table.commands.length == 0) {
+                    if (confirm("SEM COMANDA ABERTA, LIBERANDO MESA....")) {
+                      scope.view_tables();
+                    } else {
+                      scope.open_table(table, table_index, true);
+                    }
+                  }
                 };
 
                 let failure_function = function(response) {
 
                 };
 
-                //this.request('/api/sales/commands/close/', "post", data_paramters, null, success_function, failure_function);
+                this.request(`/api/sales/commands/close/${command.id}/`, "post", data_paramters, null, success_function, failure_function);
               }
             }
           },
@@ -1490,7 +1475,24 @@
 
           update_clock: function(){
             this.controls.clock = moment().utc().format();
-            //this.controls.clock = new Date().utc().format();
+          },
+
+          check_edit: function(object, backup){
+            let scope = this;
+            let newObj = {};
+            $.each(object, function(key, value) {
+              if (object[key] !== null) {
+                if (!object[key] && object[key] !== false) {
+                  if (object[key] !== 0) {
+                    object[key] = "";
+                  }
+                }
+              }
+              if (backup[key] !== value || key === 'id') {
+                newObj[key] = object[key];
+              }
+            });
+            return newObj;
           },
 
           get_user: function () {
@@ -1518,7 +1520,6 @@
           current_time: function(){
             if(this.controls.clock){
               return moment(String(this.controls.clock)).format('HH:mm:ss');
-              //return this.controls.clock.format("hh:mm:ss");
             }
           },
 
@@ -1529,11 +1530,9 @@
                 new_array.push(item);
               }
               else{
-                alert(item.name+":"+item.quant+"TIRAR");
+                alert(`${item.name}: ${item.quant} TIRAR`);
               }
             });
-
-            console.log("VEJA COMO FICOU ENTAO:"+JSON.stringify(new_array));
             this.selected.table.products = new_array;
             return this.selected.table.products;
           },
@@ -1567,7 +1566,7 @@
         app.get_user();
         app.load_tables();
         app.load_groups();
-        register_action();
+        //register_action();
       }, false);
 
       window.addEventListener('resize', function(e) {

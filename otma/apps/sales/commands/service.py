@@ -2,10 +2,9 @@ from django.template.loader import get_template, render_to_string
 from django.http import HttpResponse
 from django.conf import settings
 from conf import profile
-
+from otma.apps.core.communications.api import BaseController
 from barcode import get_barcode_class, generate
 from barcode.writer import ImageWriter
-
 import datetime
 import qrcode
 import shutil
@@ -18,7 +17,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'test_project.settings')
 django.setup()
 
 
-class CommunicationController:
+class CommunicationController(BaseController):
 
     def __init__(self):
         self.file_path = None
@@ -32,8 +31,6 @@ class CommunicationController:
 
     def find_files(self, filename=None, extension=None):
         list_files = []
-        if not extension:
-            extension = '.json'
         melinux_path = profile.MELINUX_INTEGRATION_PATH
         if not melinux_path.endswith('/'):
             path = os.path.dirname(melinux_path + '/')
@@ -44,37 +41,52 @@ class CommunicationController:
             if os.path.exists(file_path):
                 list_files.append(file_path)
         else:
-            for file in glob.glob(os.path.join(path, '*' + extension)):
-                filename = file.split('/')[-1:][0]
-                if filename.split('/')[-1:][0].startswith('card'):
-                    json_file = file
+            for json_file in glob.glob(os.path.join(path, '*' + extension)):
+                filename = json_file.split('/')[-1:][0]
+                if filename.split('/')[-1:][0].startswith('prod'):
                     list_files.append(json_file)
         return list_files
 
-    def check_update(self, object, model):
-        content = self.read_json_file(object)['cardapio']
-        update = None
-        for item in content:
-            update = self.execute_update(item, model)
-        if update:
-            os.remove(self.file_path)
-            print('Objeto atualizado com sucesso!!!')
-            return update
-        else:
-            print('Erro,não foi possível efetuar a operação...')
+    def check_update(self, json_file, model):
+        content = self.read_json_file(json_file)['produtos']
 
-    def execute_load(self, object, model):
-        content = self.read_json_file(object)
-        key = list(content)[0]
-        for item in content[key]:
-            update = self.load_data(item, model)
-        if update:
+        update_dict = {
+            "object": []
+        }
+
+        for item in content:
+            response_update = self.execute_update(item, model)
+            update_dict["result"] = response_update["result"]
+            update_dict["message"] = response_update["message"]
+            if len(response_update["object"]) > 0:
+                update_dict["object"].append(response_update["object"])
+
+        if update_dict["result"]:
             os.remove(self.file_path)
             print('Objeto salvo com sucesso!!!')
-            return update
-        else:
-            print('Erro,não foi possível efetuar a operação...')
-            return False
+
+        return update_dict
+
+    def execute_load(self, json_file, model):
+        content = self.read_json_file(json_file)
+        key = list(content)[0]
+
+        load_dict = {
+            "object": []
+        }
+
+        for item in content[key]:
+            response_load = self.load_data(item, model)
+            load_dict["result"] = response_load["result"]
+            load_dict["message"] = response_load["message"]
+            if len(response_load["object"]) > 0:
+                load_dict["object"].append(response_load["object"])
+
+        if load_dict["result"]:
+            os.remove(self.file_path)
+            print('Objeto salvo com sucesso!!!')
+
+        return load_dict
 
     def load_data(self, item, model):
         try:
@@ -83,12 +95,11 @@ class CommunicationController:
             object = model.objects.filter(code=item['code'])
         if object.count() > 0:
             object = object[0]
-            #print('JÁ EXISTE ESSE CARA NO BANCO.', item['name'])
-            self.update(item, object)
+            # print('JÁ EXISTE ESSE CARA NO BANCO.', item['name'])
+            return self.update(item, object)
         else:
             object = model()
-            self.save(item, object)
-        return True
+            return self.save(item, object)
 
     def save(self, item, object):
         for field in item:
@@ -106,12 +117,8 @@ class CommunicationController:
                     except:
                         print(field)
                         object.__setattr__(field, item[field])
-        try:
-            object.save()
-        except:
-            print('DEU ERRO...')
-            #raise
-            pass
+
+        return self.execute(object, object.save)
 
     def update(self, item, object):
         for field in item:
@@ -122,45 +129,38 @@ class CommunicationController:
                     object.__setattr__(field, item[field].strip())
                 except:
                     object.__setattr__(field, item[field])
-        try:
-            object.save()
-        except:
-            print('DEU ERRO...')
-            #raise
-            pass
+
+        return self.execute(object, object.save)
 
     def execute_update(self, item, model):
         object = model.objects.filter(code=item['code'].strip())
+        response_dict = {}
         if object.count() > 0:
             try:
                 object = object[0]
-                for field in item:
-                    if hasattr(object, field):
-                        object.__setattr__(field, item[field].strip())
-                object.save()
-                return True
+                return self.update(item, object)
             except:
-                return False
-        else:
-            return False
+                response_dict["result"] = False
+                response_dict["message"] = "Erro,não foi possível efetuar a operação..."
+                response_dict["object"] = []
 
-    def field_search(self, model=None, filename=None, extension=None, dependency=None):
+        return response_dict
+
+    def field_search(self, model, filename=None, extension=".json", dependency=None):
+        response_dict = {}
         if dependency:
             self.dependency_model = dependency
+        files = self.find_files(filename=filename, extension=extension)
         if filename:
-            files = self.find_files(filename, extension)
-            if files:
-                for file in files:
-                    return self.execute_load(file, model=model)
-            else:
-                print('Nenhum arquivo de alteração encontrado!!!')
+            for file in files:
+                return self.execute_load(file, model=model)
         else:
-            files = self.find_files(extension)
-            if files:
-                for file in files:
-                    return self.check_update(file, model=model)
-            else:
-                print('Nenhum arquivo de alteração encontrado!!!')
+            for file in files:
+                return self.check_update(file, model=model)
+
+        response_dict['result'] = False
+        response_dict['message'] = "Nenhum arquivo de alteração encontrado!!!"
+        return response_dict
 
     def write_txt_file(self, data, file_name, out_folder_path=None, mode='w', delete=False):
         base_dir = settings.BASE_DIR + '/data/fixture/sales/commands'
@@ -190,6 +190,7 @@ class CommunicationController:
             return file_txt
         except:
             print('Erro!!!')
+            return False
 
 
 class PrinterController:
@@ -197,14 +198,14 @@ class PrinterController:
     def __init__(self):
         from cups import Connection
         self.connect = Connection()
+        self.printers = self.connect.getPrinters()
 
     def scan(self):
-        printers = self.connect.getPrinters()
-        for printer in printers:
-            print(printer, printers[printer]["device-uri"])
+        for printer in self.printers:
+            print(printer, self.printers[printer]["device-uri"])
 
-    def set_printer(self):
-        return list(self.connect.getPrinters())
+    def get_printers(self):
+        return list(self.printers)
 
     def print(self, printer, filename, title=None, *args, **kwargs):
         if not title:
