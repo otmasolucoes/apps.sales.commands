@@ -3,6 +3,7 @@ import math
 import random
 import requests
 from conf import profile
+from decimal import Decimal
 from otma.apps.core.communications.api import BaseController
 from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Complement
 from otma.apps.sales.commands.service import CommunicationController
