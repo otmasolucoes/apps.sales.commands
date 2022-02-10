@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="pt-br">
   <head>
-    <title>Melinux</title>
+    <title>Melinux - {{ company_name }}</title>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -59,49 +59,12 @@
   </head>
   <body class="app sidebar-mini">
     <div id="app_commands_register">
-      <div style='background:#b22222;color: white;'>
-        {% verbatim %}
-        <div style="border-bottom: 2px solid #b36363;">
-          <table border='0' style="width:100%;">
-            <tr>
-              <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">Giga Byte</td>
-              <td style="width:40px;" title="Adicionar comanda">
-                <span @click="" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
-                  <i class="fas fa-plus"></i>
-                </span>
-              </td>
-
-              <td style="width:40px;" title="Minhas Notificações">
-                <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
-                  <i class="fas fa-bell"></i>
-                </span>
-              </td>
-
-              <td style="width:40px;">
-                <div class="dropdown">
-                  <span class="" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    <i class="fas fa-user"></i>
-                  </span>
-
-                  <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                    <a class="dropdown-item" href="#">Coisas</a>
-                    <div class="dropdown-divider"></div>
-                    <a class="dropdown-item" href="#">Another action</a>
-                    <a class="dropdown-item" href="#">Sair</a>
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </table>
-        </div>
-        {% endverbatim %}
-      </div>
       <div class="FlexContainer">
         <div class="FlexItem">
           <div class="img-center">
-            <img class="rounded-circle user-image" src="{% static '/company/logoemp.jpg' %}" style="width: 100px;height: 100px;">
+            <img class="rounded-circle user-image" src="{{ company_logo }}" style="width: 100px;height: 100px;">
             <h4 class="text-center user-name"></h4>
-            <p class="company-title">Giga Byte</p>
+            <p class="company-title">{{ company_name }}</p>
           </div>
           {% csrf_token %}
           <template>

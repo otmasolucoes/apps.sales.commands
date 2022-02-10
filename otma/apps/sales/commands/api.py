@@ -1,5 +1,6 @@
 import os
 import math
+import json
 import random
 import requests
 from conf import profile
@@ -17,7 +18,7 @@ def format_datetime(value):
     from datetime import timezone, datetime, timedelta
     if value is not None:
         datetime_with_timezone = value.astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
-        print("VEJA DATA:", datetime_with_timezone)
+        print("VEJA DATA: ", datetime_with_timezone)
         return datetime_with_timezone
         # return value.strftime("%d/%m/%Y, %H:%M:%S")
     else:
@@ -90,7 +91,7 @@ class CommandController(BaseController):
             count = 0
             for item in commands['object']:
                 orders = OrderController().orders_by_command(request, item['id'], is_response=is_response)
-                print("VEJA O PEDIDO MELHOR:", orders)
+                print("VEJA O PEDIDO MELHOR: ", json.dumps(orders, indent=4))
                 commands['object'][count]['orders'] = orders['object']
                 count = count + 1
 
@@ -268,6 +269,7 @@ class OrderController(BaseController):
 
     def save(self, request):
         self.start_process(request)
+        # print("OLHA O REQUEST: ", request.POST)
         order = Order()
         order.command_id = int(request.POST['command_id'])
         order.product_id = int(request.POST['product_id'])
@@ -276,20 +278,34 @@ class OrderController(BaseController):
         order.price = Decimal(request.POST['price'])
         order.quantity = Decimal(request.POST['quantity'])
         complements_total = Decimal(request.POST['complements_total'])
-        print("OLHA O TOTAL DO PEDIDO:", (order.price + complements_total) * order.quantity)
+        print("OLHA O TOTAL DO PEDIDO: ", (order.price + complements_total) * order.quantity)
+        complements = json.loads(request.POST.get("complements"))
+        print("OLHA AÍ OS COMPLEMENTOS: ", json.dumps(complements, indent=4))
         order.total = (order.price + complements_total) * order.quantity
         order.save()
         order.expected_duration = self.get_prevision_duration()
         order.expected_time = order.checkin_time + order.expected_duration
         order.observations = request.POST['observations']
-        response = self.execute(order, order.save)
-        print("OLHA O TOTAL DA COMANDA: CODE", order.command.code, " - ID:", order.command.id, order.command.total,
-              " PEDIDO:", order.total, " NOVO TOTAL:", order.command.total + order.total)
+        order.save()
+        print("OLHA O TOTAL DA COMANDA: CODE", order.command.code, " - ID: ", order.command.id, order.command.total,
+              " PEDIDO: ", order.total, " NOVO TOTAL: ", order.command.total + order.total)
         order.command.total = order.command.total + order.total
         order.command.save()
-        print("OLHA O TOTAL DA MESA: ", order.command.table.total)
+        print("OLHA O TOTAL DA MESA: ", order.command.table.total + order.total)
         order.command.table.total = order.command.table.total + order.total
         order.command.table.save()
+        if len(complements) > 0:
+            for item in complements:
+                complement = Complement()
+                complement.order = order
+                complement.command = order.command
+                complement.product = order.product
+                complement.name = item["name"]
+                complement.price = item["price"]
+                complement.quantity = item["quant"]
+                complement.save()
+        response = self.execute(order, order.save)
+
         return self.response(response)
 
     def load_orders(self, request):
@@ -356,11 +372,12 @@ class OrderController(BaseController):
         observation_height_space = 0
         if order.observations is not None:
             observation_height_space = math.ceil(len(order.observations) / 40) * 8
-            print("VAI TER QUANTOS PX DE ALTURA:", math.ceil(len(order.observations) / 40),
+            print("VAI TER QUANTOS PX DE ALTURA: ", math.ceil(len(order.observations) / 40),
                   math.ceil(len(order.observations) / 40) * 7)
 
         barcode_height_space = 40
-        total_height = main_content_height_space + complements_height_space + observation_height_space + barcode_height_space
+        total_height = main_content_height_space + complements_height_space + \
+                       observation_height_space + barcode_height_space
 
         response = {
             'id': order.id, 'table': order.command.table.id,
@@ -558,8 +575,8 @@ class DatabaseController(BaseController):
             self.model = self.get_model()
             self.dependency_model = self.model.get("dependency")
             response_dict = communication.field_search(model=self.model.get("object"),
-                                                       filename=self.file_name,
-                                                       dependency=self.dependency_model)
+                                              filename=self.file_name,
+                                              dependency=self.dependency_model)
         else:
             self.model = Product
             response_dict = communication.field_search(model=self.model)

@@ -268,10 +268,10 @@
                     </span>
 
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-                      <a class="dropdown-item" href="#">Nada ainda</a>
+                      <!--<a class="dropdown-item" href="#">Nada ainda</a>-->
                       <div class="dropdown-divider"></div>
-                      <a class="dropdown-item" @click="back_menu()">Sair</a>
-                      <a class="dropdown-item" href="/logout">Logout</a>
+                      <a class="dropdown-item" @click="back_menu()">Atualizar</a>
+                      <a class="dropdown-item" href="/sales/commands/logout/">Sair</a>
                     </div>
                   </div>
                 </td>
@@ -741,7 +741,7 @@
                         </td>
 
                         <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='decrease_new_complement(complement, index)' style='cursor:pointer;'>
+                          <span class="fa-stack fa-1x" @click='decrease_complement(complement, index)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
                           </span>
@@ -750,7 +750,7 @@
                         <td style='width:20px;padding-top:5px;text-align:center;'> {{ complement.quant }}</td>
 
                         <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='increase_new_complement(complement, index)' style='cursor:pointer;'>
+                          <span class="fa-stack fa-1x" @click='increase_complement(complement, index)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
                           </span>
@@ -773,7 +773,7 @@
                           <template v-if='complement.quant > 0'>{{ (complement.price * complement.quant) | format_money }}</template>
                         </td>
                         <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='decrease_new_complement(complement, index)' style='cursor:pointer;'>
+                          <span class="fa-stack fa-1x" @click='decrease_complement(complement, index)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
                           </span>
@@ -784,7 +784,7 @@
                         </td>
 
                         <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='increase_new_complement(complement, index)' style='cursor:pointer;'>
+                          <span class="fa-stack fa-1x" @click='increase_complement(complement, index)' style='cursor:pointer;'>
                             <i class="fas fa-square-full fa-stack-2x"></i>
                             <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
                           </span>
@@ -1002,7 +1002,8 @@
               order: null,
               complements: {
                 total: 0.00,
-              }
+              },
+              complements_backup: null,
             },
 
             tables:[
@@ -1035,9 +1036,9 @@
 
             complements:[
               {'id':'1', 'name':'Ovo', 'price':1.50, 'quant':0},
-              {'id':'1', 'name':'Queijo', 'price':2.00, 'quant':0},
-              {'id':'1', 'name':'Presunto', 'price':2.00, 'quant':0},
-              {'id':'1', 'name':'Hamburguer', 'price':3.50, 'quant':0},
+              {'id':'2', 'name':'Queijo', 'price':2.00, 'quant':0},
+              {'id':'3', 'name':'Presunto', 'price':2.00, 'quant':0},
+              {'id':'4', 'name':'Hamburguer', 'price':3.50, 'quant':0},
             ],
 
             groups: [
@@ -1136,7 +1137,7 @@
           },
 
           print_order: function(order){
-            let data_paramters = {"order_id":order.id}
+            let data_paramters = {"order_id": order.id}
             let scope = this;
             success_function = function(){
               alert("Pedido gerado com sucesso!");
@@ -1198,14 +1199,16 @@
           save_order: function(){
             let scope = this;
             let data_paramters = {};
-            data_paramters['command_id'] = this.selected.command.id;
-            data_paramters['product_id'] = this.selected.product.id;
-            data_paramters['name'] = this.selected.product.name;
-            data_paramters['image'] = this.selected.product.image;
-            data_paramters['price'] = this.selected.product.price;
-            data_paramters['quantity'] = this.forms.order.object.quantity;
-            data_paramters['total'] = this.selected.product.price * this.forms.order.object.quantity;
-            data_paramters['complements_total'] = this.selected.complements.total;
+            let complements = scope.check_complements(scope.complements, scope.complements_backup);
+            data_paramters['command_id'] = scope.selected.command.id;
+            data_paramters['product_id'] = scope.selected.product.id;
+            data_paramters['name'] = scope.selected.product.name;
+            data_paramters['image'] = scope.selected.product.image;
+            data_paramters['price'] = scope.selected.product.price;
+            data_paramters['quantity'] = scope.forms.order.object.quantity;
+            data_paramters['total'] = scope.selected.product.price * scope.forms.order.object.quantity;
+            data_paramters['complements_total'] = scope.selected.complements.total;
+            data_paramters['complements'] = JSON.stringify(complements);
             data_paramters['checkin_time'] = null;
             data_paramters['checkout_time'] = null;
             data_paramters['waiting_time'] = null;
@@ -1213,7 +1216,6 @@
             data_paramters['duration_time'] = null;
             data_paramters['status'] = null;
             data_paramters['observations'] = this.forms.order.object.observations;
-
             let success_function = function(response) {
               scope.print_order(response.object);
               response.object.show_options = false;
@@ -1222,6 +1224,7 @@
               }
               scope.selected.command.orders.unshift(response.object);
               console.log(JSON.stringify(response.object));
+
               scope.selected.command.total += parseFloat(response.object.total);
               scope.selected.table.total += parseFloat(response.object.total);
               scope.selected.new_product = null;
@@ -1250,38 +1253,17 @@
           },
 
           increase_complement: function(complement, index){
-            this.selected.table.products[index].quant += 1
+            this.complements[index].quant += 1
+            this.selected.complements.total += this.complements[index].price;
           },
 
           decrease_complement: function(complement, index){
-            if(this.selected.table.products[index].quant >1){
-              this.selected.table.products[index].quant -= 1
-            }
-            else{
-              this.complements[index].quant = 0
-              //this.selected.table.products.shift()
-              this.selected.table.products.splice(index, 1);
-            }
-          },
-
-          increase_new_complement: function(complement, index){
-            this.complements[index].quant += 1
-            this.selected.new_products.unshift(this.complements[index]);
-            this.selected.complements.total += this.complements[index].price;
-            //this.selected.complements.items.unshift(this.complements[index]);
-          },
-
-          decrease_new_complement: function(complement, index){
             if(this.complements[index].quant > 0){
               this.complements[index].quant -= 1
-              this.selected.new_products.unshift(this.complements[index]);
               this.selected.complements.total -= this.complements[index].price;
-              //this.selected.complements.items = this.selected.complements.items.filter(value => value !== this.complements[index]);
             }
             else{
               this.complements[index].quant = 0
-              //this.selected.table.products.shift()
-              this.selected.new_products.splice(index, 1);
             }
           },
 
@@ -1365,7 +1347,7 @@
 
           open_table: function (table, index, is_fake_new) {
             let scope = this;
-            let data_paramters = {'table_id':table.id}
+            let data_paramters = {'table_id': table.id}
 
             let success_function = function(response) {
               Vue.set(scope.tables, index, response.object);
@@ -1397,7 +1379,7 @@
           select_table: function(table, index){
             let scope = this;
             if(table.status=='CLOSED'){
-              if (confirm(`Abrir nova comanda na mesa ${table.code}`)) {
+              if (confirm(`Abrir nova comanda na mesa ${table.code} ???`)) {
                 scope.open_table(table, index);
               }
             } else{
@@ -1439,14 +1421,15 @@
               data_paramters["is_last_command"] = true;
             }
             if(scope.selected.table.commands[index].status=='OPEN'){
-              if (confirm("Deseja mesmo Encerrar a command "+command.code)) {
+              if (confirm(`Deseja mesmo encerrar a comanda ${command.code} ???`)) {
                 let success_function = function(response) {
                   scope.selected.table.commands.splice(index, 1);
                   if (scope.selected.table.commands.length == 0) {
-                    if (confirm("SEM COMANDA ABERTA, LIBERANDO MESA....")) {
+                    if (confirm(`Sem comanda aberta, liberar mesa ${table.code} ???`)) {
                       scope.view_tables();
                     } else {
-                      scope.open_table(table, table_index, true);
+                      scope.selected.table.total = 0.00;
+                      //scope.open_table(table, table_index, true);
                     }
                   }
                 };
@@ -1477,22 +1460,20 @@
             this.controls.clock = moment().utc().format();
           },
 
-          check_edit: function(object, backup){
+          check_complements: function(object, backup){
             let scope = this;
-            let newObj = {};
+            let newObj = [];
             $.each(object, function(key, value) {
-              if (object[key] !== null) {
-                if (!object[key] && object[key] !== false) {
-                  if (object[key] !== 0) {
-                    object[key] = "";
-                  }
-                }
-              }
-              if (backup[key] !== value || key === 'id') {
+              if (backup[key]["quant"] < value["quant"]) {
                 newObj[key] = object[key];
               }
             });
-            return newObj;
+
+            let filtered_object = newObj.filter(function(el) {
+              return el;
+            });
+
+            return filtered_object;
           },
 
           get_user: function () {
@@ -1541,6 +1522,7 @@
         created: function () {
           //this.load_tables();
           //this.init_product_complements();
+          this.complements_backup = JSON.parse(JSON.stringify(this.complements));;
         },
 
         mounted: function () {

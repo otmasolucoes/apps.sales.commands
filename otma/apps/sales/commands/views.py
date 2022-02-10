@@ -1,7 +1,10 @@
-from django.shortcuts import render, HttpResponse
+from django.contrib.auth.decorators import login_required
 from django.template.loader import render_to_string
+from django.shortcuts import render, redirect, HttpResponse
+from django.contrib.auth import logout
 from otma.apps.sales.commands.models import Command, Order, Complement
 from otma.apps.sales.commands.service import PDFController
+from conf.profile import COMPANY_NAME, PATH_COMPANY_LOGO
 import os.path
 
 
@@ -16,15 +19,27 @@ def format_datetime(value):
 
 
 def commands_page_login(request):
-    return render(request, "login.html", {'base_page': 'commands.html'})
+    return render(request, "login.html", {'base_page': 'commands.html',
+                                          'company_name': COMPANY_NAME,
+                                          'company_logo': PATH_COMPANY_LOGO})
 
 
 def commands_page_signup(request):
-    return render(request, "signup.html", {'base_page': 'commands.html'})
+    return render(request, "signup.html", {'base_page': 'commands.html',
+                                           'company_name': COMPANY_NAME,
+                                           'company_logo': PATH_COMPANY_LOGO})
+
+
+@login_required
+def commands_page_logout(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return redirect("/sales/commands/login/")
 
 
 def delivery_page(request):
     return render(request, "delivery.html", {})
+
 
 def get_location(request):
     import googlemaps
@@ -36,7 +51,7 @@ def get_location(request):
 
     # Geocoding an address
     geocode_result = gmaps.geocode('Rua Demostenes Nunes Vieira, 60, Alto Lage, Cariacica, Espírito Santo, Brasil')
-    print("VEJA AS COORDENADAS:",geocode_result)
+    print("VEJA AS COORDENADAS:", geocode_result)
 
     # Look up an address with reverse geocoding
     reverse_geocode_result = gmaps.reverse_geocode((latitude, longitude))
@@ -45,18 +60,22 @@ def get_location(request):
     # Request directions via public transit
     now = datetime.now()
 
-    brasilia = {"lat": -20.3513491,"lng": -40.2844928}
+    brasilia = {"lat": -20.3513491, "lng": -40.2844928}
     alto_lage = {"lat": -20.3337617, "lng": -40.3732481}
 
     directions_result = gmaps.directions(alto_lage, brasilia, mode="transit", departure_time=now)
-    print("VEJA O DIRECTIONS:",directions_result)
+    print("VEJA O DIRECTIONS:", directions_result)
     return HttpResponse()
 
+
+@login_required
 def commands_page(request):
-    from conf.profile import COMPANY_NAME
-    return render(request, "commands.html", {'base_page': 'new_base_page.html', 'company_name':COMPANY_NAME})
+    return render(request, "commands.html", {'base_page': 'new_base_page.html',
+                                             'company_name': COMPANY_NAME,
+                                             'company_logo': PATH_COMPANY_LOGO})
 
 
+@login_required
 def command_view_page(request, code):
     command = Command.objects.filter(code=int(code))
     if command.count() > 0:
@@ -82,6 +101,7 @@ def command_view_page(request, code):
         return render(request, "order.html", context=response)
 
 
+@login_required
 def order_page(request, id):
     import os.path
     order = Order.objects.filter(pk=int(id))
