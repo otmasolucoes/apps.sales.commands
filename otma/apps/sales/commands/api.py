@@ -44,7 +44,8 @@ class CommandController(BaseController):
         # command.status = "OPEN"
         print("VEJA O REQUEST USER: ", request.user)
         command.attendant = request.user
-        # command.client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
+        # command.client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True,
+        # unique=False, error_messages=settings.ERRORS_MESSAGES)
         command.branch = "1"
         # command.checkin_time =
         # command.checkout_time = None
@@ -67,7 +68,8 @@ class CommandController(BaseController):
             self.create_integration_file(request, command, table)
 
         # command.attendant = request.user
-        # command.client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True, unique=False, error_messages=settings.ERRORS_MESSAGES)
+        # command.client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True,
+        # unique=False, error_messages=settings.ERRORS_MESSAGES)
         # command.branch = "1"
         # command.checkin_time =
         # command.checkout_time = None

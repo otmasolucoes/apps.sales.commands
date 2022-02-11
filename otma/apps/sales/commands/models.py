@@ -1,9 +1,11 @@
+import os
+import barcode
 from django.utils.translation import ugettext_lazy as _
 from django.utils.deconstruct import deconstructible
 from django.conf import settings
 from django.db import models
 from decimal import Decimal
-import os
+from barcode.writer import ImageWriter
 
 
 STATUS_OF_TABLE = (
@@ -66,7 +68,7 @@ class Table(models.Model):
     capacity = models.IntegerField(null=True, blank=True, default=4)
 
     def __str__(self):
-        return "MESA"+self.code+" ("+self.area+")"
+        return "MESA" + self.code + " (" + self.area + ")"
 
     def commands(self):
         return []
@@ -144,7 +146,7 @@ class Command(models.Model):
     total = models.DecimalField(max_digits=9, decimal_places=2, blank=False, null=False, default=0)
 
     def __str__(self):
-        return "COMANDA "+self.code
+        return "COMANDA " + self.code
 
 
 class Order(models.Model):
@@ -181,9 +183,6 @@ class Order(models.Model):
         return False
 
     def create_barcode(self):
-        import barcode
-        from barcode.writer import ImageWriter
-
         """
         checkin_year = str(self.checkin_time.year)[2:]
         checkin_month = "%.2d" % (self.checkin_time.month)
@@ -195,12 +194,16 @@ class Order(models.Model):
         """
         value = str(self.id).zfill(12)
         ean = barcode.get('ean13', value, writer=ImageWriter())
-        filename = ean.save("media/barcodes/"+value)
-        self.barcode = value+".png"
+        filename = ean.save("media/barcodes/" + value)
+        self.barcode = value + ".png"
         super(Order, self).save()
         return filename
 
     def save(self, *args, **kwargs):
+        if not os.path.exists("media/barcodes/"):
+            os.makedirs("media/barcodes/")
+        if not os.path.exists("media/orders/"):
+            os.makedirs("media/orders/")
         self.price = self.product.price
         self.name = self.product.name
         self.image = self.product.image
@@ -225,4 +228,3 @@ class Complement(models.Model):
                             error_messages=settings.ERRORS_MESSAGES)
     price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
-
