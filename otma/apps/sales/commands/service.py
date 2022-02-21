@@ -166,7 +166,7 @@ class CommunicationController(BaseController):
         base_dir = settings.BASE_DIR + '/data/fixture/sales/commands'
         if mode:
             mode_open = mode
-        folder_path = os.path.dirname('/home/cleiton/clientes')
+        folder_path = os.path.dirname(profile.MELINUX_INTEGRATION_PATH)
         if out_folder_path:
             folder_path = out_folder_path
         if not os.path.exists(folder_path):
@@ -193,7 +193,7 @@ class CommunicationController(BaseController):
             return False
 
 
-class PrinterController:
+class PrinterController(object):
 
     def __init__(self):
         from cups import Connection
@@ -213,7 +213,7 @@ class PrinterController:
         self.connect.printFile(printer, filename, title, kwargs)
 
 
-class PDFController:
+class PDFController(object):
 
     def generate_PDF(self, data, filename):
         #import sysconfig
@@ -235,7 +235,7 @@ class PDFController:
         return response
 
 
-class BarcodeControlller:
+class BarcodeControlller(object):
 
     def create(self, code):
         import barcode
@@ -245,7 +245,7 @@ class BarcodeControlller:
         return filename
 
 
-class QrCodeController:
+class QrCodeController(object):
 
     def create(self, data, id):
         qr = qrcode.QRCode(

@@ -48,11 +48,20 @@
         grid-gap: 1rem;
       }
 
+      ::-webkit-scrollbar {
+          display: none;
+      }
+
       /* Presentational styles */
-      body {
+      html, body {
         background-image: url("/static/apps/sales/commands/images/background-sm.png");
         line-height: 1.4;
         font-family: Tahoma, Geneva, sans-serif;
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow-x: hidden;
+        /*overflow-y: hidden;*/
       }
 
       #table-panel li {
@@ -168,6 +177,17 @@
         color: #ccc;
       }
 
+      #footer {
+        padding:6px;
+        background:#202020;
+        color:#ffffff;
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        border-top: 2px solid #646464;
+      }
+
       .menu-active{
         color: #fff;
         /*background-color: rgba(60, 60, 60, 0.90);*/
@@ -186,7 +206,7 @@
         border-top: 2px solid #fff;
       }
 
-      html { scroll-behavior: smooth; }
+      /*html { scroll-behavior: smooth; }*/
     </style>
 
 
@@ -200,15 +220,15 @@
           <div :style='controls.styles.themes.active.header_division'>
             <table border='0' style="width:100%;">
               <tr>
-                <!--<td style="width:40px;" title="Retornar a pagina anterior"><!- v-if='controls.screen.fullscreen_mode'->
-                  <span @click="back_menu()" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;"><!- @click="selected.table=null" v-if="selected.table!=null"  ->
-                    <i class="fas fa-arrow-left"></i>
-                  </span>
-                </td>-->
-
                 <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">{{ company_name }}</td>
 
-                <td style="width:40px;" title="Minhas Notificações">
+                <td style="width:25px;" title="Retornar a pagina anterior"><!-- v-if='controls.screen.fullscreen_mode'-->
+                  <span @click="back_menu()" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;"><!--@click="selected.table=null" v-if="selected.table!=null"  -->
+                    <i class="fas fa-arrow-left"></i>
+                  </span>
+                </td>
+
+                <td style="width:25px;" title="Minhas Notificações">
                   <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
                     <i class="fas fa-bell"></i>
                   </span>
@@ -261,7 +281,7 @@
                   </div>
                 </td>-->
 
-                <td style="width:40px;">
+                <td style="width:25px;">
                   <div class="dropdown">
                     <span class="" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                       <i class="fas fa-user"></i>
@@ -309,16 +329,91 @@
                 <div class="row">
                   <div class="col-6 col-md-6 float-left" style="position:relative;top:0px;">
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">
-                          <i class="fas fa-bars"></i>
-                        </button>
-                        <span style="position:relative;top:2px;font-size: 20px">Mesa {{ selected.table.code }}</span>
-                      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+                      <!--<button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">-->
+
+                      <button class="btn btn-sm btn-light" type="button" data-toggle="modal" data-target="#MenuModal">
+                        <i class="fas fa-bars"></i>
+                      </button>
+                      <span style="position:relative;top:2px;font-size: 20px">Mesa {{ selected.table.code }}</span>
+
+                      <!--<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                         <a class="dropdown-item" href="#" style="font-size:12px;padding-left:15px;padding-right:5px;" @click="open_command(selected.table, selected.table_index)"><i class="fas fa-plus"></i> Adicionar comanda</a>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" @click="view_order()" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-search"></i> Visualizar pedido</a>
-                        <a class="dropdown-item" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-print"></i> Reimprimir pedido</a>
+                        <a class="dropdown-item" @click="print_order(selected.order)" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-print"></i> Reimprimir pedido</a>
                         <a class="dropdown-item" href="#" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-times"></i> Cancelar pedido</a>
+                      </div>-->
+                      <div class="modal fade" id="MenuModal" tabindex="-1" role="dialog">
+                        <div class="modal-dialog modal-dialog-centered">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"> X </button>-->
+                              <h4>Menu</h4>
+                            </div>
+                            <div class="modal-body">
+
+                              <!--<form role="form">
+                                <div class="form-group">
+                                  <label for="usrname">
+                                    <span class="glyphicon glyphicon-user"></span>
+                                    Usuário
+                                  </label>
+                                  <input type="text" class="form-control" id="usrname" placeholder="Informe o nome do usuário">
+                                </div>
+                                <div class="form-group">
+                                  <label for="psw">
+                                    <span class="glyphicon glyphicon-eye-open"></span>
+                                    Senha
+                                  </label>
+                                  <input type="text" class="form-control" id="psw" placeholder="Informe a senha">
+                                </div>
+                                <div class="checkbox">
+                                  <label>
+                                    <input type="checkbox" value="" checked>
+                                    Lembrar-me
+                                  </label>
+                                </div>
+                                <button type="submit" class="btn btn-default btn-success btn-block">
+                                  <span class="glyphicon glyphicon-off"></span>
+                                  Login
+                                </button>
+                              </form>-->
+                              <div class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                                <a @click="view_order()" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                  <i class="fas fa-search"></i>
+                                  Visualizar pedido
+                                </a>
+                              </div>
+
+                              <div class="dropdown-divider"></div>
+
+                              <div class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                                <a class="dropdown-item" @click="print_order(selected.order)" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                  <i class="fas fa-print"></i>
+                                  Reimprimir pedido
+                                </a>
+                              </div>
+
+                              <div class="dropdown-divider"></div>
+
+                              <div class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                                <a class="dropdown-item" href="#" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                  <i class="fas fa-times"></i>
+                                  Cancelar pedido
+                                </a>
+                              </div>
+
+                            </div>
+                            <div class="modal-footer">
+
+                              <!--<button type="submit" class="btn btn-default btn-default pull-left" data-dismiss="modal">
+                                <span class="glyphicon glyphicon-remove"></span>
+                                Cancelar
+                              </button>-->
+
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -338,7 +433,7 @@
             <template v-else v-for="(command, command_index) in selected.table.commands">
               <div style="padding-top: 10px;"></div>
 
-              <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #ddd;">
+              <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #ddd;padding-bottom: 100px;">
                 <div style="height:50px;padding-bottom:70px;border-bottom:1px solid #ddd;">
                   <div class="top: 15px; width: 10%;">
                     Comanda {{ command.code }}<br>
@@ -357,11 +452,11 @@
                       <i class="fas fa-plus"></i><br><span style="font-size: 10px;">Adicionar</span>
                     </button>
 
-                    <button v-if="controls.screen.width>=1024" :disabled="!(selected.order && selected.command_index==command_index)" @click="view_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
+                    <button v-if="controls.screen.width>=1024" :disabled="!(selected.order && selected.command_index==command_index)" @click="print_order(selected.order)" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
                       <i class="fas fa-print"></i><br><span style="font-size: 10px;">Imprimir</span>
                     </button>
 
-                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="repeat_order(command, command_index, selected.order)" data-toggle="modal" data-target="#exampleModal" style="line-height:1;height:38px;">
+                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="repeat_order(command, command_index, selected.order)" data-toggle="modal" data-target="#OrderModal" style="line-height:1;height:38px;">
                       <i class="fas fa-redo-alt"></i><br><span style="font-size:10px;">Repetir</span>
                     </button>
 
@@ -434,64 +529,58 @@
 
                       <tbody>
                         <template v-for='(order, order_index) in command.orders'>
-                        <tr :class="{'selected':order.show_options}" style="cursor:pointer;" @click="show_options(command_index, order, order_index)"><!-- data-toggle="modal" data-target="#command_item_options" -->
-                          <td style="width:100px;">
-                            <img :src="'/media/'+order.image" style='width:90px;height:60px;object-fit:cover;' />
-                          </td>
+                          <tr :class="{'selected':order.show_options}" style="cursor:pointer;" @click="show_options(command_index, order, order_index)"><!-- data-toggle="modal" data-target="#command_item_options" -->
+                            <td style="width:100px;">
+                              <img :src="'/media/'+order.image" style='width:90px;height:60px;object-fit:cover;' />
+                            </td>
 
-                          <td style="line-height:1.1;">
-                            <span style='font-size:18px;'>{{ order.name }}</span><br>
-                            <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time_short }} -
-                            <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time_short }}</template>
-                            <template v-else>Entrega: {{ order.checkout_time | format_time_short }}</template></span>
-                            <br>
-                            <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
-                          </td>
+                            <td style="line-height:1.1;">
+                              <span style='font-size:18px;'>{{ order.name }}</span><br>
+                              <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time_short }} -
+                              <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time_short }}</template>
+                              <template v-else>Entrega: {{ order.checkout_time | format_time_short }}</template></span>
+                              <br>
+                              <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
+                            </td>
 
-                          <td style='width:40px;vertical-align:middle;text-align:center;'>
-                            <template v-if="order.status=='WAITING'">
-                              AGUARDANDO
-                            </template>
+                            <td style='width:40px;vertical-align:middle;text-align:center;'>
+                              <template v-if="order.status=='WAITING'">
+                                AGUARDANDO
+                              </template>
 
-                            <template v-else-if="order.status=='IN_PROGRESS'">
-                              ANDAMENTO
-                            </template>
+                              <template v-else-if="order.status=='IN_PROGRESS'">
+                                ANDAMENTO
+                              </template>
 
-                            <template v-else-if="order.status=='READY'">
-                              PRONTO
-                            </template>
+                              <template v-else-if="order.status=='READY'">
+                                PRONTO
+                              </template>
 
-                            <template v-else-if="order.status=='CANCELED'">
-                              CANCELADO
-                            </template>
+                              <template v-else-if="order.status=='CANCELED'">
+                                CANCELADO
+                              </template>
 
-                            <template v-else>
-                              ENTREGUE
-                            </template>
+                              <template v-else>
+                                ENTREGUE
+                              </template>
 
-                            <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
-                              <span style="color:red;font-size:12px;"><b>ATRASADO</b></span>
-                            </template>
-                          </td>
+                              <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
+                                <span style="color:red;font-size:12px;"><b>ATRASADO</b></span>
+                              </template>
+                            </td>
 
-                          <td style='width:110px;text-align:center;vertical-align:middle;'>
-                            <span style='font-size:18px;'>{{ order.quantity | format_money }}</span>
-                          </td>
+                            <td style='width:110px;text-align:center;vertical-align:middle;'>
+                              <span style='font-size:18px;'>{{ order.quantity | format_money }}</span>
+                            </td>
 
-                          <td style="vertical-align:middle;text-align:center;width:110px;">
-                            <span style='font-size:18px;'>R$ {{ order.price | format_money }}</span>
-                          </td>
+                            <td style="vertical-align:middle;text-align:center;width:110px;">
+                              <span style='font-size:18px;'>R$ {{ order.price | format_money }}</span>
+                            </td>
 
-                          <td style='width:110px;text-align:center;vertical-align:middle;'>
-                            <span style='font-size:18px;'>R$ {{ order.total | format_money }}</span>
-                          </td>
-                          </template>
-                        </tr>
-
-                        <tr>
-                          <td colspan="4">Total</td>
-                          <td colspan="2" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
-                        </tr>
+                            <td style='width:110px;text-align:center;vertical-align:middle;'>
+                              <span style='font-size:18px;'>R$ {{ order.total | format_money }}</span>
+                            </td>
+                          </tr>
 
                         <!--<tr>
                           <td colspan="4">
@@ -585,44 +674,58 @@
                             </div>
                           </td>
                         </tr>-->
+                        </template>
                       </tbody>
                     </template>
 
                     <template v-else>
                       <tbody>
                         <template v-for='(order,index) in command.orders'>
-                        <tr class="no-border-first" :class="{'selected':order.show_options}" @click="show_options(command_index, order, index)" style="cursor:pointer;">
-                          <td style="padding-top:4px;padding-bottom:10px;line-height:1;">
-                            <span style="font-size:14px;">{{ order.quantity }} x {{ order.name }}</span><br>
+                          <tr class="no-border-first" :class="{'selected':order.show_options}" @click="show_options(command_index, order, index)" style="cursor:pointer;">
+                            <td colspan="4" style="padding-top:4px;padding-bottom:10px;line-height:1;">
+                              <span style="font-size:14px;">{{ order.quantity }} x {{ order.name }}</span><br>
 
-                            <span style='font-size:12px;position:relative;top:2px;'>
-                              <span style="padding-right:8px;"><i class="fas fa-arrow-up" style=""></i> {{ order.checkin_time | format_time_short }}</span>
+                              <span style='font-size:12px;position:relative;top:2px;'>
+                                <span style="padding-right:8px;">
+                                  <i class="fas fa-arrow-up" style=""></i>
+                                  {{ order.checkin_time | format_time_short }}
+                                </span>
 
-                              <span style="padding-right:8px;">
-                                <template v-if="order.checkout==null"><i class="fas fa-clock"></i> {{ order.expected_time | format_time_short }}</template>
+                                <span style="padding-right:8px;">
+                                  <template v-if="order.checkout==null">
+                                    <i class="fas fa-clock"></i>
+                                    {{ order.expected_time | format_time_short }}
+                                  </template>
 
-                              <template v-else><i class="fas fa-arrow-down" style="color:green;">{{ order.checkout | format_time_short }}</i></template></span>
+                                  <template v-else>
+                                    <i class="fas fa-arrow-down" style="color:green;"></i>
+                                    {{ order.checkout | format_time_short }}
+                                  </template>
+                                </span>
 
-                              <span style="">
-                                <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
-                                  <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
-                                </template>
+                                <span style="">
+                                  <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
+                                    <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
+                                  </template>
+                                </span>
                               </span>
-                            </span>
-                          </td>
+                            </td>
+                            <td colspan="2" style="text-align:right;">
+                              <div @click="show_options(order)">{{ order.total }}</div>
+                            </td>
+                          </tr>
 
-                          <td style="text-align:right;">
-                            <div @click="show_options(order)">{{ order.total }}</div>
-                          </td>
-                        </tr>
+                          <!--<tr>
+                            <td colspan="2">Total <span class="float-right">R$ {{ command.total }}</span></td>
+                          </tr>-->
+
                         </template>
-
-                        <tr>
-                          <td colspan="2">Total <span class="float-right">R$ {{ command.total }}</span></td>
-                        </tr>
-
                       </tbody>
                     </template>
+                      <tr>
+                        <td colspan="4">Total</td>
+                        <td colspan="2" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
+                      </tr>
                   </table>
                 </template>
 
@@ -642,8 +745,8 @@
 
           <br><br>
         </div>
-
-        <div class="footer-panel" style="position:fixed;bottom:0;padding:6px;width: 100%;color:#ffffff;background:#202020;border-top: 2px solid #646464;">
+        <!--<div class="footer-panel" style="position:fixed;bottom:0;padding:6px;width: 100%;color:#ffffff;background:#202020;border-top: 2px solid #646464;">-->
+        <div id="footer">
           <table id='footer-menu' style="width:100%;text-align:center;cursor:pointer;">
             <tr>
               <td style="float: left;padding-left: 10px" :class="{'menu-active': !this.selected.table, 'menu-inactive': this.selected.table}" @click="view_tables()"><i class="fas fa-th-list"></i><br><span class="font-lobster" style="font-size:14px;"> Mesas</span></td>
@@ -672,9 +775,9 @@
           </table>
         </div>
 
-        <div id="exampleModal" class="modal" tabindex="-1" role="dialog">
+        <div id="OrderModal" class="modal" tabindex="-1" role="dialog">
           <div class="modal-dialog modal-lg" role="document">
-            <div v-if='selected.product ' class="modal-content">
+            <div v-if='selected.product' class="modal-content">
               <div class="modal-header" style='padding:0px;'>
                 <img :src="'/media/'+(forms.order.object.image||forms.order.object.image)" style='width:100%;height:150px;object-fit:cover;' />
               </div>
@@ -888,6 +991,8 @@
     <script src="{% static 'vali/js/bootstrap.min.js' %}"></script>
     <script src="{% static 'bower_components/moment/min/moment.min.js' %}"></script>
     <script async defer src="{% static 'apps/core/authentication/action.js' %}"></script>
+    <script async defer src="{% static 'bower_components/pnotify/dist/pnotify.js' %}"></script>
+    <script async defer src="{% static 'apps/test_project/util/js/notify.js' %}"></script>
 
     <script>
       var app = new Vue({
@@ -995,8 +1100,8 @@
               command: null,
               command_index: null,
               item: null,
-              group:null,
-              product:null,
+              group: null,
+              product: null,
               new_product: false,
               new_products: [],
               order: null,
@@ -1035,10 +1140,10 @@
             commands:{},
 
             complements:[
-              {'id':'1', 'name':'Ovo', 'price':1.50, 'quant':0},
-              {'id':'2', 'name':'Queijo', 'price':2.00, 'quant':0},
-              {'id':'3', 'name':'Presunto', 'price':2.00, 'quant':0},
-              {'id':'4', 'name':'Hamburguer', 'price':3.50, 'quant':0},
+              {'id':'1', 'code': '111', 'name':'Ovo', 'price':1.50, 'quant':0},
+              {'id':'2', 'code': '222',  'name':'Queijo', 'price':2.00, 'quant':0},
+              {'id':'3', 'code': '333',  'name':'Presunto', 'price':2.00, 'quant':0},
+              {'id':'4', 'code': '444',  'name':'Hamburguer', 'price':3.50, 'quant':0},
             ],
 
             groups: [
@@ -1129,22 +1234,22 @@
           },
 
           print_command: function(command){
-            window.open("/api/sales/command/"+command.code+"/", "_blank");
+            window.open(`/api/sales/command/${command.code}/`, "_blank");
           },
 
           view_order: function(order){
-            window.open("/api/sales/commands/order/"+this.selected.order.id+"/", "_blank");
+            window.open(`/api/sales/commands/order/view/${this.selected.order.id}/`, "_blank");
           },
 
           print_order: function(order){
             let data_paramters = {"order_id": order.id}
             let scope = this;
             success_function = function(){
-              alert("Pedido gerado com sucesso!");
+              alert("Pedido enviado para cozinha com sucesso!");
             }
 
             failure_function = function(){
-              alert("Erro! Não foi possivel gerar o pedido")
+              alert("Erro! Não foi possivel enviar o pedido para cozinha!")
             }
 
             this.request('/api/sales/commands/order/print/', "post", data_paramters, null, success_function, failure_function);
@@ -1215,9 +1320,10 @@
             data_paramters['implement_time'] = null;
             data_paramters['duration_time'] = null;
             data_paramters['status'] = null;
-            data_paramters['observations'] = this.forms.order.object.observations;
+            data_paramters['observations'] = scope.forms.order.object.observations;
             let success_function = function(response) {
-              scope.print_order(response.object);
+              //scope.print_order(response.object);  AINDA ESTOU PENSANDO SE ISSO SERÁ AUTOMÁTICO ...
+              alert("Pedido anotado e diponível para ser enviado a cozinha.");
               response.object.show_options = false;
               if (!scope.selected.command.orders) {
                 scope.selected.command.orders = [];
@@ -1225,18 +1331,20 @@
               scope.selected.command.orders.unshift(response.object);
               console.log(JSON.stringify(response.object));
 
-              scope.selected.command.total += parseFloat(response.object.total);
-              scope.selected.table.total += parseFloat(response.object.total);
+              scope.selected.command.total = parseFloat(scope.selected.command.total) + parseFloat(response.object.total);
+              scope.selected.table.total = parseFloat(scope.selected.table.total) + parseFloat(response.object.total);
               scope.selected.new_product = null;
               scope.selected.new_products.splice(0, scope.selected.new_products.length);
               scope.selected.complements.total = 0.00;
               for (index in scope.complements) {
                 scope.complements[index].quant = 0;
               }
-              $('#exampleModal').modal('hide');
+              scope.selected.group = null;
+              $('#OrderModal').modal('hide');
             };
 
             let failure_function = function(response) {
+              alert("Erro! Não foi possivel gerar o pedido")
               return false;
             };
 
@@ -1275,7 +1383,7 @@
             (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino|android|ipad|playbook|silk/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) check = true;})(navigator.userAgent||navigator.vendor||window.opera);
 
             if(!is_mobile){
-              if((screen.availHeight || screen.height-30) <= window.innerHeight) {
+              if((screen.availHeight || screen.height - 30) <= window.innerHeight) {
                 this.controls.screen.fullscreen_mode = true;
               } else {
                 this.controls.screen.fullscreen_mode = false;
@@ -1293,7 +1401,7 @@
 
           back_menu: function(){
             if(this.selected.product){
-              $('#exampleModal').modal('hide');
+              $('#OrderModal').modal('hide');
               this.selected.product = null;
               history.pushState(null, document.title, location.href);
             }
@@ -1329,7 +1437,9 @@
           repeat_order: function(command, command_index, order){
             let cloned_order = JSON.parse(JSON.stringify(order));
             this.forms.order.object = cloned_order;
+            this.selected.command = command;
             this.selected.product = order;
+            this.selected.product.id = order.product;
           },
 
           load_tables: function () {
@@ -1457,7 +1567,9 @@
           },
 
           update_clock: function(){
-            this.controls.clock = moment().utc().format();
+            //this.controls.clock = moment().utc().format();
+            this.controls.clock = moment().format();
+            console.log(JSON.stringify(this.controls.clock));
           },
 
           check_complements: function(object, backup){
@@ -1540,9 +1652,13 @@
     </script>
 
     <script>
-      function success_notify(){
+      function success_notify() {
 
       }
+
+      /*window.alert = function(str) {
+        Alert.postMessage(str);
+      };*/
 
       window.addEventListener('load', function () {
         app.get_user();
@@ -1555,7 +1671,9 @@
         app.verify_screen();
       });
 
-      var clock = setInterval(function(){app.update_clock()},1000);
+      var clock = setInterval(function(){
+        app.update_clock()
+      }, 1000);
     </script>
   </body>
 </html>

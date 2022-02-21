@@ -105,7 +105,6 @@
 		</style>
 
 	</head>
-
 	<body id="pagina">
 		<div id='page-content'>
 			<div id="page-header">
@@ -117,9 +116,9 @@
 						</td>
 
 						<td style="padding:0px;margin:0px;padding-left:4px;line-height:1.5;">
-							<span id='company-name'>{{ company_name }}</span><br>
+							<span id='company-name'>{{ order.company_name }}</span><br>
 							<span id='order-date'>{{ order.checkin_time | date:"d/m/Y" }}</span><br>
-							<span id='company-attendent'>{{ attendant_name }}</span>
+							<span id='company-attendent'>{{ order.attendant_name }}</span>
 						</td>
 					</tr>
 				</table>
@@ -151,9 +150,8 @@
 
 				{% if order.complements %}
 				<div style="font-weight:bold;font-size:14px;padding:15px;padding-top:5px;padding-bottom:5px;border-bottom:1px solid #ccc;">
-				{% for complement in complements %}
-					+ 2 x Bacon<br>
-					+ 1 x Calabresa<br>
+				{% for complement in order.complements %}
+					+ {{ complement.quant }} x {{ complement.name }}<br>
 				{% endfor %}
 				</div>
 				{% endif %}

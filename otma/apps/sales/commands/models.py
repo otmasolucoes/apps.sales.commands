@@ -139,14 +139,14 @@ class Command(models.Model):
                                        error_messages=settings.ERRORS_MESSAGES)
     branch = models.CharField(_('Código da loja'), max_length=2, null=False, blank=False,
                               error_messages=settings.ERRORS_MESSAGES)
-    checkin_time = models.DateTimeField(_('Entrada de pedido'), null=True, auto_now_add=True)
-    checkout_time = models.DateTimeField(_('Saída de pedido'), null=True, blank=True)
+    checkin_time = models.DateTimeField(_('Criação da comanda'), null=True, auto_now_add=True)
+    checkout_time = models.DateTimeField(_('Fechamento da comanda'), null=True, blank=True)
     permanence_time = models.DurationField(null=True, blank=True)
     peoples = models.IntegerField(null=True, blank=True)
     total = models.DecimalField(max_digits=9, decimal_places=2, blank=False, null=False, default=0)
 
     def __str__(self):
-        return "COMANDA " + self.code
+        return f"COMANDA {self.code}"
 
 
 class Order(models.Model):
@@ -224,7 +224,10 @@ class Complement(models.Model):
     command = models.ForeignKey(Command, on_delete=models.DO_NOTHING)
     order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
     product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
+    code = models.CharField(_('Código do produto'), max_length=10, null=False, blank=False, unique=False,
+                            error_messages=settings.ERRORS_MESSAGES)
     name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=False,
                             error_messages=settings.ERRORS_MESSAGES)
     price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
     quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
+

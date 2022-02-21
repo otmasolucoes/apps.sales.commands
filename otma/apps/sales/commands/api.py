@@ -3,6 +3,7 @@ import math
 import json
 import random
 import requests
+import subprocess
 from conf import profile
 from decimal import Decimal
 from otma.apps.core.communications.api import BaseController
@@ -23,6 +24,17 @@ def format_datetime(value):
         # return value.strftime("%d/%m/%Y, %H:%M:%S")
     else:
         return None
+
+
+def run_command(command):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+    output, error = process.communicate()
+    result_dict = {"result": True if output.decode() != "" else True,
+                   "object": None,
+                   "message": output.decode().replace("\n", "")
+                   if output.decode() != "" else error.decode().replace("\n", "")
+                   }
+    return result_dict
 
 
 class CommandController(BaseController):
@@ -65,6 +77,7 @@ class CommandController(BaseController):
             command.checkout_time = datetime.now()
             command.permanence_time = command.checkout_time - command.checkin_time
             command.status = "CLOSED"
+            command.total = 0.0
             self.create_integration_file(request, command, table)
 
         # command.attendant = request.user
@@ -75,7 +88,7 @@ class CommandController(BaseController):
         # command.checkout_time = None
         # command.permanence_time = None
         # command.peoples = None
-        # command.total = 0.0
+
         command.save()
         response = self.execute(command, command.save)
         return self.response(response)
@@ -146,29 +159,34 @@ class CommandController(BaseController):
         return self.response(response)
 
     def create_integration_file(self, request, command, table):
-        controller = OrderController()
-        manager = CommunicationController()
-        orders = controller.orders_by_command(request, command.id, is_response=False)
-        total = self.calcula_total(request, orders)
-        first_line = f'{table}|{command.attendant}|{total}|{command.client_document}|\n'
-        create_file = manager.write_txt_file(data=first_line,
+        complements = None
+        orders = OrderController().orders_by_command(request, command.id, is_response=False)
+        total = self.calculate_total(request, orders)
+        first_line = f'{table}|{command.attendant}|{total}|' \
+                     f'{command.client_document if command.client_document else "00000000000"}|' \
+                     f'{command.checkin_time.strftime("%Y-%m-%d %H:%M:%S")}|\n'
+        create_file = CommunicationController().write_txt_file(data=first_line,
                                              file_name='comanda' + str(command.id),
                                              out_folder_path=profile.MELINUX_INTEGRATION_PATH,
                                              mode='a')
         for order in orders['object']:
             items = MenuProductController().load_by_id(request, order['product'], is_response=False)
+            complements = OrderController().complemets_by_order(request, order["id"], is_response=False)
+            # if len(complements["object"]) > 0 and order["product"] == complements["object"][0]["product"]:
+            # items["object"] += complements["object"]
             for item in items['object']:
                 data = f'{item["code"]}|{order["quantity"]}|{item["price"]}|\n'
-                create_file = manager.write_txt_file(data=data,
+                create_file = CommunicationController().write_txt_file(data=data,
                                                      file_name='comanda' + str(command.id),
                                                      out_folder_path=profile.MELINUX_INTEGRATION_PATH,
                                                      mode='a')
-        create_file = manager.write_txt_file(data='',
+
+        create_file = CommunicationController().write_txt_file(data='',
                                              file_name='comanda' + str(command.id),
                                              out_folder_path=profile.MELINUX_INTEGRATION_PATH,
                                              mode='a', delete=True)
 
-    def calcula_total(self, request, orders):
+    def calculate_total(self, request, orders):
         total_result = 0
         for order in orders['object']:
             items = MenuProductController().load_by_id(request, order['product'], is_response=False)
@@ -280,21 +298,21 @@ class OrderController(BaseController):
         order.price = Decimal(request.POST['price'])
         order.quantity = Decimal(request.POST['quantity'])
         complements_total = Decimal(request.POST['complements_total'])
-        print("OLHA O TOTAL DO PEDIDO: ", (order.price + complements_total) * order.quantity)
+        print("OLHA O TOTAL DO PEDIDO: ", float((order.price + complements_total) * order.quantity))
         complements = json.loads(request.POST.get("complements"))
         print("OLHA AÍ OS COMPLEMENTOS: ", json.dumps(complements, indent=4))
-        order.total = (order.price + complements_total) * order.quantity
+        order.total = Decimal((order.price + complements_total) * order.quantity)
         order.save()
         order.expected_duration = self.get_prevision_duration()
         order.expected_time = order.checkin_time + order.expected_duration
-        order.observations = request.POST['observations']
+        order.observations = request.POST.get('observations')
         order.save()
         print("OLHA O TOTAL DA COMANDA: CODE", order.command.code, " - ID: ", order.command.id, order.command.total,
-              " PEDIDO: ", order.total, " NOVO TOTAL: ", order.command.total + order.total)
+              " PEDIDO: ", float(order.total), " NOVO TOTAL: ", float(order.command.total + order.total))
         order.command.total = order.command.total + order.total
         order.command.save()
-        print("OLHA O TOTAL DA MESA: ", order.command.table.total + order.total)
-        order.command.table.total = order.command.table.total + order.total
+        print("OLHA O TOTAL DA MESA: ", float(order.command.table.total + order.total))
+        order.command.table.total = float(order.command.table.total + order.total)
         order.command.table.save()
         if len(complements) > 0:
             for item in complements:
@@ -302,8 +320,9 @@ class OrderController(BaseController):
                 complement.order = order
                 complement.command = order.command
                 complement.product = order.product
+                complement.code = item["code"]
                 complement.name = item["name"]
-                complement.price = item["price"]
+                complement.price = Decimal(item["price"])
                 complement.quantity = item["quant"]
                 complement.save()
         response = self.execute(order, order.save)
@@ -321,6 +340,13 @@ class OrderController(BaseController):
         return super().filter(request,
                               self.model,
                               queryset=Order.objects.filter(command=int(id)).order_by('-id'),
+                              extra_fields=self.extra_fields,
+                              is_response=is_response)
+
+    def complemets_by_order(self, request, id, is_response=True):
+        return super().filter(request,
+                              Complement,
+                              queryset=Complement.objects.filter(order=int(id)).order_by('-id'),
                               extra_fields=self.extra_fields,
                               is_response=is_response)
 
@@ -367,6 +393,15 @@ class OrderController(BaseController):
                 barcode = order.create_barcode()
 
         complements = Complement.objects.filter(order=order)
+        complement_list = []
+        if complements.count() > 0:
+            for complement in complements:
+                complements_result = {}
+                complements_result["name"] = complement.name
+                complements_result["quant"] = int(complement.quantity)
+                complements_result["price"] = complement.price
+                complement_list.append(complements_result)
+        print("OLHA AÍ OS COMPLEMENTOS DESSE PEDIDO: ", complement_list)
 
         main_content_height_space = 47
         complements_height_space = 8 * complements.count()
@@ -384,29 +419,40 @@ class OrderController(BaseController):
         response = {
             'id': order.id, 'table': order.command.table.id,
             'command': order.command_id, 'product': order.product_id, 'name': order.name,
-            'image': order.image, 'price': order.price, 'quantity': order.quantity,
+            'image': order.image, 'price': order.price, 'quantity': int(order.quantity),
             'total': order.total, 'status': order.status, 'barcode': order.barcode,
             'checkin_time': order.checkin_time, 'checkin_time_hours': order.checkin_time,
             'checkout_time': format_datetime(order.checkout_time), 'waiting_time': order.waiting_time,
             'implement_time': order.implement_time, 'closed_time': format_datetime(order.closed_time),
             'duration_time': order.duration_time, 'expected_time': order.expected_time,
-            'expected_duration': order.expected_duration, 'complements': complements,
+            'expected_duration': order.expected_duration, 'complements': complement_list,
             'observations': order.observations, 'total_height': total_height,
         }
         return response
 
-    def view(self, request, id=None):
+    def view(self, request, id):
         self.start_process(request)
-        id = id or request.POST['order_id']
         order = Order.objects.filter(pk=int(id))
         if order.count() > 0:
             response_order = self.prepare_order(order[0])
+            response_order["base_page"] = 'commands.html'
+            response_order["company_name"] = profile.COMPANY_NAME
+            response_order["company_logo"] = profile.PATH_COMPANY_LOGO
+            response_order["attendant_name"] = request.user.first_name
+            return render(request, "order_pdf.html", context={"order": response_order})
+        return self.response({"result": False, "object": None, "message": "Object not found"})
+
+    def make_pdf(self, request, id):
+        self.start_process(request)
+        order = Order.objects.filter(pk=int(id))
+        if order.count() > 0:
+            response_order = self.prepare_order(order[0])
+            response_order["company_name"] = profile.COMPANY_NAME
+            response_order["attendant_name"] = request.GET.get("attendant_name")
             respone_content = HttpResponse(content_type='application/pdf')
-            result = generate_pdf('order_pdf.html',
+            return generate_pdf('order_pdf.html',
                                   file_object=respone_content,
-                                  context={'order': response_order,
-                                           'company_name': profile.COMPANY_NAME, 'attendant_name': 'Diegao'})
-            return result
+                                  context={'order': response_order})
         return self.response({"result": False, "object": None, "message": "Object not found"})
 
     def print(self, request, id=None):
@@ -414,16 +460,22 @@ class OrderController(BaseController):
         order_id = id or request.POST["order_id"]
         order = Order.objects.filter(pk=int(order_id))
         media_path = "media/orders/"
+        result_print = None
         if not os.path.exists(media_path):
             os.makedirs(media_path)
         if order.count() > 0:
-            route = f"http://{request.get_host()}/api/sales/commands/order/{str(order_id)}/"
-            filename = os.path.join(media_path, f"{str(order_id)}.pdf")
-            response = requests.get(route, params={"order_id": int(order_id)})
-            with open(filename, 'wb') as file:
+            route_make_pdf = f"http://{request.get_host()}/api/sales/commands/order/pdf/{order_id}"
+            file_name = os.path.join(media_path, f"{str(order_id)}.pdf")
+            response = requests.get(route_make_pdf, params={"attendant_name": request.user.first_name})
+            with open(file_name, 'wb') as file:
                 file.write(response.content)
-                return self.response({"result": True, "object": None, "message": "Order was printed"})
-        return self.response({"result": False, "object": None, "message": "Object not found"})
+                command = f'cat {file_name} | lpr -P {profile.PRINTER_CONFIG.get("name")}'
+                result_print = run_command(command)
+
+        print(result_print)
+        return self.response(result_print)
+                #return self.response({"result": True, "object": None, "message": "Order was printed"})
+        #return self.response({"result": False, "object": None, "message": "Object not found"})
 
 
 class MenuProductController(BaseController):
@@ -496,17 +548,12 @@ class VerifierRequest:
     def apply_filter(self, query):
         return self.queryset.filter(**query)
 
-    def get_field(self, field):
-        if field in self.request.GET and self.request.GET[field]:
-            return self.request.GET[field]
-        return None
-
     def verify_search(self):
-        search_value = self.get_field('search')
+        search_value = self.request.GET.get('search')
         if search_value is not None:
-            search_by = self.get_field('search_by')
+            search_by = self.request.GET.get('search_by')
             if search_by is not None:
-                if self.get_field('search_type') == 'INITIALS':
+                if self.request.GET.get('search_type') == 'INITIALS':
                     return self.apply_filter({search_by + "__istartswith": search_value})
                 else:
                     return self.apply_filter({search_by + "__icontains": search_value})
