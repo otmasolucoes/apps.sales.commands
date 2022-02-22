@@ -68,7 +68,7 @@ class Table(models.Model):
     capacity = models.IntegerField(null=True, blank=True, default=4)
 
     def __str__(self):
-        return "MESA" + self.code + " (" + self.area + ")"
+        return f"MESA {self.code} ({self.area})"
 
     def commands(self):
         return []
@@ -194,8 +194,8 @@ class Order(models.Model):
         """
         value = str(self.id).zfill(12)
         ean = barcode.get('ean13', value, writer=ImageWriter())
-        filename = ean.save("media/barcodes/" + value)
-        self.barcode = value + ".png"
+        filename = ean.save(f"media/barcodes/{value}")
+        self.barcode = f"{value}.png"
         super(Order, self).save()
         return filename
 

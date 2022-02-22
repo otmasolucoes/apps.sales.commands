@@ -993,6 +993,7 @@
     <script async defer src="{% static 'apps/core/authentication/action.js' %}"></script>
     <script async defer src="{% static 'bower_components/pnotify/dist/pnotify.js' %}"></script>
     <script async defer src="{% static 'apps/test_project/util/js/notify.js' %}"></script>
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 
     <script>
       var app = new Vue({
@@ -1197,6 +1198,9 @@
             ],
 
             user: {},
+            company: {
+              name: "{{ company_name }}"
+            }
 
           }
         },
@@ -1245,11 +1249,23 @@
             let data_paramters = {"order_id": order.id}
             let scope = this;
             success_function = function(){
-              alert("Pedido enviado para cozinha com sucesso!");
+              swal({
+                title: scope.company.name,
+                text: "Pedido enviado para cozinha com sucesso!",
+                icon: "success",
+                button: false,
+                timer: 3000
+              })
             }
 
             failure_function = function(){
-              alert("Erro! Não foi possivel enviar o pedido para cozinha!")
+              swal({
+                title: scope.company.name,
+                text: "Erro! Não foi possivel enviar o pedido para cozinha!",
+                icon: "warning",
+                button: false,
+                timer: 3000
+              })
             }
 
             this.request('/api/sales/commands/order/print/', "post", data_paramters, null, success_function, failure_function);
@@ -1305,6 +1321,7 @@
             let scope = this;
             let data_paramters = {};
             let complements = scope.check_complements(scope.complements, scope.complements_backup);
+            console.log(JSON.stringify(complements));
             data_paramters['command_id'] = scope.selected.command.id;
             data_paramters['product_id'] = scope.selected.product.id;
             data_paramters['name'] = scope.selected.product.name;
@@ -1323,7 +1340,13 @@
             data_paramters['observations'] = scope.forms.order.object.observations;
             let success_function = function(response) {
               //scope.print_order(response.object);  AINDA ESTOU PENSANDO SE ISSO SERÁ AUTOMÁTICO ...
-              alert("Pedido anotado e diponível para ser enviado a cozinha.");
+              swal({
+                title: scope.company.name,
+                text: "Pedido anotado e diponível para ser enviado a cozinha.",
+                icon: "success",
+                button: false,
+                timer: 5000
+              })
               response.object.show_options = false;
               if (!scope.selected.command.orders) {
                 scope.selected.command.orders = [];
@@ -1344,7 +1367,13 @@
             };
 
             let failure_function = function(response) {
-              alert("Erro! Não foi possivel gerar o pedido")
+              swal({
+                title: scope.company.name,
+                text: "Erro! Não foi possivel gerar o pedido.",
+                icon: "warning",
+                button: false,
+                timer: 2000
+              })
               return false;
             };
 
@@ -1489,9 +1518,17 @@
           select_table: function(table, index){
             let scope = this;
             if(table.status=='CLOSED'){
-              if (confirm(`Abrir nova comanda na mesa ${table.code} ???`)) {
-                scope.open_table(table, index);
-              }
+              swal({
+                title: scope.company.name,
+                text: `Abrir nova comanda na mesa ${table.code} ???`,
+                icon: "warning",
+                buttons: true,
+              }).then((open) => {
+                if (open) {
+                  scope.open_table(table, index);
+                }
+              });
+
             } else{
               this.selected.table = table;
               this.selected.table_index = index;
@@ -1515,7 +1552,13 @@
             };
 
             let failure_function = function(response) {
-              alert("Erro! Não foi possivel abrir nova comanda")
+              swal({
+                title: scope.company.name,
+                text: "Erro! Não foi possivel abrir nova comanda.",
+                icon: "warning",
+                button: false,
+                timer: 5000
+              })
             };
 
             this.request('/api/sales/commands/open/', "post", data_paramters, null, success_function, failure_function);
@@ -1530,26 +1573,37 @@
             if (scope.selected.table.commands.length == 1) {
               data_paramters["is_last_command"] = true;
             }
-            if(scope.selected.table.commands[index].status=='OPEN'){
-              if (confirm(`Deseja mesmo encerrar a comanda ${command.code} ???`)) {
-                let success_function = function(response) {
-                  scope.selected.table.commands.splice(index, 1);
-                  if (scope.selected.table.commands.length == 0) {
-                    if (confirm(`Sem comanda aberta, liberar mesa ${table.code} ???`)) {
-                      scope.view_tables();
-                    } else {
-                      scope.selected.table.total = 0.00;
-                      //scope.open_table(table, table_index, true);
+            if(scope.selected.table.commands[index].status=='OPEN') {
+              swal({
+                title: scope.company.name,
+                text: `Deseja mesmo encerrar a comanda ${command.code} ???`,
+                icon: "warning",
+                buttons: true,
+              }).then((close) => {
+                if (close) {
+                  let success_function = function(response) {
+                    scope.selected.table.commands.splice(index, 1);
+                    if (scope.selected.table.commands.length == 0) {
+                      swal({
+                        title: scope.company.name,
+                        text: `Sem comanda aberta, liberar mesa ${table.code} ???`,
+                        icon: "warning",
+                        buttons: true,
+                      }).then((open) => {
+                        if (open) {
+                          scope.view_tables();
+                        } else {
+                          scope.selected.table.total = 0.00;
+                        }
+                      });
                     }
-                  }
-                };
-
-                let failure_function = function(response) {
-
-                };
-
-                this.request(`/api/sales/commands/close/${command.id}/`, "post", data_paramters, null, success_function, failure_function);
-              }
+                  };
+                  let failure_function = function(response) {
+                    //;
+                  };
+                  this.request(`/api/sales/commands/close/${command.id}/`, "post", data_paramters, null, success_function, failure_function);
+                }
+              });
             }
           },
 
@@ -1569,7 +1623,6 @@
           update_clock: function(){
             //this.controls.clock = moment().utc().format();
             this.controls.clock = moment().format();
-            console.log(JSON.stringify(this.controls.clock));
           },
 
           check_complements: function(object, backup){
@@ -1595,7 +1648,6 @@
               scope.errors = response.message;
               scope.user = response.object;
               scope.user.password = '';
-              //alert('OLHA AÊ: ' + JSON.stringify(response));
               //scope.session.is_blocked = response.object.session.is_blocked;
               //localStorage.setItem("is_blocked", response.object.session.is_blocked);
               //scope.controls.page.loaded = true;
@@ -1638,7 +1690,7 @@
         },
 
         mounted: function () {
-
+          //;
         }
       });
     </script>
@@ -1653,12 +1705,8 @@
 
     <script>
       function success_notify() {
-
-      }
-
-      /*window.alert = function(str) {
-        Alert.postMessage(str);
-      };*/
+        //;
+      };
 
       window.addEventListener('load', function () {
         app.get_user();
