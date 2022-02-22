@@ -711,7 +711,7 @@
                               </span>
                             </td>
                             <td colspan="2" style="text-align:right;">
-                              <div @click="show_options(order)">{{ order.total }}</div>
+                              <div @click="show_options(order)">{{ order.price | format_money}}</div>
                             </td>
                           </tr>
 
