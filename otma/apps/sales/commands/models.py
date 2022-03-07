@@ -8,30 +8,34 @@ from decimal import Decimal
 from barcode.writer import ImageWriter
 
 
-STATUS_OF_TABLE = (
+PRODUCT_TYPE = (
+    ('NORMAL', 'NÃO PODE TER ADICIONAIS'),
+    ('ADDABLE', 'PODE TER ADICIONAIS'),
+    ('ADDITIONAL', 'É UM ADICIONAL'),
+)
+
+TABLE_STATUS = (
     ('ACTIVE', 'ATIVA'),
     ('WAITING', 'AGUARDANDO'),
     ('CLOSED', 'FECHADA'),
 )
 
-
-STATUS_OF_COMMAND = (
+COMMAND_STATUS = (
     ('OPEN', 'ABERTA'),
     ('CLOSED', 'FECHADA'),
 )
 
-STATUS_OF_ORDER = (
+ORDER_STATUS = (
+    ('SENT', 'ENVIADO'),
+    ('FINISHED', 'FINALIZADO'),
+)
+
+PREPARATION_STATUS = (
     ('WAITING', 'AGUARDANDO'),
     ('IN_PROGRESS', 'EM ANDAMENTO'),
     ('READY', 'PRONTO'),
     ('CLOSED', 'ENTREGUE'),
     ('CANCELED', 'CANCELADO'),
-)
-
-TYPE_OF_PRODUCT = (
-    ('NORMAL', 'NÃO PODE TER ADICIONAIS'),
-    ('ADDABLE', 'PODE TER ADICIONAIS'),
-    ('ADDITIONAL', 'É UM ADICIONAL'),
 )
 
 
@@ -49,29 +53,6 @@ class PathAndRename(object):
             os.remove(file_path)
 
         return os.path.join(self.path, filename)
-
-
-class Table(models.Model):
-
-    class Meta:
-        db_table = 'apps_sales_commands_tables'
-        verbose_name = _('Mesa')
-        verbose_name_plural = _('Mesas')
-
-    code = models.CharField(_('Número da mesa'), max_length=10, null=False, blank=False, unique=True,
-                            error_messages=settings.ERRORS_MESSAGES)
-    area = models.CharField(_('Identificação da area'), max_length=10, null=False, blank=False,
-                            error_messages=settings.ERRORS_MESSAGES)
-    status = models.CharField(_('Status da mesas'), max_length=20, default='CLOSED', choices=STATUS_OF_TABLE,
-                              null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
-    total = models.DecimalField(max_digits=9, decimal_places=2, null=False, default=0)
-    capacity = models.IntegerField(null=True, blank=True, default=4)
-
-    def __str__(self):
-        return f"MESA {self.code} ({self.area})"
-
-    def commands(self):
-        return []
 
 
 class Group(models.Model):
@@ -102,7 +83,7 @@ class Product(models.Model):
 
     group = models.ForeignKey(Group, null=True, blank=True, on_delete=models.DO_NOTHING)
     type = models.CharField(_('Tipo do produto'), max_length=10, null=True, blank=True, default='NORMAL',
-                            choices=TYPE_OF_PRODUCT, error_messages=settings.ERRORS_MESSAGES)
+                            choices=PRODUCT_TYPE, error_messages=settings.ERRORS_MESSAGES)
     code = models.CharField(_('Código do produto'), max_length=10, null=False, blank=False, unique=True,
                             error_messages=settings.ERRORS_MESSAGES)
     name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=True,
@@ -121,6 +102,28 @@ class Product(models.Model):
         return str(self.image)
 
 
+class Table(models.Model):
+    class Meta:
+        db_table = 'apps_sales_commands_tables'
+        verbose_name = _('Mesa')
+        verbose_name_plural = _('Mesas')
+
+    code = models.CharField(_('Número da mesa'), max_length=10, null=False, blank=False, unique=True,
+                            error_messages=settings.ERRORS_MESSAGES)
+    area = models.CharField(_('Identificação da area'), max_length=10, null=False, blank=False,
+                            error_messages=settings.ERRORS_MESSAGES)
+    status = models.CharField(_('Status da mesas'), max_length=20, default='CLOSED', choices=TABLE_STATUS,
+                              null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
+    total = models.DecimalField(max_digits=9, decimal_places=2, null=False, default=0)
+    capacity = models.IntegerField(null=True, blank=True, default=4)
+
+    def __str__(self):
+        return f"MESA {self.code} ({self.area})"
+
+    def commands(self):
+        return []
+
+
 class Command(models.Model):
 
     class Meta:
@@ -132,7 +135,7 @@ class Command(models.Model):
                             error_messages=settings.ERRORS_MESSAGES)
     table = models.ForeignKey(Table, on_delete=models.DO_NOTHING, null=True, blank=True,
                               error_messages=settings.ERRORS_MESSAGES)
-    status = models.CharField(_('Status da comanda'), max_length=20, default='OPEN', choices=STATUS_OF_COMMAND,
+    status = models.CharField(_('Status da comanda'), max_length=20, default='OPEN', choices=COMMAND_STATUS,
                               null=True, blank=True, error_messages=settings.ERRORS_MESSAGES)
     attendant = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.DO_NOTHING)
     client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True, unique=False,
@@ -157,27 +160,13 @@ class Order(models.Model):
         verbose_name_plural = _('Pedidos')
 
     command = models.ForeignKey(Command, on_delete=models.DO_NOTHING)
-    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
-    name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=False,
-                            error_messages=settings.ERRORS_MESSAGES)
-    image = models.CharField(_('Imagem do produto'), max_length=256, null=True, blank=True, unique=False,
-                             error_messages=settings.ERRORS_MESSAGES)
-    price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
-    quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
     total = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True)
     checkin_time = models.DateTimeField(_('Entrada de pedido'), null=True, auto_now_add=True)
     checkout_time = models.DateTimeField(_('Saída de pedido'), null=True, blank=True)
-    waiting_time = models.DurationField(null=True, blank=True)
-    implement_time = models.DurationField(null=True, blank=True)
-    closed_time = models.DurationField(null=True, blank=True)
-    duration_time = models.DurationField(null=True, blank=True)
-    expected_time = models.DateTimeField(_('Término previsto'), null=True, blank=True)
-    expected_duration = models.DurationField(null=True, blank=True)
     barcode = models.CharField(_('Código de barras'), max_length=20, null=True, blank=True,
                                error_messages=settings.ERRORS_MESSAGES)
-    status = models.CharField(_('Status'), max_length=20, default='WAITING', choices=STATUS_OF_ORDER, null=True,
+    status = models.CharField(_('Status'), max_length=20, default='SENT', choices=ORDER_STATUS, null=True,
                               blank=True, error_messages=settings.ERRORS_MESSAGES)
-    observations = models.TextField('Observações', null=True, blank=True)
 
     def show_options(self):
         return False
@@ -204,14 +193,41 @@ class Order(models.Model):
             os.makedirs("media/barcodes/")
         if not os.path.exists("media/orders/"):
             os.makedirs("media/orders/")
-        self.price = self.product.price
-        self.name = self.product.name
-        self.image = self.product.image
         # self.total = Decimal(self.quantity) * Decimal(self.price)
         # self.command.total = self.command.total + self.total
         super(Order, self).save(*args, **kwargs)
         if self.barcode is None:
             self.create_barcode()
+
+
+class Item(models.Model):
+
+    class Meta:
+        db_table = 'apps_sales_commands_item'
+        verbose_name = _('Item')
+        verbose_name_plural = _('Items')
+
+    order = models.ForeignKey(Order, on_delete=models.DO_NOTHING)
+    product = models.ForeignKey(Product, on_delete=models.DO_NOTHING)
+    name = models.CharField(_('Nome do produto'), max_length=50, null=False, blank=False, unique=False,
+                            error_messages=settings.ERRORS_MESSAGES)
+    description = models.CharField(_('Descrição do produto'), max_length=200, null=True, blank=True,
+                                   error_messages=settings.ERRORS_MESSAGES)
+    price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+    quantity = models.DecimalField(max_digits=5, decimal_places=2, blank=False, null=False, default=1)
+    image = models.CharField(_('Imagem do produto'), max_length=256, null=True, blank=True, unique=False,
+                             error_messages=settings.ERRORS_MESSAGES)
+    checkin_time = models.DateTimeField(_('Entrada do item'), null=True, auto_now_add=True)
+    waiting_time = models.DurationField(null=True, blank=True)
+    implement_time = models.DurationField(null=True, blank=True)
+    duration_time = models.DurationField(null=True, blank=True)
+    expected_time = models.DateTimeField(_('Término previsto'), null=True, blank=True)
+    expected_duration = models.DurationField(null=True, blank=True)
+    closed_time = models.DurationField(null=True, blank=True)
+    was_sent = models.BooleanField(default=False)
+    status = models.CharField(_('Status'), max_length=20, default='WAITING', choices=PREPARATION_STATUS, null=True,
+                              blank=True, error_messages=settings.ERRORS_MESSAGES)
+    observations = models.TextField('Observações', null=True, blank=True)
 
 
 class Complement(models.Model):

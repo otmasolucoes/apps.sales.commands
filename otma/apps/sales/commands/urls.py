@@ -18,13 +18,14 @@ urlpatterns = [
 
     url(r'^order/save/$', OrderController().save),
     url(r'^order/print/$', OrderController().print),
-    url(r'^order/pdf/(?P<id>\d+)/$', OrderController().make_pdf),
+    url(r'^order/pdf/(?P<id>\d+)/$', OrderController().create_pdf),
     url(r'^order/view/(?P<id>\d+)/$', OrderController().view),
     url(r'^orders/load/$', OrderController().load_orders),
     url(r'^orders/(?P<id>[^/]+)/status/(?P<status>[^/]+)/change/$', OrderController().change_orders_status),
     url(r'^orders/(?P<id>[^/]+)/$', OrderController().orders_by_command),
     url(r'^orders/(?P<id>[^/]+)/cancel/$', OrderController().cancel_orders_by_id),
     url(r'^orders/(?P<id>[^/]+)/close/$', OrderController().close_orders_by_id),
+    url(r'^orders/item/(?P<id>[^/]+)/status/(?P<status>[^/]+)/change/$', OrderController().change_status_item),
 
     url(r'^groups/$', MenuGroupController().all_groups),
     url(r'^groups/load/$', MenuGroupController().load_groups),

@@ -2,26 +2,26 @@ import os
 import math
 import json
 import random
+import barcode
 import requests
 import subprocess
 from conf import profile
 from decimal import Decimal
 from otma.apps.core.communications.api import BaseController
-from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Complement
+from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Item, Complement
 from otma.apps.sales.commands.service import CommunicationController
 from django.shortcuts import render, HttpResponse
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django_xhtml2pdf.utils import generate_pdf
+from barcode.writer import ImageWriter
 
 
 def format_datetime(value):
     from datetime import timezone, datetime, timedelta
     if value is not None:
         datetime_with_timezone = value.astimezone(timezone.utc).strftime('%d/%m/%Y %H:%M:%S')
-        print("VEJA DATA: ", datetime_with_timezone)
         return datetime_with_timezone
-        # return value.strftime("%d/%m/%Y, %H:%M:%S")
     else:
         return None
 
@@ -37,16 +37,58 @@ def run_command(command):
     return result_dict
 
 
+class TableController(BaseController):
+    model = Table
+    extra_fields = []
+    extra_names = {}
+
+    def load(self, request, extra_fields=None, is_response=True):
+        response_tables = super().filter(request,
+                                         self.model,
+                                         queryset=self.model.objects.all().order_by('id'),
+                                         extra_fields=extra_fields or self.extra_fields,
+                                         is_response=False)
+        for index, table in enumerate(response_tables['object']):
+            response_commands = CommandController().load_open_commands(request,
+                                                                       table=table['id'],
+                                                                       is_response=False)
+            response_tables['object'][index]['commands'] = response_commands['object']
+        return self.response(response_tables)
+
+    def open(self, request):
+        self.start_process(request)
+        table = Table.objects.filter(pk=int(request.POST['table_id']))
+        if table.count() > 0:
+            table = table[0]
+            table.total = 0
+            table.status = "ACTIVE"
+            response = self.execute(table, table.save, extra_fields=['commands'])
+        else:
+            response = self.error({'table': 'Falha na operação, mesa não cadastrada!'})
+        return self.response(response)
+
+    def close_by_id(self, request, id):
+        self.start_process(request)
+        table = Table.objects.filter(pk=int(id))
+        if table.count() > 0:
+            table = table[0]
+            table.status = "CLOSED"
+            response = self.execute(table, table.save)
+        else:
+            response = self.error({'table': 'Falha na operação, mesa não cadastrada!'})
+        return self.response(response)
+
+
 class CommandController(BaseController):
     model = Command
     extra_fields = ['orders']
     extra_names = {}
 
-    def load(self, request):
+    def load(self, request, extra_fields=None, is_response=True):
         return super().filter(request,
                               self.model,
                               queryset=Command.objects.all(),
-                              extra_fields=self.extra_fields,
+                              extra_fields=extra_fields or self.extra_fields,
                               is_response=True)
 
     def open(self, request):
@@ -54,7 +96,7 @@ class CommandController(BaseController):
         command = Command()
         command.table_id = request.POST['table_id']
         # command.status = "OPEN"
-        print("VEJA O REQUEST USER: ", request.user)
+        # print("VEJA O REQUEST USER: ", request.user)
         command.attendant = request.user
         # command.client_document = models.CharField(_('Número de documento'), max_length=20, null=True, blank=True,
         # unique=False, error_messages=settings.ERRORS_MESSAGES)
@@ -103,12 +145,9 @@ class CommandController(BaseController):
                                       queryset=Command.objects.filter(table=table).filter(status=status),
                                       extra_fields=self.extra_fields,
                                       is_response=is_response)
-            count = 0
-            for item in commands['object']:
-                orders = OrderController().orders_by_command(request, item['id'], is_response=is_response)
-                print("VEJA O PEDIDO MELHOR: ", json.dumps(orders, indent=4))
-                commands['object'][count]['orders'] = orders['object']
-                count = count + 1
+            for index, command in enumerate(commands['object']):
+                orders = OrderController().orders_by_command(request, command['id'], is_response=is_response)
+                commands['object'][index]['orders'] = orders['object']
 
             if is_response:
                 return self.response(commands)
@@ -121,11 +160,11 @@ class CommandController(BaseController):
                                   extra_fields=self.extra_fields,
                                   is_response=is_response)
 
-    def commands_by_table(self, request, table):
+    def commands_by_table(self, request, table, extra_fields=None, is_response=True):
         return super().filter(request,
                               self.model,
                               queryset=Command.objects.filter(table=table),
-                              extra_fields=self.extra_fields,
+                              extra_fields=extra_fields or self.extra_fields,
                               is_response=True)
 
     def close_commands_by_id(self, request, id):
@@ -164,18 +203,18 @@ class CommandController(BaseController):
         total = self.calculate_total(request, orders)
         first_line = f'{table}|{command.attendant}|{total}|' \
                      f'{command.client_document if command.client_document else "00000000000"}|' \
-                     f'{command.checkin_time.strftime("%Y-%m-%d %H:%M:%S")}|\n'
+                     f'{command.checkin_time.strftime("%Y-%m-%d %H:%M:%S")}|'
         create_file = CommunicationController().write_txt_file(data=first_line,
                                              file_name='comanda' + str(command.id),
                                              out_folder_path=profile.MELINUX_INTEGRATION_PATH,
                                              mode='a')
         for order in orders['object']:
             items = MenuProductController().load_by_id(request, order['product'], is_response=False)
-            complements = OrderController().complemets_by_order(request, order["id"], is_response=False)
+            complements = OrderController().complements_by_order(request, order["id"], is_response=False)
             # if len(complements["object"]) > 0 and order["product"] == complements["object"][0]["product"]:
             # items["object"] += complements["object"]
             for item in items['object']:
-                data = f'{item["code"]}|{order["quantity"]}|{item["price"]}|\n'
+                data = f'{item["code"]}|{order["quantity"]}|{item["price"]}|'
                 create_file = CommunicationController().write_txt_file(data=data,
                                                      file_name='comanda' + str(command.id),
                                                      out_folder_path=profile.MELINUX_INTEGRATION_PATH,
@@ -195,80 +234,34 @@ class CommandController(BaseController):
         return "{0:.2f}".format(total_result)
 
 
-class TableController(BaseController):
-    model = Table
-    extra_fields = []
-    extra_names = {}
-
-    def load(self, request):
-        response_tables = super().filter(request,
-                                         self.model,
-                                         queryset=self.model.objects.all().order_by('id'),
-                                         extra_fields=self.extra_fields,
-                                         is_response=False)
-        count = 0
-        for table in response_tables['object']:
-            response_commands = CommandController().load_open_commands(request,
-                                                                       table=table['id'],
-                                                                       is_response=False)
-            response_tables['object'][count]['commands'] = response_commands['object']
-            count += 1
-        return self.response(response_tables)
-
-    def open(self, request):
-        self.start_process(request)
-        table = Table.objects.filter(pk=int(request.POST['table_id']))
-        if table.count() > 0:
-            table = table[0]
-            table.total = 0
-            table.status = "ACTIVE"
-            response = self.execute(table, table.save, extra_fields=['commands'])
-        else:
-            response = self.error({'table': 'Falha na operação, mesa não cadastrada!'})
-        return self.response(response)
-
-    def close_by_id(self, request, id):
-        self.start_process(request)
-        table = Table.objects.filter(pk=int(id))
-        if table.count() > 0:
-            table = table[0]
-            table.status = "CLOSED"
-            response = self.execute(table, table.save)
-        else:
-            response = self.error({'table': 'Falha na operação, mesa não cadastrada!'})
-        return self.response(response)
-
-
 class MenuGroupController(BaseController):
     model = Group
     extra_fields = []
     extra_names = {}
 
-    def load_tables(self, request):
+    def load_tables(self, request, extra_fields=None, is_response=True):
         return super().filter(request,
                               Table,
                               queryset=Table.objects.all(),
-                              extra_fields=self.extra_fields,
+                              extra_fields=extra_fields or self.extra_fields,
                               is_response=True)
 
-    def all_groups(self, request):
+    def all_groups(self, request, extra_fields=None, is_response=True):
         return super().filter(request,
                               self.model,
                               queryset=Group.objects.all(),
-                              extra_fields=self.extra_fields,
+                              extra_fields=extra_fields or self.extra_fields,
                               is_response=True)
 
-    def load_groups(self, request):
+    def load_groups(self, request, extra_fields=None, is_response=True):
         response_group = super().filter(request,
                                         self.model,
                                         queryset=Group.objects.all().order_by("code"),
-                                        extra_fields=self.extra_fields,
+                                        extra_fields=extra_fields or self.extra_fields,
                                         is_response=False)
-        count_groups = 0
-        for object in response_group['object']:
+        for index, object in enumerate(response_group['object']):
             response_products = MenuProductController().load_products(request, group=object['id'], is_response=False)
-            response_group['object'][count_groups]['products'] = response_products['object']
-            count_groups += 1
+            response_group['object'][index]['products'] = response_products['object']
         return self.response(response_group)
 
 
@@ -289,65 +282,149 @@ class OrderController(BaseController):
 
     def save(self, request):
         self.start_process(request)
-        # print("OLHA O REQUEST: ", request.POST)
-        order = Order()
+        list_items_response = []
+        list_items = json.loads(request.POST.get("items"))
+        if request.POST.get('order_id'):
+            order = Order.objects.filter(pk=int(request.POST['order_id']))
+            if order.count() > 0:
+                order = order[0]
+        else:
+            order = Order()
         order.command_id = int(request.POST['command_id'])
-        order.product_id = int(request.POST['product_id'])
-        order.name = request.POST['name']
-        order.image = request.POST['image']
-        order.price = Decimal(request.POST['price'])
-        order.quantity = Decimal(request.POST['quantity'])
-        complements_total = Decimal(request.POST['complements_total'])
-        print("OLHA O TOTAL DO PEDIDO: ", float((order.price + complements_total) * order.quantity))
-        complements = json.loads(request.POST.get("complements"))
-        print("OLHA AÍ OS COMPLEMENTOS: ", json.dumps(complements, indent=4))
-        order.total = Decimal((order.price + complements_total) * order.quantity)
         order.save()
-        order.expected_duration = self.get_prevision_duration()
-        order.expected_time = order.checkin_time + order.expected_duration
-        order.observations = request.POST.get('observations')
-        order.save()
-        print("OLHA O TOTAL DA COMANDA: CODE", order.command.code, " - ID: ", order.command.id, order.command.total,
-              " PEDIDO: ", float(order.total), " NOVO TOTAL: ", float(order.command.total + order.total))
-        order.command.total = order.command.total + order.total
-        order.command.save()
-        print("OLHA O TOTAL DA MESA: ", float(order.command.table.total + order.total))
-        order.command.table.total = float(order.command.table.total + order.total)
-        order.command.table.save()
-        if len(complements) > 0:
-            for item in complements:
-                complement = Complement()
-                complement.order = order
-                complement.command = order.command
-                complement.product = order.product
-                complement.code = item["code"]
-                complement.name = item["name"]
-                complement.price = Decimal(item["price"])
-                complement.quantity = item["quant"]
-                complement.save()
-        response = self.execute(order, order.save)
+        if len(list_items) > 0:
+            order_total = 0
+            for data_item in list_items:
+                item = Item()
+                item.order = order
+                item.product_id = int(data_item["id"])
+                item.name = data_item['name']
+                item.image = data_item['image']
+                item.price = Decimal(data_item['price'])
+                item.quantity = Decimal(data_item['quantity'])
+                item.was_sent = True
+                item.observations = data_item.get('observations')
+                item.save()
+                # item.expected_duration = self.get_prevision_duration()
+                item.expected_duration = timedelta(hours=data_item["duration_time"]["hours"],
+                                                    minutes=data_item["duration_time"]["minutes"],
+                                                    seconds=data_item["duration_time"]["seconds"])
+                item.expected_time = item.checkin_time + item.expected_duration
 
+                complements_total = Decimal(request.POST['complements_total'])
+                complements = data_item.get("complements")
+                print("OLHA AÍ OS COMPLEMENTOS: ", json.dumps(complements, indent=4))
+
+                if len(complements) > 0:
+                    for data_complement in complements:
+                        complement = Complement()
+                        complement.order = order
+                        complement.command = order.command
+                        complement.product = order.product
+                        complement.code = data_complement["code"]
+                        complement.name = data_complement["name"]
+                        complement.price = Decimal(data_complement["price"])
+                        complement.quantity = data_complement["quant"]
+                        complement.save()
+                order_total += Decimal((item.price + complements_total) * item.quantity)
+
+                items_response = self.execute(item, item.save)
+                list_items_response.append(items_response["object"])
+
+            order.total = order_total
+            order.command.total = Decimal(order.command.total + order.total)
+            order.command.table.total = Decimal(order.command.table.total + order.total)
+            order.save()
+            order.command.save()
+            order.command.table.save()
+            order_response = self.execute(order, order.save)
+            order_response["object"]["items"] = list_items_response
+        return self.response(order_response)
+
+    def update(self, request):
+        self.start_process(request)
+        # print("OLHA O REQUEST: ", request.POST)
+        print("OLHA O REQUEST: ", json.loads(json.dumps(request.POST)))
+        print("OLHA O ORDERS: ", json.loads(request.POST.get("orders")))
+        list_response = []
+        list_orders = json.loads(request.POST.get("orders"))
+        if len(list_orders) > 0:
+            for data_order in list_orders:
+                print(data_order)
+                order = Order()
+                order.command_id = int(request.POST['command_id'])
+                order.product_id = int(data_order['id'])
+                order.name = data_order['name']
+                order.image = data_order['image']
+                order.price = Decimal(data_order['price'])
+                order.quantity = Decimal(data_order['quantity'])
+                order.was_sent = True
+                complements_total = Decimal(request.POST['complements_total'])
+                print("OLHA O TOTAL DO PEDIDO: ", float((order.price + complements_total) * order.quantity))
+                complements = data_order.get("complements")
+                print("OLHA AÍ OS COMPLEMENTOS: ", json.dumps(complements, indent=4))
+                order.total = Decimal((order.price + complements_total) * order.quantity)
+                order.save()
+                # order.expected_duration = self.get_prevision_duration()
+                order.expected_duration = timedelta(hours=data_order["duration_time"]["hours"],
+                                                    minutes=data_order["duration_time"]["minutes"],
+                                                    seconds=data_order["duration_time"]["seconds"])
+                order.expected_time = order.checkin_time + order.expected_duration
+                order.observations = data_order.get('observations')
+                order.save()
+                print("OLHA O TOTAL DA COMANDA: CODE", order.command.code, " - ID: ", order.command.id, order.command.total,
+                      " PEDIDO: ", float(order.total), " NOVO TOTAL: ", float(order.command.total + order.total))
+                order.command.total = order.command.total + order.total
+                order.command.save()
+                print("OLHA O TOTAL DA MESA: ", float(order.command.table.total + order.total))
+                order.command.table.total = float(order.command.table.total + order.total)
+                order.command.table.save()
+                if len(complements) > 0:
+                    for item in complements:
+                        complement = Complement()
+                        complement.order = order
+                        complement.command = order.command
+                        complement.product = order.product
+                        complement.code = item["code"]
+                        complement.name = item["name"]
+                        complement.price = Decimal(item["price"])
+                        complement.quantity = item["quant"]
+                        complement.save()
+                response = self.execute(order, order.save)
+                list_response.append(response["object"])
+            response["object"] = list_response
         return self.response(response)
 
-    def load_orders(self, request):
+    def load_orders(self, request, extra_fields=None, is_response=True):
         return super().filter(request,
                               self.model,
                               queryset=Order.objects.all(),
-                              extra_fields=self.extra_fields,
+                              extra_fields=extra_fields or self.extra_fields,
                               is_response=True)
 
-    def orders_by_command(self, request, id, is_response=True):
-        return super().filter(request,
+    def orders_by_command(self, request, id, extra_fields=None, is_response=True):
+        orders = super().filter(request,
                               self.model,
                               queryset=Order.objects.filter(command=int(id)).order_by('-id'),
-                              extra_fields=self.extra_fields,
+                              extra_fields=extra_fields or self.extra_fields,
                               is_response=is_response)
+        list_items = []
+        for index, order in enumerate(orders['object']):
+            items = ItemController().items_by_order(request, order['id'], is_response=is_response)
+            for i in items['object']:
+                list_items.append(i)
+        orders['object'] = list_items
 
-    def complemets_by_order(self, request, id, is_response=True):
+        if is_response:
+            return self.response(orders)
+        else:
+            return orders
+
+    def complements_by_order(self, request, id, extra_fields=None, is_response=True):
         return super().filter(request,
                               Complement,
                               queryset=Complement.objects.filter(order=int(id)).order_by('-id'),
-                              extra_fields=self.extra_fields,
+                              extra_fields=extra_fields or self.extra_fields,
                               is_response=is_response)
 
     def change_orders_status(self, request, id, status):
@@ -358,6 +435,16 @@ class OrderController(BaseController):
             order.status = status
         order.save()
         response = self.execute(order, order.save)
+        return self.response(response)
+
+    def change_status_item(self, request, id, status):
+        self.start_process(request)
+        items = Item.objects.filter(pk=int(id))
+        if items.count() > 0:
+            item = items[0]
+            item.status = status
+        item.save()
+        response = self.execute(item, item.save)
         return self.response(response)
 
     def close_orders_by_id(self, request, id):
@@ -442,7 +529,7 @@ class OrderController(BaseController):
             return render(request, "order_pdf.html", context={"order": response_order})
         return self.response({"result": False, "object": None, "message": "Object not found"})
 
-    def make_pdf(self, request, id):
+    def create_pdf(self, request, id):
         self.start_process(request)
         order = Order.objects.filter(pk=int(id))
         if order.count() > 0:
@@ -455,7 +542,39 @@ class OrderController(BaseController):
                                   context={'order': response_order})
         return self.response({"result": False, "object": None, "message": "Object not found"})
 
-    def print(self, request, id=None):
+    def print(self, request):
+        self.start_process(request)
+        result_print = None
+        media_path = "media/orders/"
+        resquest_order = json.loads(json.dumps(request.POST))
+        order = json.loads(resquest_order.get("orders"))
+        if len(order["items"]) > 0:
+            response_order = {}
+            response_order["order"] = {}
+            response_order["order"]["items"] = order["items"]
+            response_order["order"]["total_height"] = 120
+            response_order["order"]["company_name"] = profile.COMPANY_NAME
+            response_order["order"]["checkin_time"] = datetime.now()
+            response_order["order"]["table_id"] = resquest_order.get('table_id')
+            response_order["order"]["attendant_name"] = resquest_order.get("attendant_name") \
+                                                        or request.user.first_name
+            response_order["order"]["order_id"] = order["id"]
+            response_order["order"]["barcode"] = order["barcode"]
+
+            respone_content = HttpResponse(content_type='application/pdf')
+            data_object = generate_pdf('order_pdf.html',
+                                  file_object=respone_content,
+                                  context=response_order).getvalue()
+            file_name = os.path.join(media_path, f'{str(order["id"])}.pdf')
+            with open(file_name, 'wb') as file:
+                file.write(data_object)
+                command_line = f'cat {file_name} | lpr -P {profile.PRINTER_CONFIG.get("name")}'
+                result_print = run_command(command_line)
+            return self.response({"result": True, "object": None, "message": "Order was printed"})
+
+        return self.response({"result": False, "object": None, "message": "Object not found"})
+
+    def printer(self, request, id=None):
         self.start_process(request)
         order_id = id or request.POST["order_id"]
         order = Order.objects.filter(pk=int(order_id))
@@ -471,11 +590,22 @@ class OrderController(BaseController):
                 file.write(response.content)
                 command = f'cat {file_name} | lpr -P {profile.PRINTER_CONFIG.get("name")}'
                 result_print = run_command(command)
-
-        print(result_print)
         return self.response(result_print)
-                #return self.response({"result": True, "object": None, "message": "Order was printed"})
-        #return self.response({"result": False, "object": None, "message": "Object not found"})
+        # return self.response({"result": True, "object": None, "message": "Order was printed"})
+        # return self.response({"result": False, "object": None, "message": "Object not found"})
+
+
+class ItemController(BaseController):
+    model = Item
+    extra_fields = []
+    extra_names = {}
+
+    def items_by_order(self, request, id, extra_fields=None, is_response=True):
+        return super().filter(request,
+                              Item,
+                              queryset=Item.objects.filter(order=int(id)).order_by('-id'),
+                              extra_fields=extra_fields or self.extra_fields,
+                              is_response=is_response)
 
 
 class MenuProductController(BaseController):
@@ -629,5 +759,4 @@ class DatabaseController(BaseController):
         else:
             self.model = Product
             response_dict = communication.field_search(model=self.model)
-
         return self.response(response_dict)

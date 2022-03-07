@@ -215,14 +215,14 @@
   <body>
     <div style='padding:0px;'>
       <div id="app" @mousemove="" @keyup="">
-        <div :style='controls.styles.themes.active.header'>
+        <div v-if='controls.screen.width>=1024' :style='controls.styles.themes.active.header'>
 
           <div :style='controls.styles.themes.active.header_division'>
             <table border='0' style="width:100%;">
               <tr>
                 <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">{{ company_name }}</td>
 
-                <td style="width:25px;" title="Retornar a pagina anterior"><!-- v-if='controls.screen.fullscreen_mode'-->
+                <td v-if="selected.table" style="width:25px;" title="Retornar a pagina anterior"><!-- v-if='controls.screen.fullscreen_mode'-->
                   <span @click="back_menu()" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;"><!--@click="selected.table=null" v-if="selected.table!=null"  -->
                     <i class="fas fa-arrow-left"></i>
                   </span>
@@ -234,7 +234,7 @@
                   </span>
                 </td>
 
-                <!-- OPÇÃO PARA PODER FILTRAR MESASS PELO STATUS OU AREA
+                <!-- OPÇÃO PARA PODER FILTRAR MESAS PELO STATUS OU AREA
                 <td v-if="selected.table==null" style="width:40px;">
                   <div class="dropdown">
                     <span class="" id="dropdownMenuButton" title="Filtrar mesas" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
@@ -289,6 +289,7 @@
 
                     <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                       <!--<a class="dropdown-item" href="#">Nada ainda</a>-->
+                      <span style="text-align: center;padding-left: 10px;">Opções</span>
                       <div class="dropdown-divider"></div>
                       <a class="dropdown-item" @click="back_menu()">Atualizar</a>
                       <a class="dropdown-item" href="/sales/commands/logout/">Sair</a>
@@ -302,11 +303,11 @@
 
         {% verbatim %}
         <div style="padding:15px;">
-          <template v-if="selected.new_product" href="#products">
+          <template v-if="selected.new_product">
             <app_commands :controls="controls" :forms="forms" :selected="selected" :groups="groups" :complements="complements" :init_complements="init_complements" :new_products="selected.new_products"></app_commands>
           </template>
 
-          <div v-else-if='selected.table==null' id="table-panel" href="#tables">
+          <div v-else-if='selected.table==null' id="table-panel">
             <ul id='tables-list' :class="{'auto-grid-small':controls.screen.width<1024, 'auto-grid-large':controls.screen.width>=1024}" style='margin-left:-40px;'>
               <template v-for='(table, table_index) in tables'>
                 <li v-if="table.area==selected.table_group || table.status==selected.table_group || selected.table_group=='GERAL'" @click="select_table(table, table_index)" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:15px;cursor:pointer;padding-bottom:15px;padding-top:15px;line-height:15px;'>
@@ -378,30 +379,59 @@
                                   Login
                                 </button>
                               </form>-->
-                              <div class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
-                                <a @click="view_order()" style="font-size:15px;padding-left:15px;padding-right:5px;">
-                                  <i class="fas fa-search"></i>
-                                  Visualizar pedido
-                                </a>
-                              </div>
 
-                              <div class="dropdown-divider"></div>
+                              <template>
+                                <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                                  <a @click="open_command(selected.table, selected.table_index)" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                    <i class="fas fa-plus"></i>
+                                     Adicionar comanda
+                                  </a>
+                                </template>
+                              </template>
 
-                              <div class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
-                                <a class="dropdown-item" @click="print_order(selected.order)" style="font-size:15px;padding-left:15px;padding-right:5px;">
-                                  <i class="fas fa-print"></i>
-                                  Reimprimir pedido
-                                </a>
-                              </div>
+                              <template v-if="(selected.order && selected.order.status!=='CLOSED')">
 
-                              <div class="dropdown-divider"></div>
+                                <!--<template v-if="selected.order.was_sent">
+                                  <div class="dropdown-divider"></div>
+                                  <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                                    <a @click="view_order()" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                      <i class="fas fa-search"></i>
+                                      Visualizar pedido
+                                    </a>
+                                  </template>
+                                </template>-->
 
-                              <div class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
-                                <a class="dropdown-item" href="#" style="font-size:15px;padding-left:15px;padding-right:5px;">
-                                  <i class="fas fa-times"></i>
-                                  Cancelar pedido
-                                </a>
-                              </div>
+                                <template v-if="selected.order.was_sent">
+                                  <div class="dropdown-divider"></div>
+                                  <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                                    <a class="dropdown-item" @click="print_order(selected.order)" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                      <i class="fas fa-print"></i>
+                                      imprimir pedido
+                                    </a>
+                                  </template>
+                                </template>
+
+                                <template v-if="!(selected.order.was_sent)">
+                                  <div class="dropdown-divider"></div>
+                                  <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                                    <a class="dropdown-item" @click="cancel_item(selected.order_index, selected.order)" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                      <i class="fas fa-times"></i>
+                                      Cancelar item
+                                    </a>
+                                  </template>
+                                </template>
+
+                                <template v-if="selected.order.was_sent">
+                                  <div class="dropdown-divider"></div>
+                                  <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                                    <a class="dropdown-item" @click="change_status_item(selected.order_index, selected.order, 'CLOSED')" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                      <i class="fas fa-thumbs-up"></i>
+                                      Entregue
+                                    </a>
+                                  </template>
+                                </template>
+
+                              </template>
 
                             </div>
                             <div class="modal-footer">
@@ -452,12 +482,12 @@
                       <i class="fas fa-plus"></i><br><span style="font-size: 10px;">Adicionar</span>
                     </button>
 
-                    <button v-if="controls.screen.width>=1024" :disabled="!(selected.order && selected.command_index==command_index)" @click="print_order(selected.order)" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
-                      <i class="fas fa-print"></i><br><span style="font-size: 10px;">Imprimir</span>
+                    <button @click="prepare_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
+                      <i class="fas fa-print"></i><br><span style="font-size: 10px;">Enviar</span>
                     </button>
 
-                    <button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="repeat_order(command, command_index, selected.order)" data-toggle="modal" data-target="#OrderModal" style="line-height:1;height:38px;">
-                      <i class="fas fa-redo-alt"></i><br><span style="font-size:10px;">Repetir</span>
+                    <button :disabled="!(selected.order && !selected.order.was_sent && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="change_order(command, command_index, selected.order)" data-toggle="modal" data-target="#OrderModal" style="line-height:1;height:38px;">
+                      <i class="fas fa-pencil-alt"></i><br><span style="font-size:10px;">Alterar</span>
                     </button>
 
                     <!--<button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
@@ -469,7 +499,7 @@
                     </button>-->
 
                     <button type="button" class="btn btn-sm btn-light" @click="close_command(command, command_index)" style="line-height:1;height:38px;">
-                      <i class="fas fa-sign-out-alt"></i><br><span style="font-size:10px;">Encerrar</span>
+                      <i class="fas fa-sign-out-alt"></i><br><span style="font-size:10px;">Finalizar</span>
                     </button>
 
                     <!--<button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:110px;height:38px;"><span style="font-size:13px;font-weight:bold;">R$ {{ command.total }}</span><br><span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span></button>-->
@@ -519,9 +549,10 @@
                       <thead>
                         <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
                           <td style="text-align:left;border-top:none;">Produtos</td>
-                          <td style="text-align:center;border-top:none;"></td>
-                          <td style="text-align:center;border-top:none;"></td>
-                          <td style="text-align:center;border-top:none;">Quant</td>
+                          <td style="text-align:left;border-top:none;">Descrição</td>
+                          <td style="text-align:center;border-top:none;">Confirmado</td>
+                          <td style="text-align:center;border-top:none;">Status</td>
+                          <td style="text-align:center;border-top:none;">Quantidade</td>
                           <td style="text-align:center;border-top:none;">Preço</td>
                           <td style="text-align:center;border-top:none;">Total</td>
                         </tr>
@@ -531,7 +562,7 @@
                         <template v-for='(order, order_index) in command.orders'>
                           <tr :class="{'selected':order.show_options}" style="cursor:pointer;" @click="show_options(command_index, order, order_index)"><!-- data-toggle="modal" data-target="#command_item_options" -->
                             <td style="width:100px;">
-                              <img :src="'/media/'+order.image" style='width:90px;height:60px;object-fit:cover;' />
+                              <img :src="order.image" style='width:90px;height:60px;object-fit:cover;' />
                             </td>
 
                             <td style="line-height:1.1;">
@@ -543,7 +574,17 @@
                               <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
                             </td>
 
+                            <td style="line-height: 1.1; text-align: center; vertical-align: middle;">
+                              <template v-if="order.was_sent">
+                                <i class="fas fa-check" style="color: green;"></i>
+                              </template>
+                              <template v-else-if="!order.was_sent">
+                                <i class="fas fa-exclamation" style="color: orange;"></i>
+                              </template>
+                            </td>
+
                             <td style='width:40px;vertical-align:middle;text-align:center;'>
+
                               <template v-if="order.status=='WAITING'">
                                 AGUARDANDO
                               </template>
@@ -560,11 +601,11 @@
                                 CANCELADO
                               </template>
 
-                              <template v-else>
+                              <template v-else-if="order.status=='CLOSED'">
                                 ENTREGUE
                               </template>
 
-                              <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
+                              <template v-else-if="(controls.clock > order.expected_time && order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
                                 <span style="color:red;font-size:12px;"><b>ATRASADO</b></span>
                               </template>
                             </td>
@@ -578,7 +619,7 @@
                             </td>
 
                             <td style='width:110px;text-align:center;vertical-align:middle;'>
-                              <span style='font-size:18px;'>R$ {{ order.total | format_money }}</span>
+                              <span style='font-size:18px;'>R$ {{ order.price * order.quantity | format_money }}</span>
                             </td>
                           </tr>
 
@@ -674,43 +715,71 @@
                             </div>
                           </td>
                         </tr>-->
+
                         </template>
                       </tbody>
                     </template>
 
                     <template v-else>
                       <tbody>
-                        <template v-for='(order,index) in command.orders'>
-                          <tr class="no-border-first" :class="{'selected':order.show_options}" @click="show_options(command_index, order, index)" style="cursor:pointer;">
-                            <td colspan="4" style="padding-top:4px;padding-bottom:10px;line-height:1;">
-                              <span style="font-size:14px;">{{ order.quantity }} x {{ order.name }}</span><br>
+                        <template v-for='(order, order_index) in command.orders'>
+                          <tr class="no-border-first" :class="{'selected':order.show_options}" @click="show_options(command_index, order, order_index)" style="cursor:pointer; border-top: 2px solid #41464b;">
+                            <td colspan="4" style="padding-bottom:10px;">
+                              <div>
+                                <span style="font-size:14px;">{{ order.name }}</span>
+                              </div>
 
-                              <span style='font-size:12px;position:relative;top:2px;'>
-                                <span style="padding-right:8px;">
-                                  <i class="fas fa-arrow-up" style=""></i>
-                                  {{ order.checkin_time | format_time_short }}
+                              <div>
+                                <span style='font-size:12px;position:relative;top:2px;'>
+                                  <span style="padding-right:8px;">
+                                    <i class="fas fa-arrow-up" style=""></i>
+                                    {{ order.checkin_time | format_time_short }}
+                                  </span>
+
+                                  <span style="padding-right:8px;">
+                                    <template v-if="order.checkout==null">
+                                      <i class="fas fa-clock"></i>
+                                      {{ order.expected_time | format_time_short }}
+                                    </template>
+
+                                    <template v-else>
+                                      <i class="fas fa-arrow-down" style="color:green;"></i>
+                                      {{ order.checkout | format_time_short }}
+                                    </template>
+                                  </span>
+
+                                  <span style="">
+                                    <template v-if="(controls.clock < order.expected_time && order.status == 'WAITING')">
+                                      <span style="font-size:12px;">AGUARDANDO</span>
+                                    </template>
+
+                                    <template v-else-if="(controls.clock > order.expected_time && order.status!='CLOSED')">
+                                      <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
+                                    </template>
+
+                                    <template v-else-if="order.status == 'CLOSED'">
+                                      <span style="font-size:12px;">ENTREGUE</span>
+                                    </template>
+                                    <template v-else>
+                                      <span style="font-size:12px;">{{ order.status }}</span>
+                                    </template>
+                                  </span>
                                 </span>
+                              </div>
 
-                                <span style="padding-right:8px;">
-                                  <template v-if="order.checkout==null">
-                                    <i class="fas fa-clock"></i>
-                                    {{ order.expected_time | format_time_short }}
-                                  </template>
-
-                                  <template v-else>
-                                    <i class="fas fa-arrow-down" style="color:green;"></i>
-                                    {{ order.checkout | format_time_short }}
-                                  </template>
-                                </span>
-
-                                <span style="">
-                                  <template v-if="(controls.clock > order.expected_time) && (order.status=='WAITING' || order.status!='IN_PROGRESS' || order.status!='READY')">
-                                    <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
-                                  </template>
-                                </span>
-                              </span>
                             </td>
-                            <td colspan="2" style="text-align:right;">
+                            <td colspan="1" style="text-align:right;vertical-align: middle;">
+                              <template v-if="order.was_sent">
+                                <i class="fas fa-check" style="color: green;"></i>
+                              </template>
+                              <template v-else-if="!order.was_sent">
+                                <i class="fas fa-exclamation" style="color: orange;"></i>
+                              </template>
+                            </td>
+                            <td colspan="2" style="text-align:right;vertical-align: middle;">
+                              <span style="font-size:14px;">{{ order.quantity }}</span>
+                            </td>
+                            <td colspan="2" style="text-align:right;vertical-align: middle;">
                               <div @click="show_options(order)">{{ order.price | format_money}}</div>
                             </td>
                           </tr>
@@ -722,10 +791,13 @@
                         </template>
                       </tbody>
                     </template>
-                      <tr>
-                        <td colspan="4">Total</td>
-                        <td colspan="2" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
-                      </tr>
+
+                    <tr>
+                      <td colspan="4">Total</td>
+                      <td></td>
+                      <td colspan="4" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
+                    </tr>
+
                   </table>
                 </template>
 
@@ -738,6 +810,7 @@
                     <br>
                   </div>
                 </template>
+
               </div>
               <br>
             </template>
@@ -745,14 +818,34 @@
 
           <br><br>
         </div>
+
         <!--<div class="footer-panel" style="position:fixed;bottom:0;padding:6px;width: 100%;color:#ffffff;background:#202020;border-top: 2px solid #646464;">-->
+
         <div id="footer">
           <table id='footer-menu' style="width:100%;text-align:center;cursor:pointer;">
             <tr>
-              <td style="float: left;padding-left: 10px" :class="{'menu-active': !this.selected.table, 'menu-inactive': this.selected.table}" @click="view_tables()"><i class="fas fa-th-list"></i><br><span class="font-lobster" style="font-size:14px;"> Mesas</span></td>
-              <!--<td><i class="fas fa-history"></i><br><span class="font-lobster" style="font-size:14px;">Histórico</span></td>
-              <td><i class="fas fa-shopping-cart"></i><br><span class="font-lobster" style="font-size:14px;">Carrinho</span></td>-->
-              <td style="float: right;padding-right: 10px"><i class="fas fa-sign-out-alt"></i><br><span class="font-lobster" style="font-size:14px;">Finalizar</span></td>
+              <td style="float: left;padding-left: 10px" :class="{'menu-active': !this.selected.table, 'menu-inactive': this.selected.table}" @click="view_tables()">
+                <i class="fas fa-th-list"></i>
+                <br>
+                <span class="font-lobster" style="font-size:14px;"> Mesas</span>
+              </td>
+
+              <!--<td>
+                <i class="fas fa-history"></i>
+                <br>
+                <span class="font-lobster" style="font-size:14px;">Histórico</span>
+              </td>
+              <td>
+                <i class="fas fa-shopping-cart"></i>
+                <br>
+                <span class="font-lobster" style="font-size:14px;">Carrinho</span>
+              </td>-->
+
+              <td v-if="selected.table" style="float: right;padding-right: 10px">
+                <i class="fas fa-sign-out-alt"></i>
+                <br>
+                <span class="font-lobster" style="font-size:14px;">Finalizar</span>
+              </td>
             </tr>
 
             <!--<template v-if="controls.screen.width>=1024">
@@ -776,10 +869,10 @@
         </div>
 
         <div id="OrderModal" class="modal" tabindex="-1" role="dialog">
-          <div class="modal-dialog modal-lg" role="document">
+          <div class="modal-dialog modal-dialog-centered" role="document">
             <div v-if='selected.product' class="modal-content">
               <div class="modal-header" style='padding:0px;'>
-                <img :src="'/media/'+(forms.order.object.image||forms.order.object.image)" style='width:100%;height:150px;object-fit:cover;' />
+                <img :src="(forms.order.object.image||forms.order.object.image)" style='width:100%;height:150px;object-fit:cover;' />
               </div>
 
               <div class="order_decoration" :style="controls.styles.themes.active.order_decoration">
@@ -921,24 +1014,24 @@
                   <div class="float-left">
                     <div class="float-left">
                       <span style="font-size:10px;padding-left:4px;">Quantidade:</span><br>
-                      <select class='form-control form-control-sm' v-model="forms.order.object.quantity">
+                        <input class='form-control form-control-sm' type="text" v-model="forms.order.object.quantity">
+                      <!--<select class='form-control form-control-sm' v-model="forms.order.object.quantity">
                         <option value="1.00">1 unidade</option>
                         <option value="2.00">2 unidades</option>
                         <option value="3.00">3 unidades</option>
                         <option value="4.00">4 unidades</option>
                         <option value="5.00">5 unidades</option>
-                      </select>
+                      </select>-->
                     </div>
                   </div>
 
                   <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal"> X </button>-->
-                  <button type="button" class="btn btn-success" @click='save_order()' style="width:120px;line-height:1;margin-top:19px;float:right;font-family:arial;">
+                  <!--<button type="button" class="btn btn-success" @click='save_order()' style="width:120px;line-height:1;margin-top:19px;float:right;font-family:arial;">-->
+                  <button type="button" class="btn btn-success" @click='add_order()' style="width:120px;line-height:1;margin-top:19px;float:right;font-family:arial;">
                     Confirmar <i class="fas fa-arrow-right"></i>
                   </button>
                 </div>
               </div>
-
-
 
               <div class="modal-footer">
                 <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancelar</button>->
@@ -949,7 +1042,7 @@
           </div>
         </div>
 
-        <div id="update_command_client_modal" class="modal" tabindex="-1" role="dialog">
+        <!--<div id="update_command_client_modal" class="modal" tabindex="-1" role="dialog">
           <div class="modal-dialog modal-sm" role="document">
             <div class="modal-content">
               <div class="modal-header">
@@ -980,7 +1073,8 @@
               </div>
             </div>
           </div>
-        </div>
+        </div>-->
+
         {% endverbatim %}
       </div>
     </div>
@@ -1084,6 +1178,8 @@
                   implement_time: null,
                   duration_time: null,
                   status: null,
+                  was_sent: false,
+                  complements: null,
                   observations: null,
                 },
 
@@ -1110,6 +1206,7 @@
                 total: 0.00,
               },
               complements_backup: null,
+              cloned_order: null,
             },
 
             tables:[
@@ -1198,6 +1295,7 @@
             ],
 
             user: {},
+
             company: {
               name: "{{ company_name }}"
             }
@@ -1206,7 +1304,7 @@
         },
 
         filters: {
-          round: function(value){
+          round: function (value) {
             return value.toFixed(2);
           },
 
@@ -1219,7 +1317,8 @@
             }
 
             let final = [];
-            for(let word of value){
+
+            for (let word of value) {
               if(word.length > 2){
                 final.push(word.charAt(0).toUpperCase()+ word.slice(1));
               }
@@ -1233,21 +1332,59 @@
         },
 
         methods: {
-          filter_tables: function(option){
+          filter_tables: function (option) {
             this.selected.table_group = option;
           },
 
-          print_command: function(command){
-            window.open(`/api/sales/command/${command.code}/`, "_blank");
+          print_command: function (command) {
+            //window.open(`/api/sales/command/${command.code}/`, "_blank");
+            window.location.href = `/api/sales/commands/order/view/${command.code}/`;
           },
 
-          view_order: function(order){
-            window.open(`/api/sales/commands/order/view/${this.selected.order.id}/`, "_blank");
+          view_order: function (order) {
+            $('#MenuModal').modal('hide');
+            window.location.href = `/api/sales/commands/order/view/${this.selected.order.id}/`;
+            //window.open(`/api/sales/commands/order/view/${this.selected.order.id}/`, "_blank");
           },
 
-          print_order: function(order){
-            let data_paramters = {"order_id": order.id}
+          print_order: function (orders) {
             let scope = this;
+            let data_paramters = {};
+            let now = moment();
+            data_paramters["checkin_time"] = now.format();
+            data_paramters["table_id"] = scope.selected.table.id
+            data_paramters["command_id"] = scope.selected.command.id;
+            data_paramters["attendant_name"] = scope.user.first_name;
+            data_paramters["orders"] = JSON.stringify(orders);
+
+            success_function = function () {
+              swal({
+                title: scope.company.name,
+                text: "Pedido enviado para cozinha com sucesso!",
+                icon: "success",
+                button: false,
+                timer: 3000
+              });
+
+              $('#MenuModal').modal('hide');
+            }
+
+            failure_function = function () {
+              swal({
+                title: scope.company.name,
+                text: "Erro! Não foi possivel enviar o pedido para cozinha!",
+                icon: "warning",
+                button: false,
+                timer: 3000
+              })
+            }
+
+            this.request('/api/sales/commands/order/print/', "post", data_paramters, null, success_function, failure_function);
+          },
+
+          print_order_command: function(){
+            let scope = this;
+            let data_paramters = {"command_id": scope.selected.command.id}
             success_function = function(){
               swal({
                 title: scope.company.name,
@@ -1255,7 +1392,9 @@
                 icon: "success",
                 button: false,
                 timer: 3000
-              })
+              });
+
+              $('#MenuModal').modal('hide');
             }
 
             failure_function = function(){
@@ -1271,25 +1410,27 @@
             this.request('/api/sales/commands/order/print/', "post", data_paramters, null, success_function, failure_function);
           },
 
-          confirm_item: function(item){
+          confirm_item: function (item) {
             alert("confirmei");
           },
 
-          confirm_new_itens: function(){
+          confirm_new_itens: function () {
             let scope = this;
+
             for (index in this.selected.new_products) {
               var value = this.selected.new_products[index];
               value.is_confirmed = true;
               this.selected.table.products.unshift(value);
             }
+
             this.selected.new_products = [];
           },
 
-          show_options: function(command_index , order, order_index){
+          show_options: function (command_index , order, order_index) {
             if(this.selected.order){
               if(this.selected.order.id==order.id){
                 this.selected.table.commands[command_index].orders[order_index].show_options = false;
-                this.selected.command_index = null;
+                // this.selected.command_index = null;
                 this.selected.order_index = null;
                 this.selected.order = null;
               }
@@ -1309,48 +1450,180 @@
             }
           },
 
-          open_client_name_field: function(){
+          open_client_name_field: function () {
             this.forms.command.change_client_name = true;
           },
 
-          confirm_client_name_field: function(){
+          confirm_client_name_field: function () {
             this.forms.command.change_client_name = false;
           },
 
-          save_order: function(){
+          get_prevision_duration: function () {
+            let hours = Math.random() * 2 | 0;
+            let minutes = Math.random() * 59 | 0;
+            let seconds = Math.random() * 59 | 0;
+            return moment.duration({hours: hours, minutes: minutes, seconds: seconds})
+          },
+
+          add_order: function () {
+            let scope = this;
+            scope.forms.order.object.complements = scope.check_complements(scope.complements, scope.complements_backup);
+
+            if (!scope.selected.command.orders) {
+              scope.selected.command.orders = [];
+            }
+
+            let now = moment();
+            let duration = scope.get_prevision_duration();
+            scope.forms.order.object.checkin_time = now.format();
+            scope.forms.order.object.checkout_time = null;
+            scope.forms.order.object.waiting_time = null;
+            scope.forms.order.object.implement_time = null;
+            scope.forms.order.object.status = "WAITING";
+            scope.forms.order.object.was_sent = false;
+
+            scope.forms.order.object.duration_time = {
+              hours: duration.hours(), minutes: duration.minutes(), seconds: duration.seconds()
+            };
+
+            scope.forms.order.object.expected_time = now.add({
+              hours: duration.hours(), minutes: duration.minutes(), seconds: duration.seconds()
+            }).format();
+
+            if (scope.selected.cloned_order) {
+              Vue.set(scope.selected.command.orders, scope.selected.order_index, scope.forms.order.object);
+              scope.selected.cloned_order = null;
+            } else {
+              scope.selected.command.orders.unshift(scope.forms.order.object);
+            }
+
+            scope.selected.command.total = scope.calculate_command_total();
+            scope.selected.table.total = scope.calculate_table_total();
+
+            scope.selected.group = null;
+            scope.selected.product = null;
+            // scope.selected.command = null;
+            scope.selected.new_product = null;
+            scope.selected.complements.total = 0.00;
+            scope.selected.new_products.splice(0, scope.selected.new_products.length);
+
+            for (index in scope.complements) {
+              scope.complements[index].quant = 0;
+            }
+
+            $('#OrderModal').modal('hide');
+          },
+
+          calculate_command_total: function () {
+            let scope = this;
+            let total = 0;
+
+            for (index in scope.selected.command.orders) {
+              total += scope.selected.command.orders[index].price * scope.selected.command.orders[index].quantity;
+            }
+            return parseFloat(total);
+          },
+
+          calculate_table_total: function () {
+            let scope = this;
+            let total = 0;
+
+            for (index in scope.selected.table.commands) {
+              total += scope.selected.table.commands[index].total;
+            }
+
+            return parseFloat(total);
+          },
+
+          prepare_order: function () {
+            let scope = this;
+            let data_paramters = {};
+            let list_items = [];
+            let list_indexes = [];
+
+            if (scope.selected.command_index >= 0) {
+              for (index in scope.selected.table.commands[scope.selected.command_index].orders) {
+                if (!scope.selected.table.commands[scope.selected.command_index].orders[index].was_sent){
+                  list_items.unshift(scope.selected.table.commands[scope.selected.command_index].orders[index]);
+                  list_indexes.unshift(index);
+                }
+              }
+            }
+
+            if (list_items.length > 0) {
+              data_paramters["items"] = JSON.stringify(list_items);
+              data_paramters['command_id'] = scope.selected.table.commands[scope.selected.command_index].id;
+              data_paramters['complements_total'] = scope.selected.complements.total;
+
+              console.log(JSON.stringify(data_paramters));
+
+              let success_function = function (response) {
+                response.object.show_options = false;
+                console.log(JSON.stringify(response.object.items));
+                let list_items_id = [];
+
+                for (index in response.object.items) {
+                  list_items_id.unshift(response.object.items[index].id);
+                }
+
+                for (index in list_items) {
+                  Vue.set(scope.selected.command.orders, index, response.object.items[index]);
+                }
+
+                scope.print_order(response.object);
+
+                swal({
+                  title: scope.company.name,
+                  text: "Pedido anotado e diponível para ser enviado a cozinha.",
+                  icon: "success",
+                  button: false,
+                  timer: 1000
+                })
+              };
+
+              let failure_function = function (response) {
+                swal({
+                  title: scope.company.name,
+                  text: "Erro! Não foi possivel gerar o pedido.",
+                  icon: "warning",
+                  button: false,
+                  timer: 1000
+                })
+
+                return false;
+              };
+
+              this.request('/api/sales/commands/order/save/', "post", data_paramters, null, success_function, failure_function);
+            }
+          },
+
+          save_order: function () {
             let scope = this;
             let data_paramters = {};
             let complements = scope.check_complements(scope.complements, scope.complements_backup);
             console.log(JSON.stringify(complements));
+
+            data_paramters = scope.forms.order.object;
             data_paramters['command_id'] = scope.selected.command.id;
-            data_paramters['product_id'] = scope.selected.product.id;
-            data_paramters['name'] = scope.selected.product.name;
-            data_paramters['image'] = scope.selected.product.image;
-            data_paramters['price'] = scope.selected.product.price;
-            data_paramters['quantity'] = scope.forms.order.object.quantity;
-            data_paramters['total'] = scope.selected.product.price * scope.forms.order.object.quantity;
+            data_paramters['orders_total'] = scope.selected.product.price * scope.forms.order.object.quantity;
             data_paramters['complements_total'] = scope.selected.complements.total;
             data_paramters['complements'] = JSON.stringify(complements);
-            data_paramters['checkin_time'] = null;
-            data_paramters['checkout_time'] = null;
-            data_paramters['waiting_time'] = null;
-            data_paramters['implement_time'] = null;
-            data_paramters['duration_time'] = null;
-            data_paramters['status'] = null;
-            data_paramters['observations'] = scope.forms.order.object.observations;
-            let success_function = function(response) {
-              //scope.print_order(response.object);  AINDA ESTOU PENSANDO SE ISSO SERÁ AUTOMÁTICO ...
-              swal({
+
+            let success_function = function (response) {
+              /*swal({
                 title: scope.company.name,
                 text: "Pedido anotado e diponível para ser enviado a cozinha.",
                 icon: "success",
                 button: false,
-                timer: 5000
-              })
+                timer: 2000
+              })*/
+
               response.object.show_options = false;
+
               if (!scope.selected.command.orders) {
                 scope.selected.command.orders = [];
               }
+
               scope.selected.command.orders.unshift(response.object);
               console.log(JSON.stringify(response.object));
 
@@ -1359,14 +1632,18 @@
               scope.selected.new_product = null;
               scope.selected.new_products.splice(0, scope.selected.new_products.length);
               scope.selected.complements.total = 0.00;
+
               for (index in scope.complements) {
                 scope.complements[index].quant = 0;
               }
+
               scope.selected.group = null;
+              scope.selected.product = null;
+              scope.selected.command = null;
               $('#OrderModal').modal('hide');
             };
 
-            let failure_function = function(response) {
+            let failure_function = function (response) {
               swal({
                 title: scope.company.name,
                 text: "Erro! Não foi possivel gerar o pedido.",
@@ -1380,21 +1657,30 @@
             this.request('/api/sales/commands/order/save/', "post", data_paramters, null, success_function, failure_function);
           },
 
-          select_item: function(command, item){
+          select_item: function (command, item) {
             this.selected.command = command;
-            this.selected.product = {'id':parseInt(item.product), 'code':'0', 'name':item.name, 'image':item.image, 'price':item.price, 'quantity':1, 'description':'', 'have_promotion':true, 'is_confirmed':false, 'show_options':false};
+            this.selected.product["code"] = 0;
+            this.selected.product["id"] = parseInt(item.product)
+            this.selected.product["name"] = item.name
+            this.selected.product["image"] = item.image
+            this.selected.product["price"] = item.price
+            this.selected.product["quantity"] = 1
+            this.selected.product["description"] = ""
+            this.selected.product["have_promotion"] = true
+            this.selected.product["is_confirmed"] = false
+            this.selected.product["show_options"] = false
           },
 
-          unselect_item: function(item){
+          unselect_item: function (item) {
             this.selected.item = null;
           },
 
-          increase_complement: function(complement, index){
+          increase_complement: function (complement, index) {
             this.complements[index].quant += 1
             this.selected.complements.total += this.complements[index].price;
           },
 
-          decrease_complement: function(complement, index){
+          decrease_complement: function (complement, index) {
             if(this.complements[index].quant > 0){
               this.complements[index].quant -= 1
               this.selected.complements.total -= this.complements[index].price;
@@ -1418,19 +1704,36 @@
                 this.controls.screen.fullscreen_mode = false;
               }
             }
+
           },
 
-          init_complements: function(){
+          init_complements: function() {
 
           },
 
           view_tables: function () {
-            history.go(0);
+            let scope = this;
+
+            if (scope.selected.command && scope.check_unsent_orders()) {
+              swal({
+                title: scope.company.name,
+                text: "Existem pedidos que não foram confirmados, deseja mesmo continuar ???",
+                icon: "warning",
+                buttons: true,
+              }).then((close) => {
+                if (close) {
+                  history.go(0);
+                }
+              })
+            } else {
+              history.go(0);
+            }
+
           },
 
-          back_menu: function(){
+          back_menu: function () {
             if(this.selected.product){
-              $('#OrderModal').modal('hide');
+               //$('#OrderModal').modal('hide');
               this.selected.product = null;
               history.pushState(null, document.title, location.href);
             }
@@ -1451,28 +1754,48 @@
               this.selected.table = null;
               history.pushState(null, document.title, location.href);
             }
+
             else{
               this.view_tables();
             }
-            history.pushState(null, document.title, location.href);
+            //history.pushState(null, document.title, location.href);
           },
 
-          open_menu: function(command, index){
+          open_menu: function (command, index) {
             this.selected.command = command;
             this.selected.new_product = true;
             this.selected.command_index = index;
           },
 
-          repeat_order: function(command, command_index, order){
-            let cloned_order = JSON.parse(JSON.stringify(order));
-            this.forms.order.object = cloned_order;
-            this.selected.command = command;
-            this.selected.product = order;
-            this.selected.product.id = order.product;
+          change_order: function (command, command_index, order) {
+            let scope = this;
+            scope.selected.cloned_order = JSON.parse(JSON.stringify(order));
+            scope.forms.order.object = scope.selected.cloned_order;
+            scope.selected.command = command;
+            scope.selected.product = order;
+            scope.selected.product.id = order.product;
+          },
+
+          change_status_item: function (index, order, status) {
+            let scope = this;
+            let item_id = order.id
+            let data_paramters = {}
+            let success_function = function (response) {
+              //scope.selected.command.order.unshift(response.object);
+              Vue.set(scope.selected.command.orders, index, response.object);
+              $('#MenuModal').modal('hide');
+            };
+
+            let failure_function = function (response) {
+              //;
+            };
+
+            this.request(`/api/sales/commands/orders/item/${item_id}/status/${status}/change/`, "post", data_paramters, null, success_function, failure_function)
           },
 
           load_tables: function () {
             let scope = this;
+
             let success_function = function(response) {
               scope.tables = response.object;
             };
@@ -1488,14 +1811,16 @@
             let scope = this;
             let data_paramters = {'table_id': table.id}
 
-            let success_function = function(response) {
+            let success_function = function (response) {
               Vue.set(scope.tables, index, response.object);
+
               if (!is_fake_new) {
                 scope.open_command(table, index);
               }
+
             };
 
-            let failure_function = function(response) {};
+            let failure_function = function (response) {};
 
             this.request('/api/sales/commands/tables/open/', "post", data_paramters, null, success_function, failure_function);
           },
@@ -1504,20 +1829,21 @@
             let scope = this;
             let data_paramters = {}
 
-            let success_function = function(response) {
+            let success_function = function (response) {
               scope.tables[index] = response.object;
             };
 
-            let failure_function = function(response) {
+            let failure_function = function (response) {
 
             };
 
             this.request(`/api/sales/commands/table/close/${table.id}/`, "post", data_paramters, null, success_function, failure_function);
           },
 
-          select_table: function(table, index){
+          select_table: function (table, index) {
             let scope = this;
-            if(table.status=='CLOSED'){
+
+            if (table.status === 'CLOSED') {
               swal({
                 title: scope.company.name,
                 text: `Abrir nova comanda na mesa ${table.code} ???`,
@@ -1530,28 +1856,34 @@
               });
 
             } else{
-              this.selected.table = table;
-              this.selected.table_index = index;
+              scope.selected.table = table;
+              scope.selected.table_index = index;
+              scope.selected.command_index = 0;
+              scope.selected.command = scope.selected.table.commands[scope.selected.command_index];
             }
           },
 
-          unselect_table: function(table){
+          unselect_table: function (table) {
             this.selected.table = null;
           },
 
-          open_command: function(table, table_index){
+          open_command: function (table, table_index) {
             let scope = this;
             let data_paramters = {'table_id':table.id}
 
-            let success_function = function(response) {
+            let success_function = function (response) {
               scope.tables[table_index].commands.push(response.object);
-              if(scope.selected.table==null){
+
+              if(scope.selected.table == null){
                 scope.selected.table = scope.tables[table_index];
                 scope.selected.table_index = table_index;
+                scope.selected.command_index = 0;
               }
+
+              $('#MenuModal').modal('hide');
             };
 
-            let failure_function = function(response) {
+            let failure_function = function (response) {
               swal({
                 title: scope.company.name,
                 text: "Erro! Não foi possivel abrir nova comanda.",
@@ -1564,77 +1896,102 @@
             this.request('/api/sales/commands/open/', "post", data_paramters, null, success_function, failure_function);
           },
 
-          close_command: function(command, index){
+          check_unsent_orders: function () {
+            let scope = this;
+
+            for (index in scope.selected.command.orders) {
+              if(!scope.selected.command.orders[index].was_sent){
+                return true;
+              }
+            }
+
+            return false;
+          },
+
+          close_command: function (command, index) {
             let scope = this;
             let data_paramters = {};
             let table = scope.selected.table;
             let table_index = scope.selected.table_index;
-            data_paramters["is_last_command"] = false;
-            if (scope.selected.table.commands.length == 1) {
-              data_paramters["is_last_command"] = true;
-            }
-            if(scope.selected.table.commands[index].status=='OPEN') {
+
+            if (scope.check_unsent_orders()) {
               swal({
                 title: scope.company.name,
-                text: `Deseja mesmo encerrar a comanda ${command.code} ???`,
+                text: "Existem pedidos que não foram confirmados!",
                 icon: "warning",
-                buttons: true,
-              }).then((close) => {
-                if (close) {
-                  let success_function = function(response) {
-                    scope.selected.table.commands.splice(index, 1);
-                    if (scope.selected.table.commands.length == 0) {
-                      swal({
-                        title: scope.company.name,
-                        text: `Sem comanda aberta, liberar mesa ${table.code} ???`,
-                        icon: "warning",
-                        buttons: true,
-                      }).then((open) => {
-                        if (open) {
-                          scope.view_tables();
-                        } else {
-                          scope.selected.table.total = 0.00;
-                        }
-                      });
-                    }
-                  };
-                  let failure_function = function(response) {
-                    //;
-                  };
-                  this.request(`/api/sales/commands/close/${command.id}/`, "post", data_paramters, null, success_function, failure_function);
-                }
-              });
+                button: false,
+                timer: 2000
+              })
+              return false;
+            } else {
+              data_paramters["is_last_command"] = false;
+              if (scope.selected.table.commands.length == 1) {
+                data_paramters["is_last_command"] = true;
+              }
+              if(scope.selected.table.commands[index].status=='OPEN') {
+                swal({
+                  title: scope.company.name,
+                  text: `Deseja mesmo finalizar a comanda ${command.code} ???`,
+                  icon: "warning",
+                  buttons: true,
+                }).then((close) => {
+                  if (close) {
+                    let success_function = function (response) {
+                      scope.selected.table.commands.splice(index, 1);
+                      if (scope.selected.table.commands.length == 0) {
+                        swal({
+                          title: scope.company.name,
+                          text: `Sem comanda aberta, liberar mesa ${table.code} ???`,
+                          icon: "warning",
+                          buttons: true,
+                        }).then((open) => {
+                          if (open) {
+                            scope.view_tables();
+                          } else {
+                            scope.selected.table.total = 0.00;
+                          }
+                        });
+                      }
+                    };
+                    let failure_function = function (response) {
+                      //;
+                    };
+                    this.request(`/api/sales/commands/close/${command.id}/`, "post", data_paramters, null, success_function, failure_function);
+                  }
+                });
+              }
             }
           },
 
           load_groups: function () {
             let scope = this;
-            let success_function = function(response) {
+            let success_function = function (response) {
               scope.groups = response.object;
             };
 
-            let failure_function = function(response) {
+            let failure_function = function (response) {
               return false;
             };
 
             this.request('/api/sales/commands/groups/load/', "get", null, null, success_function, failure_function);
           },
 
-          update_clock: function(){
+          update_clock: function() {
             //this.controls.clock = moment().utc().format();
             this.controls.clock = moment().format();
           },
 
-          check_complements: function(object, backup){
+          check_complements: function (object, backup) {
             let scope = this;
             let newObj = [];
-            $.each(object, function(key, value) {
+
+            $.each(object, function (key, value) {
               if (backup[key]["quant"] < value["quant"]) {
                 newObj[key] = object[key];
               }
             });
 
-            let filtered_object = newObj.filter(function(el) {
+            let filtered_object = newObj.filter(function (el) {
               return el;
             });
 
@@ -1644,7 +2001,7 @@
           get_user: function () {
             let scope = this;
             let data_parameters = {};
-            let success_function = function(response) {
+            let success_function = function (response) {
               scope.errors = response.message;
               scope.user = response.object;
               scope.user.password = '';
@@ -1653,7 +2010,7 @@
               //scope.controls.page.loaded = true;
             };
 
-            let failure_function = function(response) {
+            let failure_function = function (response) {
               window.location.href = "/sales/commands/login";
             };
 
@@ -1662,15 +2019,15 @@
         },
 
         computed: {
-          current_time: function(){
+          current_time: function () {
             if(this.controls.clock){
               return moment(String(this.controls.clock)).format('HH:mm:ss');
             }
           },
 
-          product_in_command: function(){
+          /*product_in_command: function () {
             let new_array = [];
-            this.selected.table.commands.products.forEach(function(item, chave){
+            this.selected.table.commands.products.forEach(function (item, chave) {
               if(item.quant > 0){
                 new_array.push(item);
               }
@@ -1680,7 +2037,8 @@
             });
             this.selected.table.products = new_array;
             return this.selected.table.products;
-          },
+          },*/
+
         },
 
         created: function () {
@@ -1697,14 +2055,14 @@
 
     <script>
       history.pushState(null, document.title, location.href);
-      window.addEventListener('popstate', function (event){
+      window.addEventListener('popstate', function (event) {
         app.back_menu();
       });
 
     </script>
 
     <script>
-      function success_notify() {
+      function success_notify () {
         //;
       };
 
@@ -1715,11 +2073,11 @@
         //register_action();
       }, false);
 
-      window.addEventListener('resize', function(e) {
+      window.addEventListener('resize', function (e) {
         app.verify_screen();
       });
 
-      var clock = setInterval(function(){
+      var clock = setInterval(function () {
         app.update_clock()
       }, 1000);
     </script>

@@ -6,6 +6,9 @@
 
 		<style>
 			#page-content {
+				display: block;
+				margin-left: auto;
+				margin-right: auto;
 				background: white;
 				width: 80mm;
 				font-family: Arial,Helvetica Neue,Helvetica,sans-serif;
@@ -35,7 +38,7 @@
 
 		<style>
 			body {
-				width: 80mm;
+				/*width: 80mm;*/
 				padding: 0px;
 				background:#ccc;
 			}
@@ -127,12 +130,12 @@
 					<tr>
 						<td style='padding-top:6px;padding-bottom:6px;width: 70px;text-align: center;'>
 							<div class='order-label'>MESA</div>
-							<div style="font-size:20px;padding:0px;">{{ order.table }}</div>
+							<div style="font-size:20px;padding:0px;">{{ order.table_id }}</div>
 						</td>
 
 						<td style='padding-top:6px;padding-bottom:6px;width: 100px;text-align: center;border-left:1px solid #ccc;border-right:1px solid #ccc;'>
 							<div class='order-label'>PEDIDO</div>
-							<div style="font-size:20px;padding:0px;">{{ order.id }}</div>
+							<div style="font-size:20px;padding:0px;">{{ order.order_id }}</div>
 						</td>
 
 						<td style='padding-top:6px;padding-bottom:6px;text-align: center;'>
@@ -144,26 +147,28 @@
 			</div>
 
 			<div id="page-body" style='line-height: 1.3;padding-top:10px;padding-bottom:0px;'>
+				{% for product in order.items %}
 				<div id='order-product'>
-					{{ order.quantity }} x {{ order.name }}
+					{{ product.quantity }} x {{ product.name }}
 				</div>
 
-				{% if order.complements %}
+				{% if product.complements %}
 				<div style="font-weight:bold;font-size:14px;padding:15px;padding-top:5px;padding-bottom:5px;border-bottom:1px solid #ccc;">
-				{% for complement in order.complements %}
+				{% for complement in product.complements %}
 					+ {{ complement.quant }} x {{ complement.name }}<br>
 				{% endfor %}
 				</div>
 				{% endif %}
 
-				{% if order.observations %}
+				{% if product.observations %}
 				<div style="padding-top:10px;line-height:1.5">Observações:<br>
 					<span style="margin-top:20px;font-weight:bold;font-size:14px;padding:15px;">
-					{{ order.observations }}
+					{{ product.observations }}
 					<br>
 					</span>
 				</div>
 				{% endif %}
+				{% endfor %}
 			</div>
 
 			<div id='order-barcode' style='border-top:1px solid #ccc;text-align: center;margin-top:10px;padding:10px;'>
