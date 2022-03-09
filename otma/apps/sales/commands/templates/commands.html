@@ -406,7 +406,7 @@
                                   <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
                                     <a class="dropdown-item" @click="print_order(selected.order)" style="font-size:15px;padding-left:15px;padding-right:5px;">
                                       <i class="fas fa-print"></i>
-                                      imprimir pedido
+                                      Reimprimir item
                                     </a>
                                   </template>
                                 </template>
@@ -478,6 +478,13 @@
                     </span>-->
                   </div>
                   <div class="float-right" style="text-align: right;position: relative;top: 0px;padding-right: 0px;">
+                    <button class="btn btn-sm btn-light" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="line-height: 1;height: 38px;">
+                      <i class="fas fa-print"></i><br><span style="font-size: 10px;">Reimprimir</span>
+                    </button>
+                    <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
+                      <button v-for="(order_id, order_index) in list_orders_id" class="dropdown-item" type="button" @click="reprint_order(order_id)">Pedido nº {{ order_id }}</button>
+                    </div>
+
                     <button type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height: 1;height: 38px;">
                       <i class="fas fa-plus"></i><br><span style="font-size: 10px;">Adicionar</span>
                     </button>
@@ -1298,7 +1305,9 @@
 
             company: {
               name: "{{ company_name }}"
-            }
+            },
+
+            list_orders_id: null,
 
           }
         },
@@ -1380,6 +1389,34 @@
             }
 
             this.request('/api/sales/commands/order/print/', "post", data_paramters, null, success_function, failure_function);
+          },
+
+          reprint_order: function (order) {
+            let scope = this;
+            let data_paramters = {};
+            success_function = function () {
+              swal({
+                title: scope.company.name,
+                text: "Pedido reenviado para cozinha com sucesso!",
+                icon: "success",
+                button: false,
+                timer: 3000
+              });
+
+              $('#MenuModal').modal('hide');
+            }
+
+            failure_function = function () {
+              swal({
+                title: scope.company.name,
+                text: "Erro! Não foi possivel reenviar o pedido para cozinha!",
+                icon: "warning",
+                button: false,
+                timer: 3000
+              })
+            }
+
+            this.request(`/api/sales/commands/order/reprint/${order}/`, "post", data_paramters, null, success_function, failure_function);
           },
 
           print_order_command: function(){
@@ -1559,7 +1596,15 @@
 
               let success_function = function (response) {
                 response.object.show_options = false;
+
                 console.log(JSON.stringify(response.object.items));
+                console.log(JSON.stringify(response.object));
+
+                if (!scope.list_orders_id) {
+                  scope.list_orders_id = [];
+                }
+                scope.list_orders_id.unshift(response.object.id);
+
                 let list_items_id = [];
 
                 for (index in response.object.items) {
@@ -1762,9 +1807,10 @@
           },
 
           open_menu: function (command, index) {
-            this.selected.command = command;
-            this.selected.new_product = true;
-            this.selected.command_index = index;
+            let scope = this;
+            scope.selected.command = command;
+            scope.selected.new_product = true;
+            scope.selected.command_index = index;
           },
 
           change_order: function (command, command_index, order) {
@@ -1860,6 +1906,15 @@
               scope.selected.table_index = index;
               scope.selected.command_index = 0;
               scope.selected.command = scope.selected.table.commands[scope.selected.command_index];
+              scope.list_orders_id = [];
+              let before_id = null;
+              for (index in scope.selected.command.orders) {
+                if (before_id !== scope.selected.table.commands[scope.selected.command_index].orders[index].order) {
+                  before_id = scope.selected.table.commands[scope.selected.command_index].orders[index].order;
+                  scope.list_orders_id.unshift(before_id);
+                }
+              }
+
             }
           },
 

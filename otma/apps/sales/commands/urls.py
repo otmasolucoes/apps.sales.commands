@@ -18,6 +18,7 @@ urlpatterns = [
 
     url(r'^order/save/$', OrderController().save),
     url(r'^order/print/$', OrderController().print),
+    url(r'^order/reprint/(?P<id>\d+)/$', OrderController().reprint),
     url(r'^order/pdf/(?P<id>\d+)/$', OrderController().create_pdf),
     url(r'^order/view/(?P<id>\d+)/$', OrderController().view),
     url(r'^orders/load/$', OrderController().load_orders),

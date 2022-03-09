@@ -548,31 +548,51 @@ class OrderController(BaseController):
         media_path = "media/orders/"
         resquest_order = json.loads(json.dumps(request.POST))
         order = json.loads(resquest_order.get("orders"))
-        if len(order["items"]) > 0:
-            response_order = {}
-            response_order["order"] = {}
-            response_order["order"]["items"] = order["items"]
-            response_order["order"]["total_height"] = 120
-            response_order["order"]["company_name"] = profile.COMPANY_NAME
-            response_order["order"]["checkin_time"] = datetime.now()
-            response_order["order"]["table_id"] = resquest_order.get('table_id')
-            response_order["order"]["attendant_name"] = resquest_order.get("attendant_name") \
-                                                        or request.user.first_name
-            response_order["order"]["order_id"] = order["id"]
-            response_order["order"]["barcode"] = order["barcode"]
+        reprint = False
+        if order.get("items"):
+            items = order["items"]
+        else:
+            items = [order]
+            reprint = True
+        response_order = {}
+        response_order["order"] = {}
+        response_order["order"]["items"] = items
+        response_order["order"]["total_height"] = 120
+        response_order["order"]["company_name"] = profile.COMPANY_NAME
+        response_order["order"]["checkin_time"] = datetime.now()
+        response_order["order"]["table_id"] = resquest_order.get('table_id')
+        response_order["order"]["attendant_name"] = resquest_order.get("attendant_name") \
+                                                    or request.user.first_name
+        response_order["order"]["order_id"] = order["id"] if not reprint else order["order"]
+        response_order["order"]["barcode"] = order["barcode"] if not reprint else ""
 
-            respone_content = HttpResponse(content_type='application/pdf')
-            data_object = generate_pdf('order_pdf.html',
-                                  file_object=respone_content,
-                                  context=response_order).getvalue()
-            file_name = os.path.join(media_path, f'{str(order["id"])}.pdf')
-            with open(file_name, 'wb') as file:
-                file.write(data_object)
-                command_line = f'cat {file_name} | lpr -P {profile.PRINTER_CONFIG.get("name")}'
-                result_print = run_command(command_line)
-            return self.response({"result": True, "object": None, "message": "Order was printed"})
+        respone_content = HttpResponse(content_type='application/pdf')
+        data_object = generate_pdf('order_pdf.html',
+                              file_object=respone_content,
+                              context=response_order).getvalue() #
+        file_name = os.path.join(media_path, f'{str(order["id"])}.pdf' if not reprint else \
+            f'reprint-item-order-{str(order["order"])}.pdf')
+        with open(file_name, 'wb') as file:
+            file.write(data_object)
+            command_line = f'cat {file_name} | lpr -P {profile.PRINTER_CONFIG.get("name")}'
+            result_print = run_command(command_line)
 
-        return self.response({"result": False, "object": None, "message": "Object not found"})
+        return self.response(result_print)
+
+    def reprint(self, request, id=None):
+        self.start_process(request)
+        order_id = id or request.POST["order_id"]
+        order = Order.objects.filter(pk=int(order_id))
+        media_path = "media/orders/"
+        result_print = None
+        if not os.path.exists(media_path):
+            os.makedirs(media_path)
+        if order.count() > 0:
+            file_name = os.path.join(media_path, f"{str(order_id)}.pdf")
+            command = f'cat {file_name} | lpr -P {profile.PRINTER_CONFIG.get("name")}'
+            print(command)
+            result_print = run_command(command)
+        return self.response(result_print)
 
     def printer(self, request, id=None):
         self.start_process(request)
