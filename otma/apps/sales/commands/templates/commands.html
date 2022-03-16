@@ -478,7 +478,7 @@
                     </span>-->
                   </div>
                   <div class="float-right" style="text-align: right;position: relative;top: 0px;padding-right: 0px;">
-                    <button class="btn btn-sm btn-light" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="line-height: 1;height: 38px;">
+                    <button :disabled="!(selected.order && !selected.order.was_sent && selected.command_index==command_index)" class="btn btn-sm btn-light" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="line-height: 1;height: 38px;">
                       <i class="fas fa-print"></i><br><span style="font-size: 10px;">Reimprimir</span>
                     </button>
                     <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
