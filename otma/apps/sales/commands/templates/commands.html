@@ -1642,6 +1642,13 @@
             }
           },
 
+          cancel_item: function (order_index, order) {
+            let scope = this;
+            scope.selected.command.orders.splice(order_index, 1);
+            scope.selected.order = null;
+            $('#MenuModal').modal('hide');
+          },
+
           save_order: function () {
             let scope = this;
             let data_paramters = {};
