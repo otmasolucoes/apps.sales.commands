@@ -55,7 +55,7 @@
       /* Presentational styles */
       html, body {
         background-image: url("/static/apps/sales/commands/images/background-sm.png");
-        line-height: 1.4;
+        /*line-height: 1.4;*/
         font-family: Tahoma, Geneva, sans-serif;
         margin: 0;
         padding: 0;
@@ -79,7 +79,7 @@
       }
 
       #consumed_products td {
-        padding:10px;
+        padding:0px;
       }
 
 
@@ -328,14 +328,13 @@
             <div>
               <h6 style="background:white;padding-right:5px;">
                 <div class="row">
-                  <div class="col-6 col-md-6 float-left" style="position:relative;top:0px;">
+                  <div class="col-4 col-md-4 float-left" style="position: relative;top: 0px;padding-top: 5px;">
                     <div class="dropdown">
                       <!--<button class="btn btn-sm btn-light" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="false" aria-expanded="false">-->
 
                       <button class="btn btn-sm btn-light" type="button" data-toggle="modal" data-target="#MenuModal">
                         <i class="fas fa-bars"></i>
                       </button>
-                      <span style="position:relative;top:2px;font-size: 20px">Mesa {{ selected.table.code }}</span>
 
                       <!--<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
                         <a class="dropdown-item" href="#" style="font-size:12px;padding-left:15px;padding-right:5px;" @click="open_command(selected.table, selected.table_index)"><i class="fas fa-plus"></i> Adicionar comanda</a>
@@ -344,6 +343,7 @@
                         <a class="dropdown-item" @click="print_order(selected.order)" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-print"></i> Reimprimir pedido</a>
                         <a class="dropdown-item" href="#" style="cursor:pointer;font-size:12px;padding-left:15px;padding-right:5px;"><i class="fas fa-times"></i> Cancelar pedido</a>
                       </div>-->
+
                       <div class="modal fade" id="MenuModal" tabindex="-1" role="dialog">
                         <div class="modal-dialog modal-dialog-centered">
                           <div class="modal-content">
@@ -424,7 +424,7 @@
                                 <template v-if="selected.order.was_sent">
                                   <div class="dropdown-divider"></div>
                                   <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
-                                    <a class="dropdown-item" @click="change_status_item(selected.order_index, selected.order, 'CLOSED')" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                                    <a class="dropdown-item" @click="delivered_item(selected.order_index, selected.order, 'CLOSED')" style="font-size:15px;padding-left:15px;padding-right:5px;">
                                       <i class="fas fa-thumbs-up"></i>
                                       Entregue
                                     </a>
@@ -447,8 +447,13 @@
                       </div>
                     </div>
                   </div>
-                  <div class="col-6 col-md-6" style="text-align: right">
-                    <span style="position:relative;left:-10px;top:7px;color:#777;font-family:Arial;font-size: 20px">R$ {{ selected.table.total | format_money }}</span>
+
+                  <div class="col-4 col-md-4" style="padding-top: 5px;">
+                    <span style="position:relative;top:2px;font-size: 20px">Mesa {{ selected.table.code }}</span>
+                  </div>
+
+                  <div class="col-4 col-md-4" style="text-align: right">
+                    <span style="position:relative;top:7px;color:#777;font-family:Arial;font-size: 20px">R$ {{ selected.table.total | format_money }}</span>
                   </div>
                 </div>
               </h6>
@@ -464,10 +469,11 @@
               <div style="padding-top: 10px;"></div>
 
               <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #ddd;padding-bottom: 100px;">
-                <div style="height:50px;padding-bottom:70px;border-bottom:1px solid #ddd;">
-                  <div class="top: 15px; width: 10%;">
+                <div style="height:50px;padding-bottom:50px;border-bottom:1px solid #ddd;">
+
+                  <!--<div class="top: 15px; width: 10%;">
                     Comanda {{ command.code }}<br>
-                    <!--<span style="font-size:12px;color:#666;">
+                    <!-<span style="font-size:12px;color:#666;">
                       Cliente não identificado
                       <template v-if="command.client">{{ command.client }}</template>
                       <template v-else>
@@ -475,12 +481,18 @@
                         <a v-else style="cursor:pointer;">Identificar cliente</a><-- data-toggle="modal" href="#update_command_client_modal" >
                       </template>
                       <template v-if="controls.screen.width>600">Entrada:</template>{{ command.checkin_time | format_datetime }}
-                    </span>-->
-                  </div>
+                    </span>->
+                  </div>-->
+
                   <div class="float-right" style="text-align: right;position: relative;top: 0px;padding-right: 0px;">
+                    <button :disabled="!(selected.order &&selected.command_index==command_index)" class="btn btn-sm btn-light" type="button" style="line-height: 1;height: 38px;"  data-toggle="modal" data-target="#StatusModal" aria-haspopup="true" aria-expanded="false">
+                      <i class="fas fa-info-circle"></i><br><span style="font-size: 10px;">Status</span>
+                    </button>
+
                     <button :disabled="!(selected.order && !selected.order.was_sent && selected.command_index==command_index)" class="btn btn-sm btn-light" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="line-height: 1;height: 38px;">
                       <i class="fas fa-print"></i><br><span style="font-size: 10px;">Reimprimir</span>
                     </button>
+
                     <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
                       <button v-for="(order_id, order_index) in list_orders_id" class="dropdown-item" type="button" @click="reprint_order(order_id)">Pedido nº {{ order_id }}</button>
                     </div>
@@ -730,12 +742,14 @@
                     <template v-else>
                       <tbody>
                         <template v-for='(order, order_index) in command.orders'>
-                          <tr class="no-border-first" :class="{'selected':order.show_options}" @click="show_options(command_index, order, order_index)" style="cursor:pointer; border-top: 2px solid #41464b;">
-                            <td colspan="4" style="padding-bottom:10px;">
-                              <div>
-                                <span style="font-size:14px;">{{ order.name }}</span>
-                              </div>
+                          <tr class="no-border" :class="{'selected':order.show_options}" @click="show_options(command_index, order, order_index)" style="cursor:pointer; border-top: 2px solid #41464b;">
+                            <td colspan="12" style="border-bottom-width: 0px;">
+                              <template>
+                                <span style="font-size:14px;font-weight: bold;">{{ order.name }}</span>
+                              </template>
+                            </td>
 
+                            <!--<td colspan="4" style="padding-bottom:10px;">
                               <div>
                                 <span style='font-size:12px;position:relative;top:2px;'>
                                   <span style="padding-right:8px;">
@@ -773,21 +787,55 @@
                                   </span>
                                 </span>
                               </div>
+                            </td>-->
 
-                            </td>
-                            <td colspan="1" style="text-align:right;vertical-align: middle;">
+                          </tr>
+                          <tr class="no-border-first" :class="{'selected':order.show_options}">
+                            <td colspan="2" style="vertical-align: middle;">
                               <template v-if="order.was_sent">
-                                <i class="fas fa-check" style="color: green;"></i>
+                                  <span style="padding-right:8px;font-size:14px;">
+                                    <!--<i class="fas fa-arrow-up" style=""></i>-->
+                                    Ped: {{ order.checkin_time | format_time_short }}
+                                  </span>
                               </template>
                               <template v-else-if="!order.was_sent">
-                                <i class="fas fa-exclamation" style="color: orange;"></i>
+                                <!-- NADA AQUI -->
+                              </template>
+                            </td>
+                            <td colspan="2" style="vertical-align: middle;">
+                              <!--<template v-if="order.was_sent">
+                                    <template v-if="order.checkout==null">
+                                      <!-<i class="fas fa-arrow-down"></i>->
+                                      Entr: {{ order.expected_time | format_time_short }}
+                                    </template>
+                              </template>
+                              <template v-else-if="!order.was_sent">
+                                <!- NADA AQUI ->
+                              </template>-->
+                              <!--<template v-else-if="(controls.clock > order.expected_time && order.status!='CLOSED')">
+                                <span style="color:#a60e0e;font-size:12px;">ATRASADO</span>
+                              </template>-->
+                              <template v-if="order.status == 'WAITING'">
+                                <span style="font-size:14px;"></span>
+                              </template>
+                              <template v-else-if="order.status == 'IN_PROGRESS'">
+                                <span style="font-size:14px;">PREPARANDO</span>
+                              </template>
+                              <template v-else-if="order.status == 'READY'">
+                                <span style="font-size:14px;">PRONTO</span>
+                              </template>
+                              <template v-else-if="order.status == 'CLOSED'">
+                                <span style="font-size:14px;">Entr: {{ order.expected_time | format_time_short }}</span>
+                              </template>
+                              <template v-else>
+                                <span style="font-size:14px;">{{ order.status }}</span>
                               </template>
                             </td>
                             <td colspan="2" style="text-align:right;vertical-align: middle;">
                               <span style="font-size:14px;">{{ order.quantity }}</span>
                             </td>
-                            <td colspan="2" style="text-align:right;vertical-align: middle;">
-                              <div @click="show_options(order)">{{ order.price | format_money}}</div>
+                            <td colspan="2" style="text-align:right;vertical-align: middle;font-weight: bold;">
+                              <div>{{ order.price | format_money}}</div>
                             </td>
                           </tr>
 
@@ -1044,6 +1092,40 @@
                 <!--<button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancelar</button>->
                 <button type="button" class="btn btn-sm btn-success" @click='save_order()' style="font-family:arial;">Confirmar</button>
                 -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal fade" id="StatusModal" tabindex="-1" role="dialog">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h4>Status</h4>
+              </div>
+              <div class="modal-body">
+                <template v-if="selected.order">
+                  <template>
+                    <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                      <a class="dropdown-item" @click="change_status_order('IN_PROGRESS')" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                        <i class="fa fa-spinner fa-spin"></i>
+                        PREPARANDO
+                      </a>
+                    </template>
+                  </template>
+
+                  <template>
+                    <div class="dropdown-divider"></div>
+                    <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
+                      <a class="dropdown-item" @click="change_status_order('READY')" style="font-size:15px;padding-left:15px;padding-right:5px;">
+                        <i class="fa fa-check-square"></i>
+                        PRONTO
+                      </a>
+                    </template>
+                  </template>
+                </template>
+              </div>
+              <div class="modal-footer">
               </div>
             </div>
           </div>
@@ -1419,10 +1501,10 @@
             this.request(`/api/sales/commands/order/reprint/${order}/`, "post", data_paramters, null, success_function, failure_function);
           },
 
-          print_order_command: function(){
+          print_order_command: function() {
             let scope = this;
             let data_paramters = {"command_id": scope.selected.command.id}
-            success_function = function(){
+            success_function = function() {
               swal({
                 title: scope.company.name,
                 text: "Pedido enviado para cozinha com sucesso!",
@@ -1829,7 +1911,28 @@
             scope.selected.product.id = order.product;
           },
 
-          change_status_item: function (index, order, status) {
+          change_status_order: function (status) {
+            let scope = this;
+            let item_id = scope.selected.order.id;
+            let data_paramters = {};
+            scope.selected.order.status = status;
+            $('#StatusModal').modal('hide');
+            alert(`VOU MUDAR O STATUS PARA ${status}`);
+
+            let success_function = function (response) {
+              //scope.selected.command.order.unshift(response.object);
+              Vue.set(scope.selected.command.orders, index, response.object);
+              $('#MenuModal').modal('hide');
+            };
+
+            let failure_function = function (response) {
+              //
+            };
+
+            this.request(`/api/sales/commands/orders/item/${item_id}/status/${status}/change/`, "post", data_paramters, null, success_function, failure_function)
+          },
+
+          delivered_item: function (index, order, status) {
             let scope = this;
             let item_id = order.id
             let data_paramters = {}

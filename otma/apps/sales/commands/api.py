@@ -205,9 +205,9 @@ class CommandController(BaseController):
                      f'{command.client_document if command.client_document else "00000000000"}|' \
                      f'{command.checkin_time.strftime("%Y-%m-%d %H:%M:%S")}|'
         create_file = CommunicationController().write_txt_file(data=first_line,
-                                             file_name='comanda' + str(command.id),
-                                             out_folder_path=profile.MELINUX_INTEGRATION_PATH,
-                                             mode='a')
+                                                               file_name='comanda' + str(command.id),
+                                                               out_folder_path=profile.MELINUX_INTEGRATION_PATH,
+                                                               mode='a')
         for order in orders['object']:
             items = MenuProductController().load_by_id(request, order['product'], is_response=False)
             complements = OrderController().complements_by_order(request, order["id"], is_response=False)
@@ -216,14 +216,14 @@ class CommandController(BaseController):
             for item in items['object']:
                 data = f'{item["code"]}|{order["quantity"]}|{item["price"]}|'
                 create_file = CommunicationController().write_txt_file(data=data,
-                                                     file_name='comanda' + str(command.id),
-                                                     out_folder_path=profile.MELINUX_INTEGRATION_PATH,
-                                                     mode='a')
+                                                                       file_name='comanda' + str(command.id),
+                                                                       out_folder_path=profile.MELINUX_INTEGRATION_PATH,
+                                                                       mode='a')
 
         create_file = CommunicationController().write_txt_file(data='',
-                                             file_name='comanda' + str(command.id),
-                                             out_folder_path=profile.MELINUX_INTEGRATION_PATH,
-                                             mode='a', delete=True)
+                                                               file_name='comanda' + str(command.id),
+                                                               out_folder_path=profile.MELINUX_INTEGRATION_PATH,
+                                                               mode='a', delete=True)
 
     def calculate_total(self, request, orders):
         total_result = 0
@@ -307,8 +307,8 @@ class OrderController(BaseController):
                 item.save()
                 # item.expected_duration = self.get_prevision_duration()
                 item.expected_duration = timedelta(hours=data_item["duration_time"]["hours"],
-                                                    minutes=data_item["duration_time"]["minutes"],
-                                                    seconds=data_item["duration_time"]["seconds"])
+                                                   minutes=data_item["duration_time"]["minutes"],
+                                                   seconds=data_item["duration_time"]["seconds"])
                 item.expected_time = item.checkin_time + item.expected_duration
 
                 complements_total = Decimal(request.POST['complements_total'])
@@ -372,7 +372,8 @@ class OrderController(BaseController):
                 order.expected_time = order.checkin_time + order.expected_duration
                 order.observations = data_order.get('observations')
                 order.save()
-                print("OLHA O TOTAL DA COMANDA: CODE", order.command.code, " - ID: ", order.command.id, order.command.total,
+                print("OLHA O TOTAL DA COMANDA: CODE", order.command.code, " - ID: ", order.command.id,
+                      order.command.total,
                       " PEDIDO: ", float(order.total), " NOVO TOTAL: ", float(order.command.total + order.total))
                 order.command.total = order.command.total + order.total
                 order.command.save()
@@ -404,10 +405,10 @@ class OrderController(BaseController):
 
     def orders_by_command(self, request, id, extra_fields=None, is_response=True):
         orders = super().filter(request,
-                              self.model,
-                              queryset=Order.objects.filter(command=int(id)).order_by('-id'),
-                              extra_fields=extra_fields or self.extra_fields,
-                              is_response=is_response)
+                                self.model,
+                                queryset=Order.objects.filter(command=int(id)).order_by('-id'),
+                                extra_fields=extra_fields or self.extra_fields,
+                                is_response=is_response)
         list_items = []
         for index, order in enumerate(orders['object']):
             items = ItemController().items_by_order(request, order['id'], is_response=is_response)
@@ -538,8 +539,8 @@ class OrderController(BaseController):
             response_order["attendant_name"] = request.GET.get("attendant_name")
             respone_content = HttpResponse(content_type='application/pdf')
             return generate_pdf('order_pdf.html',
-                                  file_object=respone_content,
-                                  context={'order': response_order})
+                                file_object=respone_content,
+                                context={'order': response_order})
         return self.response({"result": False, "object": None, "message": "Object not found"})
 
     def print(self, request):
@@ -568,8 +569,8 @@ class OrderController(BaseController):
 
         respone_content = HttpResponse(content_type='application/pdf')
         data_object = generate_pdf('order_pdf.html',
-                              file_object=respone_content,
-                              context=response_order).getvalue() #
+                                   file_object=respone_content,
+                                   context=response_order).getvalue()  #
         file_name = os.path.join(media_path, f'{str(order["id"])}.pdf' if not reprint else \
             f'reprint-item-order-{str(order["order"])}.pdf')
         with open(file_name, 'wb') as file:
@@ -774,8 +775,8 @@ class DatabaseController(BaseController):
             self.model = self.get_model()
             self.dependency_model = self.model.get("dependency")
             response_dict = communication.field_search(model=self.model.get("object"),
-                                              filename=self.file_name,
-                                              dependency=self.dependency_model)
+                                                       filename=self.file_name,
+                                                       dependency=self.dependency_model)
         else:
             self.model = Product
             response_dict = communication.field_search(model=self.model)
