@@ -7,6 +7,7 @@ import requests
 import subprocess
 from conf import profile
 from decimal import Decimal
+from test_project.signals import sio
 from otma.apps.core.communications.api import BaseController
 from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Item, Complement
 from otma.apps.sales.commands.service import CommunicationController
@@ -445,7 +446,15 @@ class OrderController(BaseController):
             item = items[0]
             item.status = status
         item.save()
+
         response = self.execute(item, item.save)
+        response["object"]["table"] = request.POST.get("table_id")
+        response["object"]["table_index"] = request.POST.get("table_index")
+        response["object"]["command_index"] = request.POST.get("command_index")
+        response["object"]["item_index"] = request.POST.get("item_index")
+
+        sio.emit('change_status', {'data': response})
+
         return self.response(response)
 
     def close_orders_by_id(self, request, id):

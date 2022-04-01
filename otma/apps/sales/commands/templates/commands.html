@@ -8,7 +8,8 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'bower_components/font-awesome/css/all.min.css' %}">
-
+    <link rel="stylesheet" href="{% static 'css/float_notification.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <script src="{% static 'bower_components/vue/dist/vue.js' %}"></script>
     <script src="{% static 'base_controller.js' %}"></script>
     <script src="{% static 'commands_controller.js' %}"></script>
@@ -207,14 +208,79 @@
       }
 
       /*html { scroll-behavior: smooth; }*/
-    </style>
 
+      .fa.pisca {
+          font-size: 30px;
+          color: red;
+          opacity: 0;
+          animation: anima 1s ease infinite;
+      }
+
+      @keyframes anima {
+          to {
+              opacity: 1;
+          }
+      }
+
+      .icon-badge-group .icon-badge-container {
+        display: inline-block;
+        margin-left: 12px;
+      }
+
+      .icon-badge-group .icon-badge-container:first-child {
+        margin-left: 0
+      }
+
+      .icon-badge-container {
+        margin-top: 20px;
+        position: relative;
+      }
+
+      .icon-badge-icon {
+        font-size: 17px;
+        position: relative;
+      }
+
+      .icon-badge {
+        background-color: red;
+        font-size: 12px;
+        color: white;
+        text-align: center;
+        width: 16px;
+        height: 18px;
+        border-radius: 35%;
+        position: relative;
+        top: -35px;
+        left: 12px;
+      }
+    </style>
 
   </head>
 
   <body>
     <div style='padding:0px;'>
       <div id="app" @mousemove="" @keyup="">
+        <template v-if='controls.screen.width<=1024 && list_orders_ready.length > 0'>
+          <div class="floating-container">
+            <div class="floating-button" @click="view_orders_ready()">
+              <i class="material-icons">notifications_on</i>
+            </div>
+            <!--<div class="element-container">
+
+              <a href="google.com">
+                <span class="float-element tooltip-left">
+                  <i class="material-icons">phone</i>
+                </span>
+              </a>
+                <span class="float-element">
+                  <i class="material-icons">email</i>
+                </span>
+                <span class="float-element">
+                  <i class="material-icons">chat</i>
+                </span>
+            </div>-->
+          </div>
+        </template>
         <div v-if='controls.screen.width>=1024' :style='controls.styles.themes.active.header'>
 
           <div :style='controls.styles.themes.active.header_division'>
@@ -229,9 +295,13 @@
                 </td>
 
                 <td style="width:25px;" title="Minhas Notificações">
-                  <span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
+                  <div class="icon-badge-container">
+                    <i class="fas fa-bell icon-badge-icon"></i>
+                    <div class="icon-badge">6</div>
+                  </div>
+                  <!--<span style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;">
                     <i class="fas fa-bell"></i>
-                  </span>
+                  </span>-->
                 </td>
 
                 <!-- OPÇÃO PARA PODER FILTRAR MESAS PELO STATUS OU AREA
@@ -312,12 +382,15 @@
               <template v-for='(table, table_index) in tables'>
                 <li v-if="table.area==selected.table_group || table.status==selected.table_group || selected.table_group=='GERAL'" @click="select_table(table, table_index)" :class="{'opened':table.status=='ACTIVE', 'waiting':table.status=='WAITING'}" style='vertical-align:middle;padding:15px;cursor:pointer;padding-bottom:15px;padding-top:15px;line-height:15px;'>
                   <div style="text-align:center;">
-                    <i v-if="table.status=='WAITING'" class="fas fa-user-clock fa-2x"></i>
-                    <i v-else-if="table.status=='ACTIVE'" class="fas fa-users fa-2x"></i>
-                    <i v-else class="fas fa-users fa-2x"></i>
+                    <i v-if="table.status=='WAITING'" class="fa fa-user-clock fa-2x" :id="'table-icon_' + table_index"></i>
+                    <i v-else-if="table.status=='ACTIVE'" class="fa fa-users fa-2x" :id="'table-icon_' + table_index"></i>
+                    <i v-else class="fa fa-users fa-2x" :id="'table-icon_' + table_index"></i>
                     <br>
-                    <span style="position:relative;top:4px;">Mesa {{ table.code }}</span><br>
-                    <span style="font-size:10px;">{{ table.area }}</span>
+                    <!--<span style="position:relative;top:4px;">Mesa {{ table.code }}</span><br>
+                    <span style="font-size:10px;">{{ table.area }}</span>-->
+                    <span style="position: relative;top: 6px;font-size: 18px;font-weight: bold;">{{ table.code }}</span><br>
+                    <span v-if="table.status=='ACTIVE'" style="font-size: 13px;position: relative;top: 6px;">{{ user.username }}</span><br>
+                    <span v-else style="font-size: 10px;"> </span>
                   </div>
                 </li>
               </template>
@@ -502,7 +575,7 @@
                     </button>
 
                     <button @click="prepare_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
-                      <i class="fas fa-print"></i><br><span style="font-size: 10px;">Enviar</span>
+                      <i class="fas fa-paper-plane"></i><br><span style="font-size: 10px;">Enviar</span>
                     </button>
 
                     <button :disabled="!(selected.order && !selected.order.was_sent && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="change_order(command, command_index, selected.order)" data-toggle="modal" data-target="#OrderModal" style="line-height:1;height:38px;">
@@ -1108,7 +1181,7 @@
                   <template>
                     <template class="dropdown-item" style="padding-top: 10px;height: 40px;cursor: pointer;">
                       <a class="dropdown-item" @click="change_status_order('IN_PROGRESS')" style="font-size:15px;padding-left:15px;padding-right:5px;">
-                        <i class="fa fa-spinner fa-spin"></i>
+                        <i class="fa fa-sync"></i>
                         PREPARANDO
                       </a>
                     </template>
@@ -1177,6 +1250,7 @@
     <script async defer src="{% static 'bower_components/pnotify/dist/pnotify.js' %}"></script>
     <script async defer src="{% static 'apps/test_project/util/js/notify.js' %}"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.min.js"></script>
 
     <script>
       var app = new Vue({
@@ -1390,6 +1464,7 @@
             },
 
             list_orders_id: null,
+            list_orders_ready: [],
 
           }
         },
@@ -1455,6 +1530,8 @@
                 icon: "success",
                 button: false,
                 timer: 3000
+              }).then((close) => {
+                scope.view_tables();
               });
 
               $('#MenuModal').modal('hide');
@@ -1514,6 +1591,7 @@
               });
 
               $('#MenuModal').modal('hide');
+
             }
 
             failure_function = function(){
@@ -1704,8 +1782,9 @@
                   text: "Pedido anotado e diponível para ser enviado a cozinha.",
                   icon: "success",
                   button: false,
-                  timer: 1000
+                  timer: 3000
                 })
+
               };
 
               let failure_function = function (response) {
@@ -1915,13 +1994,21 @@
             let scope = this;
             let item_id = scope.selected.order.id;
             let data_paramters = {};
-            scope.selected.order.status = status;
-            $('#StatusModal').modal('hide');
-            alert(`VOU MUDAR O STATUS PARA ${status}`);
 
+            console.log(scope.selected.command);
+            console.log(scope.selected.command_index);
+
+            data_paramters["table_id"] = scope.selected.command.table;
+            data_paramters["table_index"] = scope.selected.table_index;
+            data_paramters["command_index"] = scope.selected.command_index;
+            data_paramters["item_index"] = scope.selected.order_index;
+
+            scope.selected.order.status = status;
+
+            $('#StatusModal').modal('hide');
             let success_function = function (response) {
               //scope.selected.command.order.unshift(response.object);
-              Vue.set(scope.selected.command.orders, index, response.object);
+              Vue.set(scope.selected.command.orders, scope.selected.order_index, response.object);
               $('#MenuModal').modal('hide');
             };
 
@@ -1934,8 +2021,8 @@
 
           delivered_item: function (index, order, status) {
             let scope = this;
-            let item_id = order.id
-            let data_paramters = {}
+            let item_id = order.id;
+            let data_paramters = {};
             let success_function = function (response) {
               //scope.selected.command.order.unshift(response.object);
               Vue.set(scope.selected.command.orders, index, response.object);
@@ -2071,6 +2158,11 @@
             }
 
             return false;
+          },
+
+          view_orders_ready: function () {
+            alert("VOU CRIAR UM MODAL PARA GERENCIAR OS PEDIDOS PRONTOS...");
+            scope.list_orders_ready = [];
           },
 
           close_command: function (command, index) {
@@ -2213,7 +2305,52 @@
         },
 
         mounted: function () {
-          //;
+          let scope = this;
+          let status = null;
+          let socket = io.connect();
+
+          socket.on('connect', function() {
+            socket.emit('my_event', {data: 'I\'m connected!'});
+          });
+          socket.on('disconnect', function() {
+            $('#log').append('<br>Disconnected');
+          });
+          socket.on('change_status', function(msg) {
+            console.log(`Received: ${JSON.stringify(msg.data)}`);
+            let result_object = msg.data.object;
+            scope.tables[result_object.table_index].commands[result_object.command_index].orders[result_object.item_index].status = result_object.status;
+
+            if (result_object.status === "READY") {
+              let audio = new Audio('/media/notification.mp3');
+              audio.play();
+
+              scope.list_orders_ready.unshift(result_object);
+
+              let table_class = document.querySelector('#table-icon_' + result_object.table_index);
+              status = "PRONTO";
+              table = result_object.table;
+
+              if (table_class) {
+                table_class.classList.add("pisca");
+              }
+
+              swal({
+                //title: scope.company.name,
+                title: "PEDIDO PRONTO",
+                text: `MESA ${table}`,
+                content: {
+                      element: 'p',
+                      attributes: {
+                        innerHTML: `${result_object.name}`,
+                      },
+                    },
+                icon: "success",
+                button: false,
+                timer: 5000
+              });
+
+            }
+          });
         }
       });
     </script>
@@ -2226,7 +2363,7 @@
 
     </script>
 
-    <script>
+    <script type="text/javascript" charset="utf-8">
       function success_notify () {
         //;
       };
@@ -2245,6 +2382,20 @@
       var clock = setInterval(function () {
         app.update_clock()
       }, 1000);
+
+    /*$(document).ready(function(){
+      let socket = io.connect();
+
+      socket.on('connect', function() {
+          socket.emit('my_event', {data: 'I\'m connected!'});
+      });
+      socket.on('disconnect', function() {
+          $('#log').append('<br>Disconnected');
+      });
+      socket.on('change_status', function(msg) {
+          console.log(`Received: ${JSON.stringify(msg.data)}`);
+      });
+    });*/
     </script>
   </body>
 </html>
