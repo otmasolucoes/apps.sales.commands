@@ -390,7 +390,7 @@
                     <span style="font-size:10px;">{{ table.area }}</span>-->
                     <span style="position: relative;top: 6px;font-size: 18px;font-weight: bold;">{{ table.code }}</span><br>
                     <span v-if="table.status=='ACTIVE'" style="font-size: 13px;position: relative;top: 6px;">{{ user.username }}</span><br>
-                    <span v-else style="font-size: 10px;"> </span>
+                    <span style="font-size: 10px;"> </span>
                   </div>
                 </li>
               </template>
@@ -521,7 +521,7 @@
                     </div>
                   </div>
 
-                  <div class="col-4 col-md-4" style="padding-top: 5px;">
+                  <div class="col-4 col-md-4" style="padding-top: 5px;text-align: center;">
                     <span style="position:relative;top:2px;font-size: 20px">Mesa {{ selected.table.code }}</span>
                   </div>
 
@@ -541,7 +541,7 @@
             <template v-else v-for="(command, command_index) in selected.table.commands">
               <div style="padding-top: 10px;"></div>
 
-              <div id="consumed_products_panel" style="background:white;padding:10px;border:1px solid #ddd;padding-bottom: 100px;">
+              <div id="consumed_products_panel" style="background:white;padding:5px;border:1px solid #ddd;padding-bottom: 100px;">
                 <div style="height:50px;padding-bottom:50px;border-bottom:1px solid #ddd;">
 
                   <!--<div class="top: 15px; width: 10%;">
@@ -558,12 +558,12 @@
                   </div>-->
 
                   <div class="float-right" style="text-align: right;position: relative;top: 0px;padding-right: 0px;">
-                    <button :disabled="!(selected.order &&selected.command_index==command_index)" class="btn btn-sm btn-light" type="button" style="line-height: 1;height: 38px;"  data-toggle="modal" data-target="#StatusModal" aria-haspopup="true" aria-expanded="false">
-                      <i class="fas fa-info-circle"></i><br><span style="font-size: 10px;">Status</span>
+                    <button :disabled="!(selected.order && selected.order.was_sent && selected.command_index==command_index)" class="btn btn-sm btn-light" type="button" style="line-height: 1;height: 38px;"  data-toggle="modal" data-target="#StatusModal" aria-haspopup="true" aria-expanded="false">
+                      <i class="fas fa-info-circle"></i><br><span style="font-size: 9px;">Status</span>
                     </button>
 
-                    <button :disabled="!(selected.order && !selected.order.was_sent && selected.command_index==command_index)" class="btn btn-sm btn-light" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="line-height: 1;height: 38px;">
-                      <i class="fas fa-print"></i><br><span style="font-size: 10px;">Reimprimir</span>
+                    <button :disabled="!(selected.order && selected.order.was_sent && selected.command_index==command_index)" class="btn btn-sm btn-light" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="line-height: 1;height: 38px;">
+                      <i class="fas fa-print"></i><br><span style="font-size: 9px;">Reimprimir</span>
                     </button>
 
                     <div class="dropdown-menu" aria-labelledby="dropdownMenu2">
@@ -571,15 +571,15 @@
                     </div>
 
                     <button type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height: 1;height: 38px;">
-                      <i class="fas fa-plus"></i><br><span style="font-size: 10px;">Adicionar</span>
+                      <i class="fas fa-plus"></i><br><span style="font-size: 9px;">Adicionar</span>
                     </button>
 
                     <button @click="prepare_order()" type="button" class="btn btn-sm btn-light" style="line-height:1;height:38px;">
-                      <i class="fas fa-paper-plane"></i><br><span style="font-size: 10px;">Enviar</span>
+                      <i class="fas fa-paper-plane"></i><br><span style="font-size: 9px;">Enviar</span>
                     </button>
 
                     <button :disabled="!(selected.order && !selected.order.was_sent && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="change_order(command, command_index, selected.order)" data-toggle="modal" data-target="#OrderModal" style="line-height:1;height:38px;">
-                      <i class="fas fa-pencil-alt"></i><br><span style="font-size:10px;">Alterar</span>
+                      <i class="fas fa-pencil-alt"></i><br><span style="font-size:9px;">Alterar</span>
                     </button>
 
                     <!--<button :disabled="!(selected.order && selected.command_index==command_index)" type="button" class="btn btn-sm btn-light" @click="open_menu(command, command_index)" style="line-height:1;height:38px;">
@@ -590,9 +590,9 @@
                       <i class="fas fa-times"></i><br><span style="font-size:10px;">Cancelar</span>
                     </button>-->
 
-                    <button type="button" class="btn btn-sm btn-light" @click="close_command(command, command_index)" style="line-height:1;height:38px;">
-                      <i class="fas fa-sign-out-alt"></i><br><span style="font-size:10px;">Finalizar</span>
-                    </button>
+                    <!--<button type="button" class="btn btn-sm btn-light" @click="close_command(command, command_index)" style="line-height:1;height:38px;">
+                      <i class="fas fa-sign-out-alt"></i><br><span style="font-size:9px;">Finalizar</span>
+                    </button>-->
 
                     <!--<button type="button" class="btn btn-sm btn-secondary" style="line-height:1;width:110px;height:38px;"><span style="font-size:13px;font-weight:bold;">R$ {{ command.total }}</span><br><span style="font-size:10px;"><i class="fas fa-sign-out-alt"></i> Encerrar</span></button>-->
 
@@ -640,24 +640,24 @@
                     <template v-if='controls.screen.width>=1024'>
                       <thead>
                         <tr style="font-size:10px;font-weight:bold;font-weight:bold;">
-                          <td style="text-align:left;border-top:none;">Produtos</td>
-                          <td style="text-align:left;border-top:none;">Descrição</td>
-                          <td style="text-align:center;border-top:none;">Confirmado</td>
-                          <td style="text-align:center;border-top:none;">Status</td>
-                          <td style="text-align:center;border-top:none;">Quantidade</td>
-                          <td style="text-align:center;border-top:none;">Preço</td>
-                          <td style="text-align:center;border-top:none;">Total</td>
+                          <td colspan="2" style="text-align:left;border-top:none;">Produtos</td>
+                          <td colspan="2" style="text-align:left;border-top:none;">Descrição</td>
+                          <td colspan="2" style="text-align:center;border-top:none;">Confirmado</td>
+                          <td colspan="2" style="text-align:center;border-top:none;">Status</td>
+                          <td colspan="2" style="text-align:center;border-top:none;">Quantidade</td>
+                          <td colspan="2" style="text-align:center;border-top:none;">Preço</td>
+                          <td colspan="2" style="text-align:right;border-top:none;">Total</td>
                         </tr>
                       </thead>
 
                       <tbody>
                         <template v-for='(order, order_index) in command.orders'>
                           <tr :class="{'selected':order.show_options}" style="cursor:pointer;" @click="show_options(command_index, order, order_index)"><!-- data-toggle="modal" data-target="#command_item_options" -->
-                            <td style="width:100px;">
+                            <td colspan="2" style="width:100px;">
                               <img :src="order.image" style='width:90px;height:60px;object-fit:cover;' />
                             </td>
 
-                            <td style="line-height:1.1;">
+                            <td colspan="2" style="padding-top: 5px;line-height:1.1;">
                               <span style='font-size:18px;'>{{ order.name }}</span><br>
                               <span style='font-size:12px;color:#888;'>Entrada: {{ order.checkin_time | format_time_short }} -
                               <template v-if="order.checkout_time==null">Previsão: {{ order.expected_time | format_time_short }}</template>
@@ -666,7 +666,7 @@
                               <span style='font-size:12px;color:#888;'>Observações: {{ order.observations }}</span>
                             </td>
 
-                            <td style="line-height: 1.1; text-align: center; vertical-align: middle;">
+                            <td colspan="2" style="line-height: 1.1; text-align: center; vertical-align: middle;">
                               <template v-if="order.was_sent">
                                 <i class="fas fa-check" style="color: green;"></i>
                               </template>
@@ -675,7 +675,7 @@
                               </template>
                             </td>
 
-                            <td style='width:40px;vertical-align:middle;text-align:center;'>
+                            <td colspan="2" style='width:40px;vertical-align:middle;text-align:center;'>
 
                               <template v-if="order.status=='WAITING'">
                                 AGUARDANDO
@@ -702,15 +702,15 @@
                               </template>
                             </td>
 
-                            <td style='width:110px;text-align:center;vertical-align:middle;'>
+                            <td colspan="2" style='width:110px;text-align:center;vertical-align:middle;'>
                               <span style='font-size:18px;'>{{ order.quantity | format_money }}</span>
                             </td>
 
-                            <td style="vertical-align:middle;text-align:center;width:110px;">
+                            <td colspan="2" style="vertical-align:middle;text-align:center;width:110px;">
                               <span style='font-size:18px;'>R$ {{ order.price | format_money }}</span>
                             </td>
 
-                            <td style='width:110px;text-align:center;vertical-align:middle;'>
+                            <td colspan="2" style='width:110px;text-align:right;vertical-align:middle;'>
                               <span style='font-size:18px;'>R$ {{ order.price * order.quantity | format_money }}</span>
                             </td>
                           </tr>
@@ -863,8 +863,9 @@
                             </td>-->
 
                           </tr>
+
                           <tr class="no-border-first" :class="{'selected':order.show_options}">
-                            <td colspan="2" style="vertical-align: middle;">
+                            <td colspan="3" style="vertical-align: middle;">
                               <template v-if="order.was_sent">
                                   <span style="padding-right:8px;font-size:14px;">
                                     <!--<i class="fas fa-arrow-up" style=""></i>-->
@@ -875,7 +876,7 @@
                                 <!-- NADA AQUI -->
                               </template>
                             </td>
-                            <td colspan="2" style="vertical-align: middle;">
+                            <td colspan="3" style="vertical-align: middle;">
                               <!--<template v-if="order.was_sent">
                                     <template v-if="order.checkout==null">
                                       <!-<i class="fas fa-arrow-down"></i>->
@@ -904,11 +905,29 @@
                                 <span style="font-size:14px;">{{ order.status }}</span>
                               </template>
                             </td>
-                            <td colspan="2" style="text-align:right;vertical-align: middle;">
+                            <td colspan="3" style="text-align:right;vertical-align: middle;">
                               <span style="font-size:14px;">{{ order.quantity }}</span>
                             </td>
-                            <td colspan="2" style="text-align:right;vertical-align: middle;font-weight: bold;">
+                            <td colspan="3" style="text-align:right;vertical-align: middle;font-weight: bold;">
                               <div>{{ order.price | format_money}}</div>
+                            </td>
+                          </tr>
+
+                          <tr v-for="complement in order.complements" class="no-border-first" :class="{'selected':order.show_options}">
+                            <td colspan="4" style="vertical-align: middle;">
+                              <template>
+                                <span style="font-size:12px;">{{ complement.name }}</span>
+                              </template>
+                            </td>
+                            <td colspan="4" style="text-align:right;vertical-align: middle;">
+                              <template>
+                                <span style="font-size:12px;">{{ complement.quantity }}</span>
+                              </template>
+                            </td>
+                            <td colspan="4" style="text-align:right;vertical-align: middle;">
+                              <template>
+                                <span style="font-size:12px;">{{ complement.price | format_money }}</span>
+                              </template>
                             </td>
                           </tr>
 
@@ -921,9 +940,9 @@
                     </template>
 
                     <tr>
-                      <td colspan="4">Total</td>
+                      <td colspan="6">Total</td>
                       <td></td>
-                      <td colspan="4" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
+                      <td colspan="6" style="text-align:right;"><b>R$ {{ command.total | format_money }}</b></td>
                     </tr>
 
                   </table>
@@ -931,7 +950,8 @@
 
                 <template v-else>
                   <div style="text-align:center;padding:10px;">
-                    Nenhum pedido feito.. <br><span @click="open_menu(selected.table.commands[command_index], command_index)" style="cursor:pointer;font-weight:bold;">clique aqui para adicionar um novo pedido..</span>
+                    Nenhum pedido feito.. <br>
+                    <span @click="open_menu(selected.table.commands[command_index], command_index)" style="cursor:pointer;font-weight:bold;">clique aqui para adicionar um novo pedido..</span>
                     <br>
                   </div>
                   <div style="padding-top: 40px;">
@@ -969,7 +989,7 @@
                 <span class="font-lobster" style="font-size:14px;">Carrinho</span>
               </td>-->
 
-              <td v-if="selected.table" style="float: right;padding-right: 10px">
+              <td v-if="selected.table && !selected.new_product" style="float: right;padding-right: 10px" @click="close_command(selected.command, selected.command_index)">
                 <i class="fas fa-sign-out-alt"></i>
                 <br>
                 <span class="font-lobster" style="font-size:14px;">Finalizar</span>
@@ -1048,73 +1068,73 @@
                   <table id='product_complements' border="0" class='table table-sm table-stripped table-hover' style=''>
                     <tbody>
                       <template v-if='controls.screen.width>=1024'>
-                      <template v-for='(complement, index) in complements'>
-                      <tr>
-                        <td>
-                          <span style='font-size:14px;'>{{ complement.name }}</span><br>
-                          <span style='font-size:10px;color:#888;'>R$ {{ complement.price | format_money }}</span>
-                        </td>
+                        <template v-for='(complement, index) in complements'>
+                          <tr>
+                            <td>
+                              <span style='font-size:14px;'>{{ complement.name }}</span><br>
+                              <span style='font-size:10px;color:#888;'>R$ {{ complement.price | format_money }}</span>
+                            </td>
 
-                        <td style='width:60px;text-align:center;'></td>
-                        <!--<td style='width:50px;text-align:center;'>
-                          <template v-if='complement.quant > 0'>{{ complement.quant }}</template>
-                        </td>-->
+                            <td style='width:60px;text-align:center;'></td>
+                            <!--<td style='width:50px;text-align:center;'>
+                              <template v-if='complement.quantity > 0'>{{ complement.quantity }}</template>
+                            </td>-->
 
-                        <td style='width:60px;text-align:center;'>
-                          <template v-if='complement.quant > 0'>{{ (complement.price * complement.quant) | format_money }}</template>
-                        </td>
+                            <td style='width:60px;text-align:center;'>
+                              <template v-if='complement.quantity > 0'>{{ (complement.price * complement.quantity) | format_money }}</template>
+                            </td>
 
-                        <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='decrease_complement(complement, index)' style='cursor:pointer;'>
-                            <i class="fas fa-square-full fa-stack-2x"></i>
-                            <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
-                          </span>
-                        </td>
+                            <td style='width:40px;'>
+                              <span class="fa-stack fa-1x" @click='decrease_complement(complement, index)' style='cursor:pointer;'>
+                                <i class="fas fa-square-full fa-stack-2x"></i>
+                                <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
+                              </span>
+                            </td>
 
-                        <td style='width:20px;padding-top:5px;text-align:center;'> {{ complement.quant }}</td>
+                            <td style='width:20px;padding-top:5px;text-align:center;'> {{ complement.quantity }}</td>
 
-                        <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='increase_complement(complement, index)' style='cursor:pointer;'>
-                            <i class="fas fa-square-full fa-stack-2x"></i>
-                            <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
-                          </span>
-                        </td>
-                      </tr>
-                      </template>
+                            <td style='width:40px;'>
+                              <span class="fa-stack fa-1x" @click='increase_complement(complement, index)' style='cursor:pointer;'>
+                                <i class="fas fa-square-full fa-stack-2x"></i>
+                                <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
+                              </span>
+                            </td>
+                          </tr>
+                        </template>
                       </template>
 
                       <template v-else>
-                      <template v-for='(complement, index) in complements'>
-                      <tr>
-                        <td><span style='font-size:14px;'>{{ complement.name }}</span><br>
-                          <span style='font-size:10px;margin-left:1px;font-family:arial;'>R$ {{ complement.price | format_money}}</span>
-                        </td>
+                        <template v-for='(complement, index) in complements'>
+                          <tr>
+                            <td><span style='font-size:14px;'>{{ complement.name }}</span><br>
+                              <span style='font-size:10px;margin-left:1px;font-family:arial;'>R$ {{ complement.price | format_money}}</span>
+                            </td>
 
-                        <td style='width:50px;text-align:center;'>
-                          <template v-if='complement.quant > 0'>{{ complement.quant }}</template>
-                        </td>
-                        <td style='width:50px;text-align:center;'>
-                          <template v-if='complement.quant > 0'>{{ (complement.price * complement.quant) | format_money }}</template>
-                        </td>
-                        <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='decrease_complement(complement, index)' style='cursor:pointer;'>
-                            <i class="fas fa-square-full fa-stack-2x"></i>
-                            <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
-                          </span>
-                        </td>
+                            <td style='width:50px;text-align:center;'>
+                              <template v-if='complement.quantity > 0'>{{ complement.quantity }}</template>
+                            </td>
+                            <td style='width:50px;text-align:center;'>
+                              <template v-if='complement.quantity > 0'>{{ (complement.price * complement.quantity) | format_money }}</template>
+                            </td>
+                            <td style='width:40px;'>
+                              <span class="fa-stack fa-1x" @click='decrease_complement(complement, index)' style='cursor:pointer;'>
+                                <i class="fas fa-square-full fa-stack-2x"></i>
+                                <i class="fa fa-minus fa-stack-1x fa-inverse"></i>
+                              </span>
+                            </td>
 
-                        <td style='width:20px;padding-top:5px;text-align:center;'>
-                          0
-                        </td>
+                            <td style='width:20px;padding-top:5px;text-align:center;'>
+                              {{ complement.quantity }}
+                            </td>
 
-                        <td style='width:40px;'>
-                          <span class="fa-stack fa-1x" @click='increase_complement(complement, index)' style='cursor:pointer;'>
-                            <i class="fas fa-square-full fa-stack-2x"></i>
-                            <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
-                          </span>
-                        </td>
-                      </tr>
-                      </template>
+                            <td style='width:40px;'>
+                              <span class="fa-stack fa-1x" @click='increase_complement(complement, index)' style='cursor:pointer;'>
+                                <i class="fas fa-square-full fa-stack-2x"></i>
+                                <i class="fa fa-plus fa-stack-1x fa-inverse"></i>
+                              </span>
+                            </td>
+                          </tr>
+                        </template>
                       </template>
                     </tbody>
                   </table>
@@ -1366,7 +1386,7 @@
               new_products: [],
               order: null,
               complements: {
-                total: 0.00,
+                total: 0,
               },
               complements_backup: null,
               cloned_order: null,
@@ -1401,10 +1421,10 @@
             commands:{},
 
             complements:[
-              {'id':'1', 'code': '111', 'name':'Ovo', 'price':1.50, 'quant':0},
-              {'id':'2', 'code': '222',  'name':'Queijo', 'price':2.00, 'quant':0},
-              {'id':'3', 'code': '333',  'name':'Presunto', 'price':2.00, 'quant':0},
-              {'id':'4', 'code': '444',  'name':'Hamburguer', 'price':3.50, 'quant':0},
+              {'id':'1', 'code': '111', 'name':'Ovo', 'price':1.50, 'quantity':0},
+              {'id':'2', 'code': '222',  'name':'Queijo', 'price':2.00, 'quantity':0},
+              {'id':'3', 'code': '333',  'name':'Presunto', 'price':2.00, 'quantity':0},
+              {'id':'4', 'code': '444',  'name':'Hamburguer', 'price':3.50, 'quantity':0},
             ],
 
             groups: [
@@ -1664,7 +1684,8 @@
 
           add_order: function () {
             let scope = this;
-            scope.forms.order.object.complements = scope.check_complements(scope.complements, scope.complements_backup);
+
+            scope.forms.order.object.complements = JSON.parse(JSON.stringify(scope.check_complements(scope.complements, scope.complements_backup)));
 
             if (!scope.selected.command.orders) {
               scope.selected.command.orders = [];
@@ -1701,11 +1722,11 @@
             scope.selected.product = null;
             // scope.selected.command = null;
             scope.selected.new_product = null;
-            scope.selected.complements.total = 0.00;
+            scope.selected.complements.total = 0;
             scope.selected.new_products.splice(0, scope.selected.new_products.length);
 
             for (index in scope.complements) {
-              scope.complements[index].quant = 0;
+              scope.complements[index].quantity = 0;
             }
 
             $('#OrderModal').modal('hide');
@@ -1714,11 +1735,15 @@
           calculate_command_total: function () {
             let scope = this;
             let total = 0;
+            let complements_total = 0
 
             for (index in scope.selected.command.orders) {
+              for (idx in scope.selected.command.orders[index].complements) {
+                complements_total += scope.selected.command.orders[index].complements[idx].quantity * scope.selected.command.orders[index].complements[idx].price;
+              }
               total += scope.selected.command.orders[index].price * scope.selected.command.orders[index].quantity;
             }
-            return parseFloat(total);
+            return parseFloat(total + complements_total);
           },
 
           calculate_table_total: function () {
@@ -1844,10 +1869,10 @@
               scope.selected.table.total = parseFloat(scope.selected.table.total) + parseFloat(response.object.total);
               scope.selected.new_product = null;
               scope.selected.new_products.splice(0, scope.selected.new_products.length);
-              scope.selected.complements.total = 0.00;
+              scope.selected.complements.total = 0;
 
               for (index in scope.complements) {
-                scope.complements[index].quant = 0;
+                scope.complements[index].quantity = 0;
               }
 
               scope.selected.group = null;
@@ -1889,17 +1914,17 @@
           },
 
           increase_complement: function (complement, index) {
-            this.complements[index].quant += 1
+            this.complements[index].quantity += 1
             this.selected.complements.total += this.complements[index].price;
           },
 
           decrease_complement: function (complement, index) {
-            if(this.complements[index].quant > 0){
-              this.complements[index].quant -= 1
+            if(this.complements[index].quantity > 0){
+              this.complements[index].quantity -= 1
               this.selected.complements.total -= this.complements[index].price;
             }
             else{
-              this.complements[index].quant = 0
+              this.complements[index].quantity = 0
             }
           },
 
@@ -2041,6 +2066,7 @@
 
             let success_function = function(response) {
               scope.tables = response.object;
+              //console.log(JSON.stringify(scope.tables));
             };
 
             let failure_function = function(response) {
@@ -2111,7 +2137,11 @@
                   scope.list_orders_id.unshift(before_id);
                 }
               }
-
+              if (scope.selected.command.orders && scope.selected.command.orders.length == 0) {
+                scope.open_menu(scope.selected.command, scope.selected.command_index);
+              }
+              scope.selected.command.total = scope.calculate_command_total();
+              scope.selected.table.total = scope.calculate_table_total();
             }
           },
 
@@ -2126,10 +2156,12 @@
             let success_function = function (response) {
               scope.tables[table_index].commands.push(response.object);
 
-              if(scope.selected.table == null){
+              if(scope.selected.table == null) {
                 scope.selected.table = scope.tables[table_index];
                 scope.selected.table_index = table_index;
                 scope.selected.command_index = 0;
+                scope.selected.command = scope.selected.table.commands[scope.selected.command_index];
+                scope.open_menu(scope.selected.command, scope.selected.command_index);
               }
 
               $('#MenuModal').modal('hide');
@@ -2152,7 +2184,7 @@
             let scope = this;
 
             for (index in scope.selected.command.orders) {
-              if(!scope.selected.command.orders[index].was_sent){
+              if(!scope.selected.command.orders[index].was_sent) {
                 return true;
               }
             }
@@ -2205,7 +2237,7 @@
                           if (open) {
                             scope.view_tables();
                           } else {
-                            scope.selected.table.total = 0.00;
+                            scope.selected.table.total = 0;
                           }
                         });
                       }
@@ -2241,17 +2273,17 @@
           check_complements: function (object, backup) {
             let scope = this;
             let newObj = [];
+            let filtered_object = null;
 
             $.each(object, function (key, value) {
-              if (backup[key]["quant"] < value["quant"]) {
+              if (backup[key]["quantity"] < value["quantity"]) {
                 newObj[key] = object[key];
               }
             });
 
-            let filtered_object = newObj.filter(function (el) {
+            filtered_object = newObj.filter(function (el) {
               return el;
             });
-
             return filtered_object;
           },
 
@@ -2277,7 +2309,7 @@
 
         computed: {
           current_time: function () {
-            if(this.controls.clock){
+            if(this.controls.clock) {
               return moment(String(this.controls.clock)).format('HH:mm:ss');
             }
           },
@@ -2301,7 +2333,7 @@
         created: function () {
           //this.load_tables();
           //this.init_product_complements();
-          this.complements_backup = JSON.parse(JSON.stringify(this.complements));;
+          this.complements_backup = JSON.parse(JSON.stringify(this.complements));
         },
 
         mounted: function () {

@@ -7,7 +7,7 @@ import requests
 import subprocess
 from conf import profile
 from decimal import Decimal
-from test_project.signals import sio
+from melinux.signals import sio
 from otma.apps.core.communications.api import BaseController
 from otma.apps.sales.commands.models import Table, Group, Product, Command, Order, Item, Complement
 from otma.apps.sales.commands.service import CommunicationController
@@ -49,11 +49,14 @@ class TableController(BaseController):
                                          queryset=self.model.objects.all().order_by('id'),
                                          extra_fields=extra_fields or self.extra_fields,
                                          is_response=False)
+
         for index, table in enumerate(response_tables['object']):
             response_commands = CommandController().load_open_commands(request,
                                                                        table=table['id'],
                                                                        is_response=False)
+
             response_tables['object'][index]['commands'] = response_commands['object']
+
         return self.response(response_tables)
 
     def open(self, request):
@@ -146,6 +149,7 @@ class CommandController(BaseController):
                                       queryset=Command.objects.filter(table=table).filter(status=status),
                                       extra_fields=self.extra_fields,
                                       is_response=is_response)
+
             for index, command in enumerate(commands['object']):
                 orders = OrderController().orders_by_command(request, command['id'], is_response=is_response)
                 commands['object'][index]['orders'] = orders['object']
@@ -211,16 +215,20 @@ class CommandController(BaseController):
                                                                mode='a')
         for order in orders['object']:
             items = MenuProductController().load_by_id(request, order['product'], is_response=False)
-            complements = OrderController().complements_by_order(request, order["id"], is_response=False)
-            # if len(complements["object"]) > 0 and order["product"] == complements["object"][0]["product"]:
-            # items["object"] += complements["object"]
+            complements = order.get("complements")
             for item in items['object']:
                 data = f'{item["code"]}|{order["quantity"]}|{item["price"]}|'
                 create_file = CommunicationController().write_txt_file(data=data,
                                                                        file_name='comanda' + str(command.id),
                                                                        out_folder_path=profile.MELINUX_INTEGRATION_PATH,
                                                                        mode='a')
-
+                if complements and len(complements) > 0:
+                    for complement in complements:
+                        data = f'{complement["code"]}|{complement["quantity"]}|{complement["price"]}|'
+                        create_file = CommunicationController().write_txt_file(data=data,
+                                                                               file_name='comanda' + str(complement["command"]),
+                                                                               out_folder_path=profile.MELINUX_INTEGRATION_PATH,
+                                                                               mode='a')
         create_file = CommunicationController().write_txt_file(data='',
                                                                file_name='comanda' + str(command.id),
                                                                out_folder_path=profile.MELINUX_INTEGRATION_PATH,
@@ -230,8 +238,12 @@ class CommandController(BaseController):
         total_result = 0
         for order in orders['object']:
             items = MenuProductController().load_by_id(request, order['product'], is_response=False)
+            complements = order.get("complements")
             for item in items['object']:
                 total_result += float(order["quantity"]) * float(item["price"])
+                if complements and len(complements) > 0:
+                    for complement in complements:
+                        total_result += float(complement["quantity"]) * float(complement["price"])
         return "{0:.2f}".format(total_result)
 
 
@@ -321,15 +333,16 @@ class OrderController(BaseController):
                         complement = Complement()
                         complement.order = order
                         complement.command = order.command
-                        complement.product = order.product
+                        complement.product = item.product
                         complement.code = data_complement["code"]
                         complement.name = data_complement["name"]
                         complement.price = Decimal(data_complement["price"])
-                        complement.quantity = data_complement["quant"]
-                        complement.save()
+                        complement.quantity = data_complement["quantity"]
+                        complements_response = self.execute(complement, complement.save)
                 order_total += Decimal((item.price + complements_total) * item.quantity)
 
                 items_response = self.execute(item, item.save)
+                items_response["object"]["complements"] = complements
                 list_items_response.append(items_response["object"])
 
             order.total = order_total
@@ -390,11 +403,11 @@ class OrderController(BaseController):
                         complement.code = item["code"]
                         complement.name = item["name"]
                         complement.price = Decimal(item["price"])
-                        complement.quantity = item["quant"]
+                        complement.quantity = item["quantity"]
                         complement.save()
                 response = self.execute(order, order.save)
                 list_response.append(response["object"])
-            response["object"] = list_response
+                response["object"] = list_response
         return self.response(response)
 
     def load_orders(self, request, extra_fields=None, is_response=True):
@@ -413,10 +426,13 @@ class OrderController(BaseController):
         list_items = []
         for index, order in enumerate(orders['object']):
             items = ItemController().items_by_order(request, order['id'], is_response=is_response)
-            for i in items['object']:
-                list_items.append(i)
+            for item in items['object']:
+                complements = self.complements_by_order(request, order['id'], is_response=is_response)
+                if len(complements["object"]) > 0:
+                    if item["product"] == complements["object"][0]["product"]:
+                        item["complements"] = complements["object"]
+                list_items.append(item)
         orders['object'] = list_items
-
         if is_response:
             return self.response(orders)
         else:
@@ -495,7 +511,7 @@ class OrderController(BaseController):
             for complement in complements:
                 complements_result = {}
                 complements_result["name"] = complement.name
-                complements_result["quant"] = int(complement.quantity)
+                complements_result["quantity"] = int(complement.quantity)
                 complements_result["price"] = complement.price
                 complement_list.append(complements_result)
         print("OLHA AÍ OS COMPLEMENTOS DESSE PEDIDO: ", complement_list)
@@ -586,7 +602,6 @@ class OrderController(BaseController):
             file.write(data_object)
             command_line = f'cat {file_name} | lpr -P {profile.PRINTER_CONFIG.get("name")}'
             result_print = run_command(command_line)
-
         return self.response(result_print)
 
     def reprint(self, request, id=None):
