@@ -358,7 +358,7 @@ class OrderController(BaseController):
     def update(self, request):
         self.start_process(request)
         # print("OLHA O REQUEST: ", request.POST)
-        print("OLHA O REQUEST: ", json.loads(json.dumps(request.POST)))
+        # print("OLHA O REQUEST: ", json.loads(json.dumps(request.POST)))
         print("OLHA O ORDERS: ", json.loads(request.POST.get("orders")))
         list_response = []
         list_orders = json.loads(request.POST.get("orders"))
