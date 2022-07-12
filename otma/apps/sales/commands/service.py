@@ -95,11 +95,13 @@ class CommunicationController(BaseController):
             object = model.objects.filter(code=item['code'])
         if object.count() > 0:
             object = object[0]
-            # print('JÁ EXISTE ESSE CARA NO BANCO.', item['name'])
             return self.update(item, object)
         else:
             object = model()
-            return self.save(item, object)
+            object_name = model.objects.filter(name=item['name'])
+            if not object_name.count() > 0:
+               return self.save(item, object)
+            return {"result": False, "object": [], "message": "ja existe esse objeto no banco"}
 
     def save(self, item, object):
         for field in item:
