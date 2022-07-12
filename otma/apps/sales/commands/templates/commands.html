@@ -2183,7 +2183,11 @@
           load_groups: function () {
             let scope = this;
             let success_function = function (response) {
-              scope.groups = response.object;
+              for (index in response.object) {
+                if (response.object[index].products.length > 0) {
+                  scope.groups.push(response.object[index]);
+                }
+              }
             };
 
             let failure_function = function (response) {
