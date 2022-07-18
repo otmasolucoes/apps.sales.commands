@@ -2,6 +2,7 @@ from django.template.loader import get_template, render_to_string
 from django.http import HttpResponse
 from django.conf import settings
 from conf import profile
+from otma.apps.sales.commands.models import Group, Product
 from otma.apps.core.communications.api import BaseController
 from barcode import get_barcode_class, generate
 from barcode.writer import ImageWriter
@@ -29,140 +30,52 @@ class CommunicationController(BaseController):
             data = f.read()
         return json.loads(data)
 
-    def find_files(self, filename=None, extension=None):
-        list_files = []
+    def find_files(self, data_name, extension=".json"):
         melinux_path = profile.MELINUX_INTEGRATION_PATH
         if not melinux_path.endswith('/'):
-            path = os.path.dirname(melinux_path + '/')
-        else:
-            path = os.path.dirname(melinux_path)
-        if filename:
-            file_path = os.path.join(path, filename + extension)
-            if os.path.exists(file_path):
-                list_files.append(file_path)
-        else:
-            for json_file in glob.glob(os.path.join(path, '*' + extension)):
-                filename = json_file.split('/')[-1:][0]
-                if filename.split('/')[-1:][0].startswith('prod'):
-                    list_files.append(json_file)
-        return list_files
+            melinux_path = os.path.dirname(melinux_path + '/')
+        for json_file in glob.glob(os.path.join(melinux_path, '*' + extension)):
+            filename = json_file.split('/')[-1:][0]
+            if filename.split('/')[-1:][0].startswith(data_name):
+                return json_file
+        return None
 
-    def check_update(self, json_file, model):
-        content = self.read_json_file(json_file)['produtos']
+    def load_data(self, item, model, code_group=None):
+        object = model.objects.filter(code=item['code']).first()
+        if not object:
+            object = model()
+        return self.save(item, object, code_group)
 
-        update_dict = {
-            "object": []
-        }
+    def save(self, item, object, code_group):
+        for field in item:
+            if hasattr(object, field):
+                if code_group:
+                    object.name = item["description"]
+                    object.group = Group.objects.filter(code=code_group).first()
+                if field == 'price':
+                    item[field] = item[field].replace(',', '.')
+                object.__setattr__(field, item[field])
+        return self.execute(object, object.save)
 
-        for item in content:
-            response_update = self.execute_update(item, model)
-            update_dict["result"] = response_update["result"]
-            update_dict["message"] = response_update["message"]
-            if len(response_update["object"]) > 0:
-                update_dict["object"].append(response_update["object"])
-
-        if update_dict["result"]:
-            os.remove(self.file_path)
-            print('Objeto salvo com sucesso!!!')
-
-        return update_dict
-
-    def execute_load(self, json_file, model):
-        content = self.read_json_file(json_file)
-        key = list(content)[0]
-
+    def export_data(self, data_name):
         load_dict = {
             "object": []
         }
-
-        for item in content[key]:
-            response_load = self.load_data(item, model)
-            load_dict["result"] = response_load["result"]
-            load_dict["message"] = response_load["message"]
-            if len(response_load["object"]) > 0:
-                load_dict["object"].append(response_load["object"])
-
+        content = self.read_json_file(self.find_files(data_name=data_name))[data_name]
+        for item in content:
+            group_load = self.load_data(item, Group)
+            group_load["object"]["products"] = []
+            for sub_item in item["products"]:
+                product_load = self.load_data(sub_item, Product, item["code"])
+                group_load["object"]["products"].append(product_load["object"])
+            load_dict["object"].append(group_load["object"])
+        load_dict["result"] = group_load["result"]
+        load_dict["message"] = group_load["message"]
         if load_dict["result"]:
             os.remove(self.file_path)
             print('Objeto salvo com sucesso!!!')
 
         return load_dict
-
-    def load_data(self, item, model):
-        try:
-            object = model.objects.filter(code=item['code'].strip())
-        except:
-            object = model.objects.filter(code=item['code'])
-        if object.count() > 0:
-            object = object[0]
-            return self.update(item, object)
-        else:
-            object = model()
-            object_name = model.objects.filter(name=item['name'])
-            if not object_name.count() > 0:
-               return self.save(item, object)
-            return {"result": False, "object": [], "message": "ja existe esse objeto no banco"}
-
-    def save(self, item, object):
-        for field in item:
-            if hasattr(object, field):
-                if field == 'group':
-                    group = self.dependency_model.objects.filter(code=item[field])
-                    if group.count() > 0:
-                        group = group[0]
-                        object.group = group
-                else:
-                    try:
-                        if field == 'price':
-                            item[field] = item[field].replace(',', '.')
-                        object.__setattr__(field, item[field].strip())
-                    except:
-                        print(field)
-                        object.__setattr__(field, item[field])
-
-        return self.execute(object, object.save)
-
-    def update(self, item, object):
-        for field in item:
-            if hasattr(object, field) and field != 'group':
-                try:
-                    if field == 'price':
-                        item[field] = item[field].replace(',', '.')
-                    object.__setattr__(field, item[field].strip())
-                except:
-                    object.__setattr__(field, item[field])
-
-        return self.execute(object, object.save)
-
-    def execute_update(self, item, model):
-        object = model.objects.filter(code=item['code'].strip())
-        response_dict = {}
-        if object.count() > 0:
-            try:
-                object = object[0]
-                return self.update(item, object)
-            except:
-                response_dict["result"] = False
-                response_dict["message"] = "Erro,não foi possível efetuar a operação..."
-                response_dict["object"] = []
-
-        return response_dict
-
-    def field_search(self, model, filename=None, extension=".json", dependency=None):
-        response_dict = {}
-        if dependency:
-            self.dependency_model = dependency
-        files = self.find_files(filename=filename, extension=extension)
-        if filename:
-            for file in files:
-                return self.execute_load(file, model=model)
-        else:
-            for file in files:
-                return self.check_update(file, model=model)
-
-        response_dict['result'] = False
-        response_dict['message'] = "Nenhum arquivo de alteração encontrado!!!"
-        return response_dict
 
     def write_txt_file(self, data, file_name, out_folder_path=None, mode='w', delete=False):
         base_dir = settings.BASE_DIR + '/data/fixture/sales/commands'

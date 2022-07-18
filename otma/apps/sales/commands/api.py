@@ -226,7 +226,8 @@ class CommandController(BaseController):
                     for complement in complements:
                         data = f'{complement["code"]}|{complement["quantity"]}|{complement["price"]}|'
                         create_file = CommunicationController().write_txt_file(data=data,
-                                                                               file_name='comanda' + str(complement["command"]),
+                                                                               file_name='comanda' + str(
+                                                                                   complement["command"]),
                                                                                out_folder_path=profile.MELINUX_INTEGRATION_PATH,
                                                                                mode='a')
         create_file = CommunicationController().write_txt_file(data='',
@@ -772,36 +773,10 @@ class VerifierRequest:
 
 class DatabaseController(BaseController):
 
-    def __init__(self):
-        self.file_name = None
-        self.model = None
-        self.dependency_model = None
-
-    def get_model(self):
-        dict_models = {
-            "grupos": {
-                "object": Group,
-                "dependency": None
-            },
-            "produtos": {
-                "object": Product,
-                "dependency": Group
-            }
-        }
-        return dict_models.get(self.file_name, None)
-
     def load(self, request):
         self.start_process(request)
         response_dict = {}
         communication = CommunicationController()
         if request.GET.get("data"):
-            self.file_name = request.GET.get('data')
-            self.model = self.get_model()
-            self.dependency_model = self.model.get("dependency")
-            response_dict = communication.field_search(model=self.model.get("object"),
-                                                       filename=self.file_name,
-                                                       dependency=self.dependency_model)
-        else:
-            self.model = Product
-            response_dict = communication.field_search(model=self.model)
+            response_dict = communication.export_data(data_name=request.GET.get("data"))
         return self.response(response_dict)
