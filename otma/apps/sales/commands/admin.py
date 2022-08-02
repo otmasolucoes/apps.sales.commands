@@ -16,19 +16,19 @@ class ProductsAdmin(admin.ModelAdmin):
 
     def name_preview(self, obj):
         description = obj.description or ""
-        base_template = """
-            <a href='/admin/commands/product/{}/change/'>
+        base_template = f"""
+            <a href='/admin/commands/product/{obj.id}/change/'>
             <table border='0' style='margin:0px;width:100%;'>
                 <tr style='height:50px;'>
                     <td style='padding:0px;width:60px;height:100%;border-bottom: 0px;'>
-                        <img src='{}' style='width:60px;height:50px;'>
+                        <img src='{obj.image}' style='width:60px;height:50px;'>
                     </td>
-                    <td style='border-bottom: 0px;'><b>{}.{}. {} <span style='font-size:10px;position:relative;top:-1px;'>({})</span></b><br><span style='font-weight:normal;'>{}</span></td>
-                    <td style='width:70px;text-align:center;vertical-align:middle;border-bottom:0px; '>R$ {}</td>
+                    <td style='border-bottom: 0px;'><b>{obj.group.code}.{obj.code}. {obj.name} <span style='font-size:10px;position:relative;top:-1px;'>({obj.group.name})</span></b><br><span style='font-weight:normal;'>{description}</span></td>
+                    <td style='width:70px;text-align:center;vertical-align:middle;border-bottom:0px; '>R$ {obj.price}</td>
                 </tr>
             </table>
             </a>
-        """.format(obj.id ,obj.image.url, obj.group.code, obj.code, obj.name, obj.group.name,description, obj.price)
+        """
         return format_html(base_template)
 
 @admin.register(Table)
