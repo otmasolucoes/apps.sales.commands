@@ -8,7 +8,7 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'bower_components/font-awesome/css/all.min.css' %}">
-    <link rel="stylesheet" href="{% static 'css/float_notification.css' %}">
+    <!--<link rel="stylesheet" href="{% static 'css/float_notification.css' %}">-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <script src="{% static 'bower_components/vue/dist/vue.js' %}"></script>
     <script src="{% static 'base_controller.js' %}"></script>
@@ -1268,7 +1268,7 @@
     <script src="{% static 'bower_components/moment/min/moment.min.js' %}"></script>
     <script async defer src="{% static 'apps/core/authentication/action.js' %}"></script>
     <script async defer src="{% static 'bower_components/pnotify/dist/pnotify.js' %}"></script>
-    <script async defer src="{% static 'apps/test_project/util/js/notify.js' %}"></script>
+    <script async defer src="{% static 'apps/core/communications/notify.js' %}"></script>
     <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.3/socket.io.min.js"></script>
 
@@ -1392,31 +1392,7 @@
               cloned_order: null,
             },
 
-            tables:[
-              /*{'id':'1', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'2', 'group':'interno', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:20, 'products':[
-                {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90,'quant':1,'total':69.90, 'is_confirmed':true, 'creation_date':'23/03/2020','creation_time':'20:21:35', 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'show_options':false,'image':'/static/images/commands/entradas.jpg'},
-                {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'quant':1, 'total':69.90, 'is_confirmed':true, 'creation_date':'23/03/2020','creation_time':'20:21:35', 'description':'Self service sem churrasco', 'have_promotion':false, 'show_options':false,'image':'/static/images/commands/refeicao.jpg'},
-              ]},
-              {'id':'3', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'4', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'5', 'group':'externo', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:5, 'products':[]},
-              {'id':'6', 'group':'externo', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:30, 'products':[]},
-              {'id':'7', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'8', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'9', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'10', 'group':'interno', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'11', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'12', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'13', 'group':'interno', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'14', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'15', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'16', 'group':'interno', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'17', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'18', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'19', 'group':'externo', 'status':'opened', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},
-              {'id':'20', 'group':'externo', 'status':'closed', 'value':'', 'opening_time': null, 'closing_time': null, last_updated:null, 'products':[]},*/
-            ],
+            tables:[],
 
             commands:{},
 
@@ -1427,55 +1403,7 @@
               {'id':'4', 'code': '444',  'name':'Hamburguer', 'price':3.50, 'quantity':0},
             ],
 
-            groups: [
-              /*{'id':'1', 'code':'1', 'name':'Refeição', 'description':'', 'image':'/static/images/commands/refeicao.jpg',
-                'products':[
-                  {'id':'1', 'code':'10', 'name':'Rodizio', 'price':69.90, 'description':'Rodízio de carnes convencionais e exóticas', 'have_promotion':true, 'image':'/static/images/commands/entradas.jpg'},
-                  {'id':'2', 'code':'11', 'name':'Buffet sem churrasco', 'price':35.00, 'description':'Self service sem churrasco', 'have_promotion':false, 'image':'/static/images/commands/refeicao.jpg'},
-                  {'id':'3', 'code':'12', 'name':'Buffet com churrasco', 'price':42.00, 'description':'Self service com churrasco', 'have_promotion':false},
-                  {'id':'4', 'code':'13', 'name':'Buffet especial', 'price':69.90, 'description':'Comidas japonesas e arabes, moquecas e tortas especiais', 'have_promotion':true},
-                  {'id':'4', 'code':'13', 'name':'Marmitex', 'price':14.00, 'description':'Arroz, feijão, macarrão, duas carnes, farofa, batata frita e salada.', 'have_promotion':true},
-                ]
-              },
-
-
-              {'id':'1', 'code':'1', 'name':'Entradas', 'description':'', 'image':'/static/images/commands/entradas.jpg',
-                'products':[
-                  {'id':'1', 'code':'10', 'name':'Torradas', 'price':8.90, 'description':'250g de torradas amanteigadas com orégano', 'have_promotion':false},
-                  {'id':'2', 'code':'11', 'name':'Torresmo', 'price':13.50, 'description':'150g de torresmo', 'have_promotion':false},
-                  {'id':'3', 'code':'12', 'name':'Porção de frios', 'price':18.50, 'description':'Salame, ovos de codorna, palmito e queijo em cubinhos', 'have_promotion':false},
-                  {'id':'4', 'code':'13', 'name':'Pasteis sortidos', 'price':21.50, 'description':'6 unidades sortidas', 'have_promotion':true},
-                ]
-              },
-
-
-              {'id':'2', 'code':'2', 'name':'Porções', 'description':'', 'image':'/static/images/commands/porcoes.jpg',
-                'products':[
-                  {'id':'5', 'code':'20', 'name':'Pasteis sortidos', 'price':27.50, 'description':'', 'have_promotion':true},
-                  {'id':'6', 'code':'21', 'name':'Bolinhas de queijo', 'price':32.80, 'description':'', 'have_promotion':false},
-                  {'id':'7', 'code':'22', 'name':'Filé com fritas', 'price':39.90, 'description':'', 'have_promotion':true},
-                  {'id':'8', 'code':'23', 'name':'Filé de tilapia', 'price':45.50, 'description':'', 'have_promotion':false},
-                ]
-              },
-
-              {'id':'3', 'code':'3', 'name':'Pizzas', 'description':'', 'image':'/static/images/commands/pizza.jfif',
-                'products':[
-                  {'id':'9', 'code':'30', 'name':'Portuguesa', 'price':27.50, 'description':'', 'have_promotion':true},
-                  {'id':'10', 'code':'31', 'name':'Calabresa', 'price':33.80, 'description':'', 'have_promotion':false},
-                  {'id':'11', 'code':'32', 'name':'Marguerita', 'price':39.90, 'description':'', 'have_promotion':true},
-                  {'id':'12', 'code':'33', 'name':'Americana', 'price':45.50, 'description':'', 'have_promotion':false},
-                ]
-              },
-
-              {'id':'4', 'code':'4', 'name':'Drinks', 'description':'', 'image':'/static/images/commands/drinks.jpg',
-                'products':[
-                  {'id':'5', 'code':'21', 'name':'Caipivodka', 'price':10.00, 'description':'Vodka batida com limão, açucar e gelo', 'have_promotion':true},
-                  {'id':'6', 'code':'22', 'name':'Mad Max', 'price':8.00, 'description':'Vodka com energético', 'have_promotion':true},
-                  {'id':'7', 'code':'23', 'name':'Canelinha', 'price':5.00, 'description':'Dose de canelinha', 'have_promotion':false},
-                  {'id':'8', 'code':'24', 'name':'Pina colada', 'price':14.50, 'description':'Vodka batida com abacaxi, coco e leite condensado', 'have_promotion':false},
-                ]
-              },*/
-            ],
+            groups: [],
 
             user: {},
 
@@ -2255,7 +2183,11 @@
           load_groups: function () {
             let scope = this;
             let success_function = function (response) {
-              scope.groups = response.object;
+              for (index in response.object) {
+                if (response.object[index].products.length > 0) {
+                  scope.groups.push(response.object[index]);
+                }
+              }
             };
 
             let failure_function = function (response) {
