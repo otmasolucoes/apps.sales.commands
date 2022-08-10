@@ -8,7 +8,7 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.min.css' %}">
     <link rel="stylesheet" href="{% static 'bower_components/font-awesome/css/all.min.css' %}">
-    <!--<link rel="stylesheet" href="{% static 'css/float_notification.css' %}">-->
+    <link rel="stylesheet" href="{% static 'css/float_notification.css' %}">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <script src="{% static 'bower_components/vue/dist/vue.js' %}"></script>
     <script src="{% static 'base_controller.js' %}"></script>
@@ -286,7 +286,7 @@
           <div :style='controls.styles.themes.active.header_division'>
             <table border='0' style="width:100%;">
               <tr>
-                <td style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">{{ company_name }}</td>
+                <td id="company_name" style="padding-left:10px;text-align:left;font-family:Brush Script MT, Brush Script Std, cursive;font-size:30px;">{{ company_name }}</td>
 
                 <td v-if="selected.table" style="width:25px;" title="Retornar a pagina anterior"><!-- v-if='controls.screen.fullscreen_mode'-->
                   <span @click="back_menu()" style="cursor:pointer;fonts-size:14px;width:80px;text-align:center;padding:11px;"><!--@click="selected.table=null" v-if="selected.table!=null"  -->
@@ -1293,6 +1293,7 @@
         app.get_user();
         app.load_tables();
         app.load_groups();
+        app.company.name = document.getElementById("company_name").innerText;
         //register_action();
       }, false);
 
